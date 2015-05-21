@@ -14,6 +14,8 @@ llparse.cmo : llvm.cmx dl.cmi bc.cmx llparse.cmi
 llparse.cmx : llvm.cmx dl.cmx bc.cmx llparse.cmi
 llvm.cmo :
 llvm.cmx :
+llvm2smt.cmo : smt.cmi llvm_parser.cmi
+llvm2smt.cmx : smt.cmx llvm_parser.cmx
 llvm_parser.cmo : lllex.cmx bc_manip.cmi bc.cmx llvm_parser.cmi
 llvm_parser.cmx : lllex.cmx bc_manip.cmx bc.cmx llvm_parser.cmi
 llvm_pp.cmo : util.cmi llvm.cmx llvm_pp.cmi
@@ -24,8 +26,14 @@ prelude.cmo : prelude.cmi
 prelude.cmx : prelude.cmi
 rawparse.cmo : util.cmi lllex.cmx bc_pp.cmi
 rawparse.cmx : util.cmx lllex.cmx bc_pp.cmx
-smt_aux.cmo : util.cmi dl.cmi bc_pp.cmi bc.cmx smt_aux.cmi
-smt_aux.cmx : util.cmx dl.cmx bc_pp.cmx bc.cmx smt_aux.cmi
+smt.cmo : util.cmi smt_aux.cmi prelude.cmi llvm_pp.cmi llvm.cmx dl.cmi \
+    bc_pp.cmi bc_manip.cmi bc.cmx smt.cmi
+smt.cmx : util.cmx smt_aux.cmx prelude.cmx llvm_pp.cmx llvm.cmx dl.cmx \
+    bc_pp.cmx bc_manip.cmx bc.cmx smt.cmi
+smt_aux.cmo : util.cmi llvm_pp.cmi llvm.cmx dl.cmi bc_manip.cmi bc.cmx \
+    smt_aux.cmi
+smt_aux.cmx : util.cmx llvm_pp.cmx llvm.cmx dl.cmx bc_manip.cmx bc.cmx \
+    smt_aux.cmi
 util.cmo : util.cmi
 util.cmx : util.cmi
 bc_manip.cmi : llvm.cmx bc.cmx
@@ -35,5 +43,6 @@ llparse.cmi : llvm.cmx bc.cmx
 llvm_parser.cmi : bc.cmx
 llvm_pp.cmi : llvm.cmx
 prelude.cmi :
+smt.cmi : bc.cmx
 smt_aux.cmi : llvm.cmx bc.cmx
 util.cmi :

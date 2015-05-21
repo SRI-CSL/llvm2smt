@@ -1,8 +1,8 @@
 LIBS=nums.cmxa unix.cmxa str.cmxa
 
-all: rawparse parse dltest
+all: rawparse parse dltest llvm2smt
 
-llvm2smt:  smt.cmx prelude.cmx dl.cmx bc.cmx bc_manip.cmx util.cmx bc_pp.cmx state.cmx smt_aux.cmx llparse.cmx lllex.cmx map2smt.cmx llvm_parser.cmx llvm2smt.cmx
+llvm2smt:  util.cmx prelude.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_manip.cmx util.cmx bc_pp.cmx  bc_manip.cmx smt_aux.cmx llparse.cmx lllex.cmx smt.cmx llvm_parser.cmx llvm2smt.cmx
 	ocamlopt $(LIBS) $^ -o $@
 
 rawparse: util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx llparse.cmx lllex.cmx rawparse.cmx

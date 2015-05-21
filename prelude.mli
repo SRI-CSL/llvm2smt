@@ -8,3 +8,9 @@
  * (i.e., the number of bits needed).
  *)
 val print_prelude: Buffer.t -> int -> unit
+
+val addr_type: int -> string
+
+val zero_address: int -> string
+
+    
