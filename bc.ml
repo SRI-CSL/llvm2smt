@@ -3,7 +3,6 @@
  *)
 
 open Llvm
-open Dl
  
 type linkage =
   | Extern_weak
@@ -48,20 +47,14 @@ type binfo = {
 }
 
 (*
-  Each pair in the hashtable is an edge in the cfg.
-  Each edge is of the form:
-
-  target_block to source_block
-
-  In other words edge stores the reverse of control flow.
-
-  var: name of source block
-
-  value: Basicblock pointed to by the terminator instruction of the source block.
-*)
+ * Each pair in the hashtable is an edge in the cfg.
+ * Each edge is of the form: target_block to source_block
+ *
+ * In other words edge stores the reverse of control flow.
+ *)
 type predecessors = (var, var) Hashtbl.t
 
-				     
+
 (*
  * Function parameters:
  * the boolean flag is to support functions with variable numbers
@@ -146,8 +139,3 @@ type cunit = {
   mutable cmdvars: (string * int list) list;
   mutable cmdnodes: mdinfo list;
 }
-
-
-
-(* conjectured end of internal representation of bitcode *)
-
