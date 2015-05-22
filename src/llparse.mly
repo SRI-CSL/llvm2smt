@@ -430,6 +430,7 @@ function_header:
                                { Bc.fcounter = ref 0;
 				 Bc.context =  Hashtbl.create 11;
 				 Bc.pred_table =  Hashtbl.create 11;
+				 Bc.cfg_table =  Hashtbl.create 11;
 				 Bc.flinkage = $1;
                                  Bc.fvisibility = $2;
                                  Bc.fstorageclass = $3;

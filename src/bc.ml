@@ -47,10 +47,40 @@ type binfo = {
 }
 
 (*
- * Each pair in the hashtable is an edge in the cfg.
- * Each edge is of the form: target_block to source_block
+ * Edge in the control flow graph.
+ * Given a block b, we keep track of its predecessors
+ * (i.e., the blocks that end with a branch instructions to b)
+ * and the conditions under which the branch is taken.
  *
+ * Conditions:
+ *   Uncond             --> no conditions (i.e., the condition is true)
+ *   Eq tau, var, const --> var == const (and both var and const have type tau)
+ *   Distinct tau, var, [c1, ..., c_n]  --> (var != c1 & var != c2 & ... & var != c_n)
+ *
+ * These conditions are enough to handle the br and switch instructions.
+ *
+ * For invoke and indirect branch, we label the condition as Unsupported.
+  *
+ * An edge is a pair (source, condition) where source is the name of source block.
+ *)
+type cfg_condition = 
+  | Uncond
+  | Eq of typ * value * value
+  | Distinct of typ * value * value list
+  | Unsupported
+
+type cfg_edge = var * cfg_condition
+
+type cfg_predecessors = (var, cfg_edge) Hashtbl.t
+
+
+(*
+ * Each pair in the hashtable is an edge in the cfg.
+ * Each edge is of the form: target_block to source_block.
  * In other words edge stores the reverse of control flow.
+ *
+ * In the hashtable, the key is the target name and the
+ * value is the source block name.
  *)
 type predecessors = (var, var) Hashtbl.t
 
@@ -68,6 +98,7 @@ type finfo = {
   fcounter: int ref;  (* counter used to produce local variables and types *)
   context: vtbl;      (* local symbol table *)
   pred_table: predecessors;
+  cfg_table: cfg_predecessors;
   mutable flinkage: linkage option;
   mutable fvisibility: visibility option;
   mutable fstorageclass: dll_storageclass option;

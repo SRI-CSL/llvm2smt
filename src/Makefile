@@ -1,3 +1,5 @@
+SHELL=/bin/sh
+
 LIBS=nums.cmxa unix.cmxa str.cmxa
 
 BITCODE=../bitcode

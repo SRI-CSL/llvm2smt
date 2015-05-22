@@ -357,11 +357,16 @@ let assign_vartyps cu =
 let get_predecessors f bname = 
   Hashtbl.find_all f.pred_table bname
 
-    
-let add_predecessor pred_table key value =
+let value_to_var value =
+  match value with 
+    | (Var v) -> v
+    | (Basicblock v) -> v
+    | _ -> failwith("Value_to_var failed for " ^ (Llvm_pp.string_of_value value))
+
+let add_predecessor pred_table key var =
   (match key with
-     | (Var v)  -> Hashtbl.add pred_table v value
-     | (Basicblock v) -> Hashtbl.add pred_table v value
+     | (Var v)  -> Hashtbl.add pred_table v var
+     | (Basicblock v) -> Hashtbl.add pred_table v var
      | _  -> failwith("Unexpected key value for add_predecessor " ^ (Llvm_pp.string_of_value key))
   )
   
@@ -403,4 +408,64 @@ let compute_predecessors_of_finfo f =
 
 let compute_predecessors cu =
   List.iter compute_predecessors_of_finfo cu.cfuns
+
+
+(*
+ * PROVISIONAL: MORE DATA IN THE PREDECESSOR TABLE
+ *)
+let get_cfg_predecessors f bname = 
+  Hashtbl.find_all f.pred_table bname
+
+
+let add_cfg_predecessor cfg_table key var cond =
+  (match key with
+     | (Var v)  -> Hashtbl.add cfg_table v (var, cond)
+     | (Basicblock v) -> Hashtbl.add cfg_table v (var, cond)
+     | _  -> failwith("Unexpected key value for add_cfg_predecessor " ^ (Llvm_pp.string_of_value key))
+  )
+
+(*
+ * Convert a list of pairs ((typ, v1), (typ2, value)) to values (all the types should be the same)
+ *)
+let list_of_values = List.map (fun (_, (_, y)) -> y)
+  
+let make_cfg_predecessors f cfg_table =
+  List.iter
+    (fun bl ->
+       let add target condition =  add_cfg_predecessor cfg_table target bl.bname condition in
+	 (* The terminator instructions are: ret, br, switch, indirectbr, invoke, resume, and unreachable. *)
+	 match List.rev bl.binstrs with
+	   | (_,i)::_ ->
+	       (match i with
+		  | Br((_,target), None, _) ->
+		      add target Uncond
+
+		  | Br((typ, v),Some((_,target1),(_,target2)),_) ->
+		      add target1 (Eq(typ, v, True));
+		      add target2 (Eq(typ, v, False))
+
+		  | Switch((typ, v),(_,default_target),targets,_) ->
+		      add default_target (Distinct(typ, v, list_of_values targets));
+		      List.iter
+			(fun ((typ2,v2),(_,target)) -> add target (Eq(typ, v, v2)))
+			targets
+
+		  | Indirectbr(_, targets,_) ->
+		      List.iter
+			(fun (_,target) -> add target Unsupported)
+			targets
+		  | Invoke(_,_,_,_,_,_,(_,target1),(_,target2),_) ->
+		      add target1 Unsupported; 
+		      add target2 Unsupported
+		  | _ -> (* N.B. 'resume', 'ret', and 'unreachable' have no successors *)
+		      ())
+	   | _ -> ())
+    f.fblocks
+
+    
+let compute_cfg_predecessors_of_finfo f =
+  make_cfg_predecessors f f.cfg_table
+
+let compute_cfg_predecessors cu =
+  List.iter compute_cfg_predecessors_of_finfo cu.cfuns
 

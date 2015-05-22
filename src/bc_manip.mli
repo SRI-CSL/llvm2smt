@@ -51,6 +51,13 @@ val assign_vartyps: Bc.cunit -> unit
  *)
 val typ_of_var: Bc.cunit -> Bc.finfo -> Llvm.var -> Llvm.typ
 
+(*
+ * value_to_var t --> checks whether t is a var or basicbloack 
+ * name and returns the name.
+ *
+ * Fails with an exception if t is not a var or basicblock.
+ *)
+val value_to_var: Llvm.value -> Llvm.var
 
 (*
  * Compute the predecessor tables of each funit in 
@@ -60,5 +67,14 @@ val typ_of_var: Bc.cunit -> Bc.finfo -> Llvm.var -> Llvm.typ
 val compute_predecessors: Bc.cunit -> unit
 
 val get_predecessors: Bc.finfo -> Llvm.var -> Llvm.var list
+    
+
+(*
+ * Compute the cfg predecessor tables of each funit in 
+ * a compilation unit.
+ *)
+val compute_cfg_predecessors: Bc.cunit -> unit
+
+
     
     
