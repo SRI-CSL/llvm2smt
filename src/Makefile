@@ -19,18 +19,25 @@ parse: util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx bc_manip.cmx llpars
 dltest: dl.cmx dltest.cmx
 	ocamlopt $(LIBS) $^ -o $@
 
-test:
+test: llvm2smt
 	./llvm2smt ${BITCODE}/int_powers.ll > ${BITCODE}/int_powers.smt
 	./llvm2smt ${BITCODE}/structs.ll > ${BITCODE}/structs.smt
 	./llvm2smt ${BITCODE}/structs.i386.ll > ${BITCODE}/structs.i386.smt
 
-bug:
+bug: parse
 	./parse ${BITCODE}/int_powers.ll > ${BITCODE}/int_powers.out.ll
 	diff -w ${BITCODE}/int_powers.ll  ${BITCODE}/int_powers.out.ll
 
-translate:
+translate: parse
 	./parse ${BITCODE}/https_examples.darwin.ll > ${BITCODE}/https_examples.darwin.out.ll
 	diff -w -I ModuleID ${BITCODE}/https_examples.darwin.ll ${BITCODE}/https_examples.darwin.out.ll
+
+stress: parse
+	./parse ${BITCODE}/https_examples.darwin.ll > ${BITCODE}/https_examples.darwin.out.ll
+	diff -w -I ModuleID ${BITCODE}/https_examples.darwin.ll ${BITCODE}/https_examples.darwin.out.ll
+	./parse ${BITCODE}/yices_main.ll > ${BITCODE}/yices_main.out.ll
+	diff -w -I ModuleID ${BITCODE}/yices_main.ll ${BITCODE}/yices_main.out.ll
+
 
 
 clean:
