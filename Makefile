@@ -1,8 +1,10 @@
 LIBS=nums.cmxa unix.cmxa str.cmxa
 
+TESTDIR=../llvmparser/tests
+
 all: rawparse parse dltest llvm2smt
 
-llvm2smt:  util.cmx prelude.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_manip.cmx util.cmx bc_pp.cmx  bc_manip.cmx smt_aux.cmx llparse.cmx lllex.cmx smt.cmx llvm_parser.cmx llvm2smt.cmx
+llvm2smt:  util.cmx prelude.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_manip.cmx util.cmx bc_pp.cmx  bc_manip.cmx smt.cmx llparse.cmx lllex.cmx smt.cmx llvm_parser.cmx llvm2smt.cmx
 	ocamlopt $(LIBS) $^ -o $@
 
 rawparse: util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx llparse.cmx lllex.cmx rawparse.cmx
@@ -16,21 +18,17 @@ dltest: dl.cmx dltest.cmx
 	ocamlopt $(LIBS) $^ -o $@
 
 test:
-	./llvm2smt tests/int_powers.ll > tests/int_powers.smt
-	./llvm2smt tests/structs.ll > tests/structs.smt
-	./llvm2smt tests/structs.i386.ll > tests/structs.i386.smt
+	./llvm2smt ${TESTDIR}/int_powers.ll > ${TESTDIR}/int_powers.smt
+	./llvm2smt ${TESTDIR}/structs.ll > ${TESTDIR}/structs.smt
+	./llvm2smt ${TESTDIR}/structs.i386.ll > ${TESTDIR}/structs.i386.smt
 
 bug:
-	./parse tests/int_powers.ll > tests/int_powers.out.ll
-	diff -w tests/int_powers.ll  tests/int_powers.out.ll
+	./parse ${TESTDIR}/int_powers.ll > ${TESTDIR}/int_powers.out.ll
+	diff -w ${TESTDIR}/int_powers.ll  ${TESTDIR}/int_powers.out.ll
 
 translate:
-	./parse ../llvmparser/tests/https_examples.darwin.ll > ../llvmparser/tests/https_examples.darwin.out.ll
-	diff -w ../llvmparser/tests/https_examples.darwin.ll ../llvmparser/tests/https_examples.darwin.out.ll
-
-variant:
-	./llvm2smt variants/int_powers00.ll > variants/int_powers00.smt
-	./llvm2smt variants/int_powers01.ll > variants/int_powers01.smt
+	./parse ${TESTDIR}/https_examples.darwin.ll > ${TESTDIR}/https_examples.darwin.out.ll
+	diff -w ${TESTDIR}/https_examples.darwin.ll ${TESTDIR}/https_examples.darwin.out.ll
 
 
 clean:

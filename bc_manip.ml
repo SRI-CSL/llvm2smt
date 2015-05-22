@@ -325,17 +325,14 @@ let value_map g f =
 
       
 let assign_vartyps cu =
-  Printf.eprintf "Before ctyps\n";
   List.iter
     (function
        | (x, None)   -> ()
        | (x, Some t) -> global_add_vartype cu x t)
     cu.ctyps;
-  Printf.eprintf "Before cglobals\n";
   List.iter
     (fun {gname;gtyp} -> global_add_vartype cu gname (Pointer(gtyp,None)))
     cu.cglobals;
-  Printf.eprintf "Before cfuns: first pass\n";
   List.iter
     (fun f ->
        let locals = f.context in
@@ -343,7 +340,6 @@ let assign_vartyps cu =
 	 global_add_vartype cu f.fname ftyp; (* function name *)
 	 List.iter (assign_vartyps_block locals cu.ctyps) f.fblocks)
     cu.cfuns;
-  Printf.eprintf "Before cfuns: second pass\n";
   List.iter
     (fun f ->
        (value_map 
@@ -401,12 +397,10 @@ let make_predecessors f result =
     
     
     
-(* this need to be part of the parsing *)    
 let compute_predecessors_of_finfo f =
   let table = f.pred_table in
     (make_predecessors f table)
 
-(* this need to be part of the parsing *)    
 let compute_predecessors cu =
   List.iter compute_predecessors_of_finfo cu.cfuns
 
