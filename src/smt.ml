@@ -537,15 +537,6 @@ let instr_to_smt b st (v, rhs) =
 	     (InstructionNotSupported _) -> bprintf b "%s\n" (decl_to_string st n))
 	
 
-(*
- * Converts a block to a sequence of SMT definitions/declarations
- *)
-let block_to_smt b st binfo =
-  List.iter (fun instr -> (instr_to_smt b st instr)) binfo.binstrs;
-  bprintf b "\n"
-
-    
-
 let declare_state b st =
   let aw = st.addr_width in 
     bprintf b "(declare-fun %s () Mem)\n" (mem_ref st);
@@ -588,12 +579,64 @@ let declare_globals b st =
   in
     List.iter declare_global st.cu.cglobals    
 
+
+(*
+ * Converts a block to a sequence of SMT definitions/declarations
+ *)
+let block_to_smt b fu state binfo =
+  (* Printf.eprintf "processing block %s\n" (Llvm_pp.string_of_var binfo.bname); *)
+  bprintf b ";; Block %s with predecessors:" (Llvm_pp.string_of_var binfo.bname);
+  List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) (Bc_manip.get_predecessors fu binfo.bname);
+  bprintf b "\n";
+  List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
+  bprintf b "\n";
+  binfo.bseen <- true
+
+
+(*
+ * Returns a list of all the currently unseen predecessors of the block.
+ * It assumes that the fu satisfies the invariant that if a block has been
+ * seen, then so has all its predecessors.
+ *
+ *)
+let get_predecessor_block_list fu block =
+  if block.bseen
+  then
+    []
+  else
+    let pred_list = Bc_manip.get_predecessors fu block.bname in
+    let candidates = List.map (fun n -> (Bc_manip.lookup_block fu n)) pred_list in
+      List.filter (fun b -> not b.bseen) candidates
+	
+let rec block_list_to_smt b fu state block_list =
+  match block_list with
+    | [] -> ()
+    | block :: rest ->
+	let pred_blocks = get_predecessor_block_list fu block in
+	  if pred_blocks == []
+	  then
+	    begin
+	      block_to_smt b fu state block;
+	      block_list_to_smt b fu state rest
+	    end
+	  else
+	    begin
+	      block.bseen <- true;
+	      block_list_to_smt b fu state pred_blocks;
+	      block.bseen <- false;
+	      block_to_smt b fu state block;
+	      block_list_to_smt b fu state rest
+	    end
+	    
+
 let fun_to_smt b fu state =
   begin
     (* TODO: don't reset the mem_idx/sp_idx counters *)
-    (* reset the local counters *)
+    (* reset the local counters
     state.mem_idx <- 0;
     state.sp_idx <- 0;
+    *)
+    (* Printf.eprintf "processing Function %s\n" (Llvm_pp.string_of_var fu.fname); *)
     state.fu  <- Some(fu);
     bprintf b "\n;; Function: ";
     name_to_smt b fu.fname;
@@ -604,8 +647,9 @@ let fun_to_smt b fu state =
       begin
 	declare_state b state;
 	declare_parameters b state;
-	(* TODO: fix this. We must process the blocks in topological order *)
-	List.iter (fun blk -> (block_to_smt b state blk)) fu.fblocks;
+	bprintf b "\n";
+	block_list_to_smt b fu state fu.fblocks;
+	(* List.iter (fun blk -> (block_to_smt b state blk)) fu.fblocks; *)
 	Buffer.add_char b '\n'
       end
     else

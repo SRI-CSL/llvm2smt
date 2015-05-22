@@ -98,10 +98,10 @@ let assign_block_numbers cu =
     let num = f.fcounter in  (*  iam: f.fcounter needs to be AFTER the params have been processed. *)
       f.fblocks <-
       List.map
-        (fun {bname=name; binstrs=instrs} ->
+        (fun {bname=name; binstrs=instrs; bseen=seen} ->
            let name', num' = number_block !num (name, instrs) in
              num := num';
-             {bname=name'; binstrs=instrs})
+             {bname=name'; binstrs=instrs; bseen=seen;})
         f.fblocks in
     List.iter number_blocks cu.cfuns;
     ()
@@ -320,7 +320,7 @@ let value_map g f =
   (f.fblocks <-
     (List.map
       (fun bl ->
-        {bname=bl.bname; binstrs=List.map (fun (nopt,i) -> (nopt, imap i)) bl.binstrs})
+        {bname=bl.bname; binstrs=List.map (fun (nopt,i) -> (nopt, imap i)) bl.binstrs; bseen=bl.bseen; })
       f.fblocks))
 
       

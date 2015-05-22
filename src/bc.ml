@@ -43,7 +43,8 @@ type vtbl = (var, typ) Hashtbl.t
 (* blocks *)
 type binfo = {
   mutable bname: var;
-  mutable binstrs: (var option * instr) list
+  mutable binstrs: (var option * instr) list;
+  mutable bseen: bool
 }
 
 (*

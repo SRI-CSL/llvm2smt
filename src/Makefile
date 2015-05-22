@@ -45,6 +45,9 @@ stress: parse
 	    echo "Success for $${sourcebits}\n"; \
         done
 
+smt:  llvm2smt
+	./llvm2smt ${BITCODE}/sums_auto3.ll > ${BITCODE}/sums_auto3.smt
+
 clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
 
