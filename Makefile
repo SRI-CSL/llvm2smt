@@ -28,7 +28,7 @@ bug:
 
 translate:
 	./parse ${TESTDIR}/https_examples.darwin.ll > ${TESTDIR}/https_examples.darwin.out.ll
-	diff -w ${TESTDIR}/https_examples.darwin.ll ${TESTDIR}/https_examples.darwin.out.ll
+	diff -w -I ModuleID ${TESTDIR}/https_examples.darwin.ll ${TESTDIR}/https_examples.darwin.out.ll
 
 
 clean:
