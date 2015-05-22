@@ -4,7 +4,9 @@ BITCODE=../bitcode
 
 EXES=rawparse parse dltest llvm2smt
 
-CORE=util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx bc_manip.cmx llparse.cmx lllex.cmx 
+CORE=util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx bc_manip.cmx llparse.cmx lllex.cmx
+
+TESTS=https_examples.darwin http_examples.i386 yices_main minigzip-3.5 minisat.darwin
 
 all: ${EXES}
 
@@ -35,10 +37,11 @@ translate: parse
 	diff -w -I ModuleID ${BITCODE}/https_examples.darwin.ll ${BITCODE}/https_examples.darwin.out.ll
 
 stress: parse
-	./parse ${BITCODE}/https_examples.darwin.ll > ${BITCODE}/https_examples.darwin.out.ll
-	diff -w -I ModuleID ${BITCODE}/https_examples.darwin.ll ${BITCODE}/https_examples.darwin.out.ll
-	./parse ${BITCODE}/yices_main.ll > ${BITCODE}/yices_main.out.ll
-	diff -w -I ModuleID ${BITCODE}/yices_main.ll ${BITCODE}/yices_main.out.ll
+	for sourcebits in ${TESTS} ; do \
+	    ./parse ${BITCODE}/$${sourcebits}.ll > ${BITCODE}/$${sourcebits}.out.ll ; \
+            diff -w -I ModuleID ${BITCODE}/$${sourcebits}.ll ${BITCODE}/$${sourcebits}.out.ll ; \
+	    echo "Success for $${sourcebits}\n"; \
+        done
 
 clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
