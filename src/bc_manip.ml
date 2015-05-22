@@ -454,9 +454,11 @@ let make_cfg_predecessors f cfg_table =
 		      List.iter
 			(fun (_,target) -> add target Unsupported)
 			targets
+
 		  | Invoke(_,_,_,_,_,_,(_,target1),(_,target2),_) ->
 		      add target1 Unsupported; 
 		      add target2 Unsupported
+
 		  | _ -> (* N.B. 'resume', 'ret', and 'unreachable' have no successors *)
 		      ())
 	   | _ -> ())
@@ -469,3 +471,10 @@ let compute_cfg_predecessors_of_finfo f =
 let compute_cfg_predecessors cu =
   List.iter compute_cfg_predecessors_of_finfo cu.cfuns
 
+
+
+(*
+ * Get a block given its name.
+ *)
+let lookup_block f name = 
+  List.find (fun b -> b.bname = name) f.fblocks

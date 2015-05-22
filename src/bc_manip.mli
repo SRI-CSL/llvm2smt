@@ -76,5 +76,8 @@ val get_predecessors: Bc.finfo -> Llvm.var -> Llvm.var list
 val compute_cfg_predecessors: Bc.cunit -> unit
 
 
-    
+(*
+ * Get a block given its name.
+ *)
+val lookup_block: Bc.finfo -> Llvm.var -> Bc.binfo
     
