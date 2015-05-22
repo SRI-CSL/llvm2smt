@@ -4,15 +4,17 @@ BITCODE=../bitcode
 
 EXES=rawparse parse dltest llvm2smt
 
+CORE=util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx bc_manip.cmx llparse.cmx lllex.cmx 
+
 all: ${EXES}
 
-llvm2smt:  util.cmx prelude.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_manip.cmx util.cmx bc_pp.cmx  bc_manip.cmx smt.cmx llparse.cmx lllex.cmx smt.cmx llvm_parser.cmx llvm2smt.cmx
+llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx smt.cmx llvm2smt.cmx
 	ocamlopt $(LIBS) $^ -o $@
 
-rawparse: util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx llparse.cmx lllex.cmx rawparse.cmx
+rawparse: ${CORE} rawparse.cmx
 	ocamlopt $(LIBS) $^ -o $@
 
-parse: util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx bc_manip.cmx llparse.cmx lllex.cmx llvm_parser.cmx  parse.cmx
+parse: ${CORE} llvm_parser.cmx  parse.cmx
 	ocamlopt $(LIBS) $^ -o $@
 
 
@@ -37,8 +39,6 @@ stress: parse
 	diff -w -I ModuleID ${BITCODE}/https_examples.darwin.ll ${BITCODE}/https_examples.darwin.out.ll
 	./parse ${BITCODE}/yices_main.ll > ${BITCODE}/yices_main.out.ll
 	diff -w -I ModuleID ${BITCODE}/yices_main.ll ${BITCODE}/yices_main.out.ll
-
-
 
 clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
