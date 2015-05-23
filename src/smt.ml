@@ -595,8 +595,12 @@ let block_to_smt b fu state binfo =
 
 (*
  * Returns a list of all the currently unseen predecessors of the block.
- * It assumes that the fu satisfies the invariant that if a block has been
+ * It assumes that the fu satisfies the CURRENTLY FALSE invariant that if a block has been
  * seen, then so has all its predecessors.
+ *
+ * Need to implement some graph algorithms.
+ *
+ * 
  *
  *)
 let get_predecessor_block_list fu block =
@@ -623,7 +627,6 @@ let rec block_list_to_smt b fu state block_list =
 	    begin
 	      block.bseen <- true;
 	      block_list_to_smt b fu state pred_blocks;
-	      block.bseen <- false;
 	      block_to_smt b fu state block;
 	      block_list_to_smt b fu state rest
 	    end
