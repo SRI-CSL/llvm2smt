@@ -1,6 +1,6 @@
 SHELL=/bin/sh
 
-LIBS=nums.cmxa unix.cmxa str.cmxa 
+LIBS=nums.cmxa unix.cmxa str.cmxa /Users/iam/.opam/system/lib/ocamlgraph/graph.cmxa
 
 BITCODE=../bitcode
 
@@ -54,8 +54,11 @@ clean:
 %.cmi: %.mli
 	ocamlc -c $<
 
+cycles.cmx: cycles.ml
+	ocamlfind ocamlopt -c cycles.ml -o cycles.cmx -linkpkg -package ocamlgraph $@
+
 %.cmx: %.ml
-	ocamlopt -c $< -o $@
+	ocamlfind ocamlopt -c $< -o $@
 
 %.ml: %.mll
 	ocamllex $< -o $@
