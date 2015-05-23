@@ -15,7 +15,7 @@ open ExtString
 
 module G = Pack.Digraph
 
-let find_all_cycles_johnson g =
+let find_all_cycles g =
   if not G.is_directed then
     assert false;
   (*  stack of nodes in current path *)
@@ -133,3 +133,5 @@ let find_all_cycles_johnson g =
       
       
       
+    
+ 

@@ -649,8 +649,12 @@ let fun_to_smt b fu state =
     bprintf b ";; %s\n" (Bc_pp.string_of_fparams fu.fparams);
     if fu.fblocks  <> []
     then
-      let g = Cycles.fu_to_graph fu in
+      let graph = Cycles.fu_to_graph fu in
+      let ll = Johnson.find_all_cycles graph in
 	begin
+	  if List.length ll > 0
+	  then
+	    Cycles.show_cycles fu ll;
 	  declare_state b state;
 	  declare_parameters b state;
 	  bprintf b "\n";

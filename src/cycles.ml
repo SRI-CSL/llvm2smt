@@ -2,10 +2,15 @@
 
 open Graph
 open Bc
+open ExtString
    
 
 module G = Pack.Digraph
 
+
+let int_to_blockname fu i = (List.nth fu.fblocks i).bname
+  
+	     
 (*
  * The nodes in the digraph are integers.
  * The index of a block is its position in fu.fblocks.
@@ -15,7 +20,9 @@ module G = Pack.Digraph
 let create_indices fu n =
   let indices = Hashtbl.create n in
     for i=0 to n - 1 do
-      Hashtbl.add indices (List.nth fu.fblocks i).bname  i;
+      let v = int_to_blockname fu i in
+	(* Printf.eprintf "%s <-> %d\n" (Llvm_pp.string_of_var v) i; *)
+	Hashtbl.add indices  v i;
     done;
     indices
       
@@ -43,3 +50,15 @@ let fu_to_graph fu =
     g
 
 
+
+let show_cycles fu ll =      
+  Printf.eprintf  "Function %s contains %d cycles\n" (Llvm_pp.string_of_var fu.fname) (List.length ll);
+  List.iter (fun path ->
+	       Printf.eprintf "%s\n" 
+		 (String.join " ->  " (List.map
+				     (fun e -> (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e)))) path))
+	    ) ll
+    
+
+
+   
