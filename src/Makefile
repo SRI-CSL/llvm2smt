@@ -1,6 +1,6 @@
 SHELL=/bin/sh
 
-LIBS=nums.cmxa unix.cmxa str.cmxa
+LIBS=nums.cmxa unix.cmxa str.cmxa 
 
 BITCODE=../bitcode
 
@@ -12,7 +12,7 @@ TESTS=https_examples.darwin http_examples.i386 yices_main minigzip-3.5 minisat.d
 
 all: ${EXES}
 
-llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx smt.cmx llvm2smt.cmx
+llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx cycles.cmx smt.cmx llvm2smt.cmx
 	ocamlopt $(LIBS) $^ -o $@
 
 rawparse: ${CORE} rawparse.cmx

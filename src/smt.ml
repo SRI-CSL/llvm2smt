@@ -600,6 +600,8 @@ let block_to_smt b fu state binfo =
  *
  * Need to implement some graph algorithms.
  *
+ * https://blog.mister-muffin.de/2012/07/04/enumerating-elementary-circuits-of-a-directed_graph/
+ *
  * 
  *
  *)
