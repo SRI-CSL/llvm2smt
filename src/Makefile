@@ -13,8 +13,8 @@ TESTS=https_examples.darwin http_examples.i386 yices_main minigzip-3.5 minisat.d
 
 all: ${EXES}
 
-llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx cycles.cmx smt.cmx llvm2smt.cmx
-	ocamlfind ocamlopt $(LIBS) $^ -linkpkg -package ocamlgraph -o $@
+llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx cycles.cmx johnson.cmx smt.cmx llvm2smt.cmx
+	ocamlfind ocamlopt $(LIBS) $^ -linkpkg -package ocamlgraph  -package extlib -o $@
 
 rawparse: ${CORE} rawparse.cmx
 	ocamlopt $(LIBS) $^ -o $@
@@ -53,8 +53,11 @@ clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
 
 
+johnson.cmx: johnson.ml
+	ocamlfind ocamlopt -c  johnson.ml -package ocamlgraph -package extlib  -o johnson.cmx
+
 cycles.cmi: cycles.mli
-	ocamlfind  ocamlc -c $< -linkpkg -package ocamlgraph
+	ocamlfind  ocamlc -c cycles.mli -linkpkg -package ocamlgraph
 
 cycles.cmx: cycles.ml
 	ocamlfind ocamlopt -c cycles.ml -o cycles.cmx -linkpkg -package ocamlgraph $@
