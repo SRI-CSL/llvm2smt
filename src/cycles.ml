@@ -13,8 +13,6 @@ let create_indices fu n =
     done;
     indices
       
-      
-  
 	     
 	     
 let fu_to_graph fu =
@@ -25,10 +23,9 @@ let fu_to_graph fu =
   let nodes = Array.init nodecount G.V.create in
   let edges = fu.successors in
   let g = (G.create ?size:(Some(Hashtbl.length edges)) ()) in
-
-
-    
-    Hashtbl.iter (fun v0 v1 -> (G.add_edge g nodes.(Hashtbl.find indices v0) nodes.(Hashtbl.find indices v1)))  edges;
+  let get_index = (fun v -> nodes.(Hashtbl.find indices v)) in
+  let add_edge = (fun v0 v1 -> (G.add_edge g (get_index v0) (get_index v1))) in
+    Hashtbl.iter add_edge  edges;
     g
 
       
