@@ -51,11 +51,15 @@ smt:  llvm2smt
 clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
 
-%.cmi: %.mli
-	ocamlc -c $<
+
+cycles.cmi: cycles.mli
+	ocamlfind  ocamlc -c $< -linkpkg -package ocamlgraph
 
 cycles.cmx: cycles.ml
 	ocamlfind ocamlopt -c cycles.ml -o cycles.cmx -linkpkg -package ocamlgraph $@
+
+%.cmi: %.mli
+	ocamlc -c $<
 
 %.cmx: %.ml
 	ocamlfind ocamlopt -c $< -o $@
