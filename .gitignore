@@ -1,0 +1,17 @@
+# Mac crap
+.DS_Store
+
+# Emacs stuff
+*~
+
+# Profiling
+gmon.out
+*.o
+*.a
+#*.bc
+*.dylib
+*.so
+
+# Ocaml
+*.cmi
+*.cmx

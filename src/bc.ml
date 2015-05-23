@@ -76,14 +76,22 @@ type cfg_predecessors = (var, cfg_edge) Hashtbl.t
 
 
 (*
+ * predecessors:
+ *
  * Each pair in the hashtable is an edge in the cfg.
  * Each edge is of the form: target_block to source_block.
  * In other words edge stores the reverse of control flow.
  *
  * In the hashtable, the key is the target name and the
  * value is the source block name.
+ *
+ * successors:
+ *
+ *  The inverse of predecessors.
+ *  
  *)
-type predecessors = (var, var) Hashtbl.t
+
+type neighbors = (var, var) Hashtbl.t
 
 
 (*
@@ -98,7 +106,8 @@ type function_parameters = (typ * param_attribute list * var option) list * bool
 type finfo = {
   fcounter: int ref;  (* counter used to produce local variables and types *)
   context: vtbl;      (* local symbol table *)
-  pred_table: predecessors;
+  predecessors: neighbors;
+  successors: neighbors;
   cfg_table: cfg_predecessors;
   mutable flinkage: linkage option;
   mutable fvisibility: visibility option;
@@ -116,7 +125,6 @@ type finfo = {
   mutable fprefix: (typ * value) option;
   mutable fblocks: binfo list;
 }
-
 
 type thread_local =
   | Localdynamic

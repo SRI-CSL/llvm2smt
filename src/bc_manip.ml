@@ -349,32 +349,36 @@ let assign_vartyps cu =
 	     | x -> x)) f)
     cu.cfuns
 
-(*
- * Predecessors of block in function f 
- * - f must be a Bc.finfo
- * - bname must be a var
- *)
-let get_predecessors f bname = 
-  Hashtbl.find_all f.pred_table bname
-
 let value_to_var value =
   match value with 
     | (Var v) -> v
     | (Basicblock v) -> v
     | _ -> failwith("Value_to_var failed for " ^ (Llvm_pp.string_of_value value))
 
-let add_predecessor pred_table key var =
-  (match key with
-     | (Var v)  -> Hashtbl.add pred_table v var
-     | (Basicblock v) -> Hashtbl.add pred_table v var
-     | _  -> failwith("Unexpected key value for add_predecessor " ^ (Llvm_pp.string_of_value key))
-  )
-  
-  
-let make_predecessors f result =
+(*
+ * Predecessors of block in function f 
+ * - f must be a Bc.finfo
+ * - bname must be a block name
+ *)
+let get_predecessors f bname = 
+  Hashtbl.find_all f.predecessors bname
+
+let get_successors f bname = 
+  Hashtbl.find_all f.successors bname
+
+    
+
+let make_neighbors f predecessors successors =
   List.iter
     (fun bl ->
-       let add target =  add_predecessor result target bl.bname  in
+       let add target =
+	 let src = bl.bname in
+	 let dst = (value_to_var target) in 
+	   begin
+	     Hashtbl.add predecessors dst src;
+	     Hashtbl.add successors src dst;
+	   end
+       in
 	 (* The terminator instructions are: ret, br, switch, indirectbr, invoke, resume, and unreachable. *)
 	 match List.rev bl.binstrs with
 	   | (_,i)::_ ->
@@ -402,19 +406,18 @@ let make_predecessors f result =
     
     
     
-let compute_predecessors_of_finfo f =
-  let table = f.pred_table in
-    (make_predecessors f table)
-
-let compute_predecessors cu =
-  List.iter compute_predecessors_of_finfo cu.cfuns
-
-
+let compute_neighbors_of_finfo f =
+  (make_neighbors f f.predecessors f.successors)
+  
+let compute_neighbors cu =
+  List.iter compute_neighbors_of_finfo cu.cfuns
+    
+    
 (*
  * PROVISIONAL: MORE DATA IN THE PREDECESSOR TABLE
  *)
 let get_cfg_predecessors f bname = 
-  Hashtbl.find_all f.pred_table bname
+  Hashtbl.find_all f.cfg_table bname
 
 
 let add_cfg_predecessor cfg_table key var cond =

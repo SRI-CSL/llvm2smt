@@ -78,18 +78,10 @@ let pad_to_column b n =
     else
       Buffer.add_char b ' '
 
-(*
- * Predecessors of block in function f 
- * - f must be a Bc.finfo
- * - bname must be a block name
- *)
-let get_predecessors f bname = 
-  Hashtbl.find_all f.pred_table bname
-
 
     
 let bpr_block f b first {bname; binstrs}  =
-  let pred_list = get_predecessors f bname in
+  let pred_list = Bc_manip.get_predecessors f bname in
     if pred_list <> []
     then
       (match bname with

@@ -6,7 +6,7 @@ BITCODE=../bitcode
 
 EXES=rawparse parse dltest llvm2smt
 
-CORE=util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_pp.cmx bc_manip.cmx llparse.cmx lllex.cmx
+CORE=util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_manip.cmx bc_pp.cmx llparse.cmx lllex.cmx
 
 TESTS=https_examples.darwin http_examples.i386 yices_main minigzip-3.5 minisat.darwin
 
