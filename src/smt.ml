@@ -649,18 +649,20 @@ let fun_to_smt b fu state =
     bprintf b ";; %s\n" (Bc_pp.string_of_fparams fu.fparams);
     if fu.fblocks  <> []
     then
-      begin
-	declare_state b state;
-	declare_parameters b state;
-	bprintf b "\n";
-	block_list_to_smt b fu state fu.fblocks;
-	(* List.iter (fun blk -> (block_to_smt b state blk)) fu.fblocks; *)
-	Buffer.add_char b '\n'
-      end
+      let g = Cycles.fu_to_graph fu in
+	begin
+	  declare_state b state;
+	  declare_parameters b state;
+	  bprintf b "\n";
+	  block_list_to_smt b fu state fu.fblocks;
+	  (* List.iter (fun blk -> (block_to_smt b state blk)) fu.fblocks; *)
+	  Buffer.add_char b '\n'
+	end
     else
       bprintf b "\n"
   end
 
+  
 let cu_to_smt b cu =
   let aw = get_addr_width cu in 
   let state = { mem_idx = 0; sp_idx = 0; fu = None; cu = cu; addr_width = aw; } in 

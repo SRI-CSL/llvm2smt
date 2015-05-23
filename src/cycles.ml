@@ -38,8 +38,8 @@ let fu_to_graph fu =
   let edges = fu.successors in
   let g = (G.create ?size:(Some(Hashtbl.length edges)) ()) in
   let get_index = (fun v -> nodes.(Hashtbl.find indices v)) in
-  let add_edge = (fun v0 v1 -> (G.add_edge g (get_index v0) (get_index v1))) in
+  let add_edge = (fun v0 v1 -> (G.add_edge g (get_index v0)(get_index v1))) in
     Hashtbl.iter add_edge  edges;
     g
-      
-      
+
+

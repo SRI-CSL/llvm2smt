@@ -1,6 +1,7 @@
 SHELL=/bin/sh
 
-LIBS=nums.cmxa unix.cmxa str.cmxa /Users/iam/.opam/system/lib/ocamlgraph/graph.cmxa
+LIBS=nums.cmxa unix.cmxa str.cmxa
+#/Users/iam/.opam/system/lib/ocamlgraph/graph.cmxa
 
 BITCODE=../bitcode
 
@@ -13,7 +14,7 @@ TESTS=https_examples.darwin http_examples.i386 yices_main minigzip-3.5 minisat.d
 all: ${EXES}
 
 llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx cycles.cmx smt.cmx llvm2smt.cmx
-	ocamlopt $(LIBS) $^ -o $@
+	ocamlfind ocamlopt $(LIBS) $^ -linkpkg -package ocamlgraph -o $@
 
 rawparse: ${CORE} rawparse.cmx
 	ocamlopt $(LIBS) $^ -o $@
