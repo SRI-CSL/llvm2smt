@@ -1,7 +1,6 @@
 SHELL=/bin/sh
 
 LIBS=nums.cmxa unix.cmxa str.cmxa
-#/Users/iam/.opam/system/lib/ocamlgraph/graph.cmxa
 
 BITCODE=../bitcode
 
@@ -11,10 +10,12 @@ CORE=util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_manip.cmx bc_pp.cmx llparse.
 
 TESTS=https_examples.darwin http_examples.i386 yices_main minigzip-3.5 minisat.darwin
 
+PKGS= -package ocamlgraph -package extlib
+
 all: ${EXES}
 
 llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx cycles.cmx johnson.cmx smt.cmx llvm2smt.cmx
-	ocamlfind ocamlopt $(LIBS) $^ -linkpkg -package ocamlgraph  -package extlib -o $@
+	ocamlfind ocamlopt $(LIBS) $^ -linkpkg ${PKGS} -o $@
 
 rawparse: ${CORE} rawparse.cmx
 	ocamlopt $(LIBS) $^ -o $@
@@ -52,21 +53,11 @@ smt:  llvm2smt
 clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
 
-
-johnson.cmx: johnson.ml
-	ocamlfind ocamlopt -c  johnson.ml -package ocamlgraph -package extlib  -o johnson.cmx
-
-cycles.cmi: cycles.mli
-	ocamlfind  ocamlc -c cycles.mli -linkpkg -package ocamlgraph
-
-cycles.cmx: cycles.ml
-	ocamlfind ocamlopt -c cycles.ml -o cycles.cmx -linkpkg -package ocamlgraph $@
-
 %.cmi: %.mli
-	ocamlc -c $<
+	ocamlfind ocamlc -c $< ${PKGS}
 
 %.cmx: %.ml
-	ocamlfind ocamlopt -c $< -o $@
+	ocamlfind ocamlopt -c $< -o $@ ${PKGS}
 
 %.ml: %.mll
 	ocamllex $< -o $@
