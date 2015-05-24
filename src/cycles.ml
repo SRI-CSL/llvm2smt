@@ -61,4 +61,14 @@ let show_cycles fu ll =
     
 
 
-   
+let cycle_to_edge fu l =
+  let len = List.length l in
+  let first = List.nth l 0 in
+  let last = List.nth l (len - 1) in
+    ((int_to_blockname fu (G.V.label last)), (int_to_blockname fu (G.V.label first)))
+       
+let cycles_to_edges fu ll =
+  List.map (fun l -> cycle_to_edge fu l) ll;
+  
+    
+		

@@ -68,7 +68,9 @@ val compute_neighbors: Bc.cunit -> unit
 
 val get_predecessors: Bc.finfo -> Llvm.var -> Llvm.var list 
     
-val get_successors: Bc.finfo -> Llvm.var -> Llvm.var list 
+val get_successors: Bc.finfo -> Llvm.var -> Llvm.var list
+
+val print_neighbors: Bc.neighbors -> unit
 
 (*
  * Compute the cfg predecessor tables of each funit in 

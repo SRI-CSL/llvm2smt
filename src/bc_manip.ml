@@ -366,7 +366,10 @@ let get_predecessors f bname =
 let get_successors f bname = 
   Hashtbl.find_all f.successors bname
 
-    
+let print_neighbors neighbors =
+  let print_edge = (fun v0 v1 -> Printf.eprintf "edge: %s -> %s\n" (Llvm_pp.string_of_var v0) (Llvm_pp.string_of_var v1)) in
+    Hashtbl.iter print_edge neighbors
+      
 
 let make_neighbors f predecessors successors =
   List.iter
