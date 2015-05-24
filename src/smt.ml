@@ -585,8 +585,19 @@ let declare_globals b st =
  *)
 let smt_block_entry_condition b fu state binfo =
   let ename = "block_" ^ (string_of_int binfo.bindex) ^ "_entry_condition"; in
-  let pred_list = Bc_manip.get_predecessors fu binfo.bname in 
-    bprintf b ";; %s \n" ename
+  let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in 
+    if cfg_pred_list = []
+    then
+      begin
+	bprintf b ";; %s \n" ename;
+	bprintf b "(define-fun %s () Bool true)\n" ename;
+      end
+    else
+      begin
+	bprintf b ";; %s \n" ename
+      end
+    
+      
 
     
 (*

@@ -78,6 +78,7 @@ val print_neighbors: Bc.neighbors -> unit
  *)
 val compute_cfg_predecessors: Bc.cunit -> unit
 
+val get_cfg_predecessors: Bc.finfo -> Llvm.var -> Bc.cfg_edge list 
 
 (*
  * Get a block given its name.
