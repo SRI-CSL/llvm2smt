@@ -638,7 +638,7 @@ let fun_to_smt b fu state =
     state.mem_idx <- 0;
     state.sp_idx <- 0;
     *)
-    Printf.eprintf "processing Function %s\n" (Llvm_pp.string_of_var fu.fname); 
+    (* Printf.eprintf "processing Function %s\n" (Llvm_pp.string_of_var fu.fname);  *)
     state.fu  <- Some(fu);
     bprintf b "\n;; Function: ";
     name_to_smt b fu.fname;
@@ -656,7 +656,7 @@ let fun_to_smt b fu state =
 	  let snip = (fun (v0, v1) -> (Hashtbl.remove preds v1)) in
 	    (List.iter snip edges); 
 	    (Cycles.show_cycles fu ll);
-	    (Bc_manip.print_neighbors preds);
+	    (* (Bc_manip.print_neighbors preds); *)
 	    preds
 	else
 	  fu.predecessors
