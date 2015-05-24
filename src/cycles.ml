@@ -55,13 +55,20 @@ let fu_to_graph fu =
 
 
 let show_cycles b fu ll =
-  Printf.bprintf  b ";; Function %s contains %d cycles\n" (Llvm_pp.string_of_var fu.fname) (List.length ll);
-  let show_cycle l = 
-    Printf.bprintf b ";; ";
-    List.iter (fun e -> (Printf.bprintf b "%s -> " (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e))))) l;
-    Printf.bprintf b "\n" in
-    List.iter show_cycle ll
-    
+  let length = (List.length ll) in
+    Printf.bprintf  b
+      ";; Function %s contains %d cycle%s\n"
+      (Llvm_pp.string_of_var fu.fname)
+      length
+      (if length > 1 then "s" else "");
+    let show_cycle l = 
+      Printf.bprintf b ";; ";
+      List.iter (fun e -> (Printf.bprintf b "%s -> " (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e))))) l;
+      Printf.bprintf b "\n";
+    in
+      List.iter show_cycle ll;
+      Printf.bprintf b ";;\n"
+	
     
 let cycle_to_edge fu l =
   let len = List.length l in
