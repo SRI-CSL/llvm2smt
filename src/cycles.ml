@@ -12,8 +12,12 @@ let int_to_blockname fu i = (List.nth fu.fblocks i).bname
   
 	     
 (*
- * The nodes in the digraph are integers.
+ * CLEAN UP NEEDED.
+ *
+ * The nodes in the digraph are indexed by integers,
+ * as are the bocks.
  * The index of a block is its position in fu.fblocks.
+ *
  * This hashtbl maps the block name v to its index.
  *
  *)
@@ -55,9 +59,11 @@ let show_cycles fu ll =
   Printf.eprintf  "Function %s contains %d cycles\n" (Llvm_pp.string_of_var fu.fname) (List.length ll);
   List.iter (fun path ->
 	       Printf.eprintf "%s\n" 
-		 (String.join " ->  " (List.map
-				     (fun e -> (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e)))) path))
-	    ) ll
+		 (String.join " ->  "
+		    (List.map
+		       (fun e -> (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e)))) path))
+	    )
+    ll
     
 
 

@@ -601,32 +601,33 @@ let block_to_smt b fu state binfo =
  * Need to implement some graph algorithms.
  *
  *)
-let get_predecessor_block_list fu block =
+let get_predecessor_block_list fu block preds_no_cycles =
   if block.bseen
   then
     []
   else
-    let pred_list = Bc_manip.get_predecessors fu block.bname in
+    let pred_list = Hashtbl.find_all preds_no_cycles block.bname in 
+    (* let pred_list = Bc_manip.get_predecessors fu block.bname in *)
     let candidates = List.map (fun n -> (Bc_manip.lookup_block fu n)) pred_list in
       List.filter (fun b -> not b.bseen) candidates
 	
-let rec block_list_to_smt b fu state block_list =
+let rec block_list_to_smt b fu state block_list preds_no_cycles  =
   match block_list with
     | [] -> ()
     | block :: rest ->
-	let pred_blocks = get_predecessor_block_list fu block in
+	let pred_blocks = get_predecessor_block_list fu block preds_no_cycles in
 	  if pred_blocks == []
 	  then
 	    begin
 	      block_to_smt b fu state block;
-	      block_list_to_smt b fu state rest
+	      block_list_to_smt b fu state rest preds_no_cycles
 	    end
 	  else
 	    begin
 	      block.bseen <- true;
-	      block_list_to_smt b fu state pred_blocks;
+	      block_list_to_smt b fu state pred_blocks preds_no_cycles;
 	      block_to_smt b fu state block;
-	      block_list_to_smt b fu state rest
+	      block_list_to_smt b fu state rest preds_no_cycles
 	    end
 	    
 
@@ -652,8 +653,8 @@ let fun_to_smt b fu state =
 	then
 	  let edges = Cycles.cycles_to_edges fu ll in
 	  let preds = Hashtbl.copy fu.predecessors in
-	  let snip = (fun (v0, v1) -> (Hashtbl.remove  preds v1)) in
-	    (* (List.iter snip edges); *)
+	  let snip = (fun (v0, v1) -> (Hashtbl.remove preds v1)) in
+	    (List.iter snip edges); 
 	    (Cycles.show_cycles fu ll);
 	    (Bc_manip.print_neighbors preds);
 	    preds
@@ -663,7 +664,7 @@ let fun_to_smt b fu state =
 	declare_state b state;
 	declare_parameters b state;
 	bprintf b "\n";
-	block_list_to_smt b fu state fu.fblocks;
+	block_list_to_smt b fu state fu.fblocks preds_no_cycles;
 	(* List.iter (fun blk -> (block_to_smt b state blk)) fu.fblocks; *)
 	Buffer.add_char b '\n'
     else
