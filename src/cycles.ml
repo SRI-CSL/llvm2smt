@@ -23,11 +23,7 @@ let int_to_blockname fu i = (List.nth fu.fblocks i).bname
  *)
 let create_indices fu n =
   let indices = Hashtbl.create n in
-    for i=0 to n - 1 do
-      let v = int_to_blockname fu i in
-	(* Printf.eprintf "%s <-> %d\n" (Llvm_pp.string_of_var v) i; *)
-	Hashtbl.add indices  v i;
-    done;
+    List.iter (fun blk -> Hashtbl.add indices blk.bname blk.bindex) fu.fblocks;
     indices
       
 (*
@@ -68,8 +64,13 @@ let show_cycles b fu ll =
     in
       List.iter show_cycle ll;
       Printf.bprintf b ";;\n"
-	
-    
+
+(*
+ *
+ * Returns the backwards edge, going from the last element node
+ * in the cycle to the first element in the cycle.
+ *
+ *)
 let cycle_to_edge fu l =
   let len = List.length l in
   let first = List.nth l 0 in

@@ -96,12 +96,17 @@ let assign_block_numbers cu =
 	  | Id(false,-1) -> Id(false, n), max n instr_numbers + 1
 	  | _ -> name, if instr_numbers = [] then n else max n instr_numbers + 1 in
     let num = f.fcounter in  (*  iam: f.fcounter needs to be AFTER the params have been processed. *)
+    let indexref = ref 0 in 
       f.fblocks <-
       List.map
-        (fun {bname=name; binstrs=instrs; bseen=seen} ->
+        (fun {bname=name; binstrs=instrs; bseen=seen; bindex=index; } ->
            let name', num' = number_block !num (name, instrs) in
+	   let i = !indexref in 
+	   let blk = {bname=name'; binstrs=instrs; bseen=seen; bindex=i;} in 
              num := num';
-             {bname=name'; binstrs=instrs; bseen=seen;})
+	     indexref := i + 1;
+	     blk;
+        )
         f.fblocks in
     List.iter number_blocks cu.cfuns;
     ()
@@ -320,7 +325,7 @@ let value_map g f =
   (f.fblocks <-
     (List.map
       (fun bl ->
-        {bname=bl.bname; binstrs=List.map (fun (nopt,i) -> (nopt, imap i)) bl.binstrs; bseen=bl.bseen; })
+        {bname=bl.bname; binstrs=List.map (fun (nopt,i) -> (nopt, imap i)) bl.binstrs; bseen=bl.bseen; bindex=bl.bindex;})
       f.fblocks))
 
       

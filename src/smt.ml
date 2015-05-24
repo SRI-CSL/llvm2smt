@@ -581,6 +581,15 @@ let declare_globals b st =
 
 
 (*
+ * Outputs the block entry condition 
+ *)
+let smt_block_entry_condition b fu state binfo =
+  let ename = "block_" ^ (string_of_int binfo.bindex) ^ "_entry_condition"; in
+  let pred_list = Bc_manip.get_predecessors fu binfo.bname in 
+    bprintf b ";; %s \n" ename
+
+    
+(*
  * Converts a block to a sequence of SMT definitions/declarations
  *)
 let block_to_smt b fu state binfo =
@@ -588,6 +597,7 @@ let block_to_smt b fu state binfo =
   then
     begin
       (* Printf.eprintf "processing block %s\n" (Llvm_pp.string_of_var binfo.bname); *)
+      smt_block_entry_condition b fu state binfo;
       bprintf b ";; Block %s with predecessors:" (Llvm_pp.string_of_var binfo.bname);
       List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) (Bc_manip.get_predecessors fu binfo.bname);
       bprintf b "\n";

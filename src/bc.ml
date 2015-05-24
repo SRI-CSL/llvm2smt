@@ -44,7 +44,13 @@ type vtbl = (var, typ) Hashtbl.t
 type binfo = {
   mutable bname: var;
   mutable binstrs: (var option * instr) list;
-  mutable bseen: bool
+  (* used to mark when a block has been see/processed *)
+  mutable bseen: bool;
+  (* used to store the position of this block in the finfo fblocks list
+   * n.b. this is not always the same as its label because of unnamed parameters
+   * in function (see fcounter).
+   *)
+  mutable bindex: int
 }
 
 (*
