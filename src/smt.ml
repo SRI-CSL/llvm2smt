@@ -647,23 +647,25 @@ let fun_to_smt b fu state =
     then
       let graph = Cycles.fu_to_graph fu in
       let ll = Johnson.find_all_cycles graph in
-	begin
-	  if List.length ll > 0
-	  then
-	    let edges = Cycles.cycles_to_edges fu ll in
-	    let preds = Hashtbl.copy fu.predecessors in
-	    let snip = (fun (v0, v1) -> (Hashtbl.remove  preds v0)) in
-	      (List.iter snip edges);
-	      (Cycles.show_cycles fu ll);
-	      (Bc_manip.print_neighbors preds);
-
-	  declare_state b state;
-	  declare_parameters b state;
-	  bprintf b "\n";
-	  block_list_to_smt b fu state fu.fblocks;
-	  (* List.iter (fun blk -> (block_to_smt b state blk)) fu.fblocks; *)
-	  Buffer.add_char b '\n'
-	end
+      let preds_no_cycles =
+	if List.length ll > 0
+	then
+	  let edges = Cycles.cycles_to_edges fu ll in
+	  let preds = Hashtbl.copy fu.predecessors in
+	  let snip = (fun (v0, v1) -> (Hashtbl.remove  preds v1)) in
+	    (* (List.iter snip edges); *)
+	    (Cycles.show_cycles fu ll);
+	    (Bc_manip.print_neighbors preds);
+	    preds
+	else
+	  fu.predecessors
+      in	
+	declare_state b state;
+	declare_parameters b state;
+	bprintf b "\n";
+	block_list_to_smt b fu state fu.fblocks;
+	(* List.iter (fun blk -> (block_to_smt b state blk)) fu.fblocks; *)
+	Buffer.add_char b '\n'
     else
       bprintf b "\n"
   end

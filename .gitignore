@@ -12,6 +12,22 @@ gmon.out
 *.dylib
 *.so
 
-# Ocaml
+# ocaml
 *.cmi
 *.cmx
+
+#build products
+.depend
+lllex.ml
+llparse.ml
+llparse.mli
+
+#test generation
+*.out.ll
+*.smt
+
+#executables
+dltest
+llvm2smt
+parse
+rawparse
