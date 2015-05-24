@@ -12,10 +12,10 @@ let int_to_blockname fu i = (List.nth fu.fblocks i).bname
   
 	     
 (*
- * CLEAN UP NEEDED.
  *
  * The nodes in the digraph are indexed by integers,
- * as are the bocks.
+ * as are the blocks.
+ *
  * The index of a block is its position in fu.fblocks.
  *
  * This hashtbl maps the block name v to its index.
@@ -32,8 +32,8 @@ let create_indices fu n =
       
 (*
  * This creates the digraph associated with the finfo.
- * The nodes in the digraph are the indexes of the blocks 
- * The edges in the digraph are the successors, viewed
+ * The nodes in the digraph are labeled by the indexes of the blocks 
+ * The edges in the digraph are the successors:
  * i.e. the index of the source block to the index of
  * the successor block.
  *
@@ -54,19 +54,15 @@ let fu_to_graph fu =
     g
 
 
-
-let show_cycles fu ll =      
-  Printf.eprintf  "Function %s contains %d cycles\n" (Llvm_pp.string_of_var fu.fname) (List.length ll);
-  List.iter (fun path ->
-	       Printf.eprintf "%s\n" 
-		 (String.join " ->  "
-		    (List.map
-		       (fun e -> (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e)))) path))
-	    )
-    ll
+let show_cycles b fu ll =
+  Printf.bprintf  b ";; Function %s contains %d cycles\n" (Llvm_pp.string_of_var fu.fname) (List.length ll);
+  let show_cycle l = 
+    Printf.bprintf b ";; ";
+    List.iter (fun e -> (Printf.bprintf b "%s -> " (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e))))) l;
+    Printf.bprintf b "\n" in
+    List.iter show_cycle ll
     
-
-
+    
 let cycle_to_edge fu l =
   let len = List.length l in
   let first = List.nth l 0 in

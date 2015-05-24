@@ -584,21 +584,22 @@ let declare_globals b st =
  * Converts a block to a sequence of SMT definitions/declarations
  *)
 let block_to_smt b fu state binfo =
-  (* Printf.eprintf "processing block %s\n" (Llvm_pp.string_of_var binfo.bname); *)
-  bprintf b ";; Block %s with predecessors:" (Llvm_pp.string_of_var binfo.bname);
-  List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) (Bc_manip.get_predecessors fu binfo.bname);
-  bprintf b "\n";
-  List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
-  bprintf b "\n";
+  if not binfo.bseen
+  then
+    begin
+      (* Printf.eprintf "processing block %s\n" (Llvm_pp.string_of_var binfo.bname); *)
+      bprintf b ";; Block %s with predecessors:" (Llvm_pp.string_of_var binfo.bname);
+      List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) (Bc_manip.get_predecessors fu binfo.bname);
+      bprintf b "\n";
+      List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
+      bprintf b "\n";
+    end;
   binfo.bseen <- true
 
 
 (*
- * Returns a list of all the currently unseen predecessors of the block.
- * It assumes that the fu satisfies the CURRENTLY FALSE invariant that if a block has been
- * seen, then so has all its predecessors.
  *
- * Need to implement some graph algorithms.
+ * Returns a list of all the currently unseen predecessors of the block.
  *
  *)
 let get_predecessor_block_list fu block preds_no_cycles =
@@ -607,7 +608,6 @@ let get_predecessor_block_list fu block preds_no_cycles =
     []
   else
     let pred_list = Hashtbl.find_all preds_no_cycles block.bname in 
-    (* let pred_list = Bc_manip.get_predecessors fu block.bname in *)
     let candidates = List.map (fun n -> (Bc_manip.lookup_block fu n)) pred_list in
       List.filter (fun b -> not b.bseen) candidates
 	
@@ -626,6 +626,7 @@ let rec block_list_to_smt b fu state block_list preds_no_cycles  =
 	    begin
 	      block.bseen <- true;
 	      block_list_to_smt b fu state pred_blocks preds_no_cycles;
+	      block.bseen <- false;
 	      block_to_smt b fu state block;
 	      block_list_to_smt b fu state rest preds_no_cycles
 	    end
@@ -655,7 +656,7 @@ let fun_to_smt b fu state =
 	  let preds = Hashtbl.copy fu.predecessors in
 	  let snip = (fun (v0, v1) -> (Hashtbl.remove preds v1)) in
 	    (List.iter snip edges); 
-	    (Cycles.show_cycles fu ll);
+	    (Cycles.show_cycles b fu ll);
 	    (* (Bc_manip.print_neighbors preds); *)
 	    preds
 	else
@@ -665,7 +666,6 @@ let fun_to_smt b fu state =
 	declare_parameters b state;
 	bprintf b "\n";
 	block_list_to_smt b fu state fu.fblocks preds_no_cycles;
-	(* List.iter (fun blk -> (block_to_smt b state blk)) fu.fblocks; *)
 	Buffer.add_char b '\n'
     else
       bprintf b "\n"
