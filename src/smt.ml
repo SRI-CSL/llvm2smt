@@ -639,7 +639,19 @@ let smt_block_entry_condition b fu state binfo =
 	  end;
 	bprintf b ")\n"
 
-    
+
+(*
+ * Prefixes an informative comment about a block prior to its
+ * corresponding sequence of SMT definitions/declarations.
+ *)
+let smt_block_comment  b fu binfo =
+  let blkname = (Llvm_pp.string_of_var binfo.bname) in
+  let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in 
+    (* Printf.eprintf "processing block %s\n" blkname; *)
+    bprintf b ";; Block %s with index %d and predecessors:" blkname binfo.bindex;
+    List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) pred_list;
+    bprintf b "\n"
+	  
 (*
  * Converts a block to a sequence of SMT definitions/declarations
  *)
@@ -647,17 +659,12 @@ let block_to_smt b fu state binfo =
   if not binfo.bseen
   then
     begin
-      (* Printf.eprintf "processing block %s\n" (Llvm_pp.string_of_var binfo.bname); *)
-      bprintf b ";; Block %s with index %d and predecessors:" (Llvm_pp.string_of_var binfo.bname) binfo.bindex;
-      List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) (Bc_manip.get_predecessors fu binfo.bname);
-      bprintf b "\n";
-
+      smt_block_comment  b fu binfo;
       smt_block_entry_condition b fu state binfo;
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
       bprintf b "\n";
     end;
   binfo.bseen <- true
-
 
 (*
  *
@@ -696,10 +703,9 @@ let rec block_list_to_smt b fu state block_list preds_no_cycles  =
 
 let fun_to_smt b fu state =
   begin
-    (* TODO: don't reset the mem_idx/sp_idx counters *)
-    (* reset the local counters
-    state.mem_idx <- 0;
-    state.sp_idx <- 0;
+    (* Reseting the counter just causes headaches.
+       state.mem_idx <- 0;
+       state.sp_idx <- 0;
     *)
     (* Printf.eprintf "processing Function %s\n" (Llvm_pp.string_of_var fu.fname);  *)
     state.fu  <- Some(fu);
