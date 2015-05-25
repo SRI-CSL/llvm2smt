@@ -584,13 +584,24 @@ let declare_globals b st =
   in
     List.iter declare_global st.cu.cglobals    
 
-      
+ (*
+  * We use the index of the block not it's name
+  * to name the condition. block names can get
+  * seriously ugly when C++ is the source of the
+  * bitcode.
+  *
+  *)
 let get_entry_condition_name i =
   "block_" ^ (string_of_int i) ^ "_entry_condition"
 
-
-
-    
+  (*
+   * Translates a cfg_edge into a smt term.
+   * (v0, cond) is the cfg_edge
+   * v0 is the name of predecessor block
+   * cond is the branching condition under which we
+   * come from v0.
+   *
+   *)
 let smt_condition fu (v0, cond) =
   let pblk = Bc_manip.lookup_block fu v0 in
   let entry_cond_name = get_entry_condition_name pblk.bindex in 
@@ -608,7 +619,10 @@ let smt_condition fu (v0, cond) =
        | Unsupported -> failwith "Unsupported predecessor condition!"
     )
     
-
+(*
+ * Translates a list of cfg_edges into a list of
+ * smt terms.
+ *)
 let smt_condition_list fu cfg_pred_list =
   List.map
     (fun e -> (smt_condition fu e))
@@ -688,22 +702,28 @@ let rec block_list_to_smt b fu state block_list preds_no_cycles  =
 	  if pred_blocks == []
 	  then
 	    begin
+	      (* no predecessors; just process the block, then the rest *)
 	      block_to_smt b fu state block;
 	      block_list_to_smt b fu state rest preds_no_cycles
 	    end
 	  else
 	    begin
+	      (* we are going to handle the block so mark it seen; the
+	       * handle i's predecessors
+	       *)
 	      block.bseen <- true;
 	      block_list_to_smt b fu state pred_blocks preds_no_cycles;
+	      (* now mark it as unseen so we can handle it *)
 	      block.bseen <- false;
 	      block_to_smt b fu state block;
+	      (* on to the rest *)
 	      block_list_to_smt b fu state rest preds_no_cycles
 	    end
 	    
 
 let fun_to_smt b fu state =
   begin
-    (* Reseting the counter just causes headaches.
+    (* Resetting the counter just causes headaches.
        state.mem_idx <- 0;
        state.sp_idx <- 0;
     *)
@@ -720,6 +740,9 @@ let fun_to_smt b fu state =
       let preds_no_cycles =
 	if List.length ll > 0
 	then
+	  (* these are the backward edges: going from the last element node
+	   * in the cycle to the first element in the cycle.
+	   *)
 	  let edges = Cycles.cycles_to_edges fu ll in
 	  let preds = Hashtbl.copy fu.predecessors in
 	  let snip = (fun (v0, v1) -> (Hashtbl.remove preds v1)) in

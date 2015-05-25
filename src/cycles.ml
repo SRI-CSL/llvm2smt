@@ -13,11 +13,6 @@ let int_to_blockname fu i = (List.nth fu.fblocks i).bname
 	     
 (*
  *
- * The nodes in the digraph are indexed by integers,
- * as are the blocks.
- *
- * The index of a block is its position in fu.fblocks.
- *
  * This hashtbl maps the block name v to its index.
  *
  *)
@@ -26,20 +21,10 @@ let create_indices fu n =
     List.iter (fun blk -> Hashtbl.add indices blk.bname blk.bindex) fu.fblocks;
     indices
       
-(*
- * This creates the digraph associated with the finfo.
- * The nodes in the digraph are labeled by the indexes of the blocks 
- * The edges in the digraph are the successors:
- * i.e. the index of the source block to the index of
- * the successor block.
- *
- *)
-      
-    
 let fu_to_graph fu =
   (* the number of blocks a.k.a nodes *)
   let nodecount = (List.length fu.fblocks) in
-    (* maps the name of the block to its index *)
+  (* maps the name of the block to its index *)
   let indices = create_indices fu nodecount in
   let nodes = Array.init nodecount G.V.create in
   let edges = fu.successors in
@@ -65,12 +50,6 @@ let show_cycles b fu ll =
       List.iter show_cycle ll;
       Printf.bprintf b ";;\n"
 
-(*
- *
- * Returns the backwards edge, going from the last element node
- * in the cycle to the first element in the cycle.
- *
- *)
 let cycle_to_edge fu l =
   let len = List.length l in
   let first = List.nth l 0 in
