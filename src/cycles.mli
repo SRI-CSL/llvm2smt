@@ -17,11 +17,20 @@ module G = Pack.Digraph
  *)
 val fu_to_graph: Bc.finfo -> G.t
 
+
+(*
+ * Prints the cycles out to the buffer as a comment. For example:
+ *
+ *  ;; Function @lhs contains 1 cycle
+ *  ;; %4 -> %14 -> %22 -> 
+ *  ;;
+ *
+ *)
 val show_cycles: Buffer.t -> Bc.finfo -> G.V.t list list -> unit
 
 (*
  *
- * Returns the backwards edge, going from the last element node
+ * Returns the list of backwards edges, each edge going from the last element node
  * in the cycle to the first element in the cycle.
  *
  *)
