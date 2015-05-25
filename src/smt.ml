@@ -580,24 +580,49 @@ let declare_globals b st =
     List.iter declare_global st.cu.cglobals    
 
 
+let smt_condition (v0, cond) =
+  (match cond with
+     | Uncond -> "uncond"
+     | Eq(t, v, const) -> "eq"
+     | Distinct(t, v, const_list) -> "distinct"
+     | Unsupported -> "unsupported"
+  )  
+      
+      
+
+let get_entry_condition_name i =
+  "block_" ^ (string_of_int i) ^ "_entry_condition"
+
+let smt_condition_list cfg_pred_list =
+  List.map
+    (fun e -> (smt_condition e))
+    cfg_pred_list
+
+
 (*
  * Outputs the block entry condition 
  *)
 let smt_block_entry_condition b fu state binfo =
-  let ename = "block_" ^ (string_of_int binfo.bindex) ^ "_entry_condition"; in
+  let ename = get_entry_condition_name binfo.bindex in
   let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in 
+    bprintf b ";; %s \n" ename;
     if cfg_pred_list = []
     then
-      begin
-	bprintf b ";; %s \n" ename;
-	bprintf b "(define-fun %s () Bool true)\n" ename;
-      end
+      bprintf b "(define-fun %s () Bool true)\n" ename
     else
-      begin
-	bprintf b ";; %s \n" ename
-      end
-    
-      
+      let cond_list = smt_condition_list cfg_pred_list in
+	bprintf b "(define-fun %s () Bool\n" ename;
+	if List.length cond_list = 1
+	then
+	  bprintf b "    %s\n" (List.nth cond_list 0)
+	else
+	  begin
+	    bprintf b "(define-fun %s () Bool\n" ename;
+	    bprintf b "    (or\n";
+	    List.iter (fun c -> bprintf b "        %s\n" c) cond_list;
+	    bprintf b "    )\n";
+	  end;
+	bprintf b ")\n"
 
     
 (*
