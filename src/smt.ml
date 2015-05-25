@@ -176,6 +176,11 @@ let name_to_smt b = function
   | Name(true, name)  -> bprintf b "|@%s|" name
   | Name(false, name) -> bprintf b "|%%%s|" name
 
+(*
+ * SMT name string: argument = var
+ *)
+let name_to_smt_string v =
+  Util.spr name_to_smt v
 
 (*
  * SMT type for tau
@@ -579,23 +584,34 @@ let declare_globals b st =
   in
     List.iter declare_global st.cu.cglobals    
 
-
-let smt_condition (v0, cond) =
-  (match cond with
-     | Uncond -> "uncond"
-     | Eq(t, v, const) -> "eq"
-     | Distinct(t, v, const_list) -> "distinct"
-     | Unsupported -> "unsupported"
-  )  
       
-      
-
 let get_entry_condition_name i =
   "block_" ^ (string_of_int i) ^ "_entry_condition"
 
-let smt_condition_list cfg_pred_list =
+
+
+    
+let smt_condition fu (v0, cond) =
+  let pblk = Bc_manip.lookup_block fu v0 in
+  let entry_cond_name = get_entry_condition_name pblk.bindex in 
+  let smt_eq_condition v const =
+    let register = name_to_smt_string (Bc_manip.value_to_var v) in
+    let conjunct = match const with
+      | True -> register
+      | False -> "(not "^register^")"
+      | _ -> failwith "Unexpected value in a eq_condition!" in
+      "(and " ^entry_cond_name^" "^conjunct^")" in 
+    (match cond with
+       | Uncond -> entry_cond_name;
+       | Eq(t, v, const) -> smt_eq_condition v const;
+       | Distinct(t, v, const_list) -> "distinct"
+       | Unsupported -> failwith "Unsupported predecessor condition!"
+    )
+    
+
+let smt_condition_list fu cfg_pred_list =
   List.map
-    (fun e -> (smt_condition e))
+    (fun e -> (smt_condition fu e))
     cfg_pred_list
 
 
@@ -610,14 +626,13 @@ let smt_block_entry_condition b fu state binfo =
     then
       bprintf b "(define-fun %s () Bool true)\n" ename
     else
-      let cond_list = smt_condition_list cfg_pred_list in
+      let cond_list = smt_condition_list fu cfg_pred_list in
 	bprintf b "(define-fun %s () Bool\n" ename;
 	if List.length cond_list = 1
 	then
 	  bprintf b "    %s\n" (List.nth cond_list 0)
 	else
 	  begin
-	    bprintf b "(define-fun %s () Bool\n" ename;
 	    bprintf b "    (or\n";
 	    List.iter (fun c -> bprintf b "        %s\n" c) cond_list;
 	    bprintf b "    )\n";
@@ -633,10 +648,11 @@ let block_to_smt b fu state binfo =
   then
     begin
       (* Printf.eprintf "processing block %s\n" (Llvm_pp.string_of_var binfo.bname); *)
-      smt_block_entry_condition b fu state binfo;
-      bprintf b ";; Block %s with predecessors:" (Llvm_pp.string_of_var binfo.bname);
+      bprintf b ";; Block %s with index %d and predecessors:" (Llvm_pp.string_of_var binfo.bname) binfo.bindex;
       List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) (Bc_manip.get_predecessors fu binfo.bname);
       bprintf b "\n";
+
+      smt_block_entry_condition b fu state binfo;
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
       bprintf b "\n";
     end;
