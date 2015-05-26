@@ -3,11 +3,18 @@
 Experimental translation of llvm bitcode to smt.
 
 
+Prerequisites
+==============
+
+Ocaml plus ocamlgraph and extlib
+
+
 
 
 
 
 Acknowledgements:
+==============
 
 The ocaml lex and yac that we built upon comes directly from:
 

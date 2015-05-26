@@ -12,6 +12,12 @@ open Dl
 open Bc   
 open Util
 
+   (*
+open Graph
+   *)
+
+module Trevor = Graph.Topological.Make(Cycles.G)
+   
 (*
  * Size of the address space in bits
  *)
@@ -658,22 +664,27 @@ let smt_block_entry_condition b fu state binfo =
  * Prefixes an informative comment about a block prior to its
  * corresponding sequence of SMT definitions/declarations.
  *)
-let smt_block_comment  b fu binfo =
+let smt_block_comment  b fu binfo preds_no_cycles =
   let blkname = (Llvm_pp.string_of_var binfo.bname) in
   let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in 
+  let pred_list_no_cycles = (Hashtbl.find_all preds_no_cycles binfo.bname) in
     (* Printf.eprintf "processing block %s\n" blkname; *)
-    bprintf b ";; Block %s with index %d and predecessors:" blkname binfo.bindex;
+    bprintf b ";; BLOCK %s with index %d\n" blkname binfo.bindex;
+    bprintf b ";; Predecessors:";
     List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) pred_list;
+    bprintf b "\n";
+    bprintf b ";; Predecessors (no-cycles):";
+    List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) pred_list_no_cycles;
     bprintf b "\n"
 	  
 (*
  * Converts a block to a sequence of SMT definitions/declarations
  *)
-let block_to_smt b fu state binfo =
+let block_to_smt b fu state binfo preds_no_cycles =
   if not binfo.bseen
   then
     begin
-      smt_block_comment  b fu binfo;
+      smt_block_comment b fu binfo preds_no_cycles;
       smt_block_entry_condition b fu state binfo;
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
       bprintf b "\n";
@@ -703,7 +714,7 @@ let rec block_list_to_smt b fu state block_list preds_no_cycles  =
 	  then
 	    begin
 	      (* no predecessors; just process the block, then the rest *)
-	      block_to_smt b fu state block;
+	      block_to_smt b fu state block preds_no_cycles;
 	      block_list_to_smt b fu state rest preds_no_cycles
 	    end
 	  else
@@ -715,7 +726,7 @@ let rec block_list_to_smt b fu state block_list preds_no_cycles  =
 	      block_list_to_smt b fu state pred_blocks preds_no_cycles;
 	      (* now mark it as unseen so we can handle it *)
 	      block.bseen <- false;
-	      block_to_smt b fu state block;
+	      block_to_smt b fu state block preds_no_cycles;
 	      (* on to the rest *)
 	      block_list_to_smt b fu state rest preds_no_cycles
 	    end
@@ -746,8 +757,12 @@ let fun_to_smt b fu state =
 	  let edges = Cycles.cycles_to_edges fu ll in
 	  let preds = Hashtbl.copy fu.predecessors in
 	  let snip = (fun (v0, v1) -> (Hashtbl.remove preds v1)) in
-	    (List.iter snip edges); 
-	    (Cycles.show_cycles b fu ll);
+	    (List.iter snip edges);
+
+	    (Trevor.iter (fun e -> Cycles.print_node fu e) graph); 
+	    
+	    (* (Cycles.dump_cycles fu ll); *)
+	    (* ((Cycles.show_cycles b fu ll); *)
 	    (* (Bc_manip.print_neighbors preds); *)
 	    preds
 	else

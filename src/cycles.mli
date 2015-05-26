@@ -17,7 +17,8 @@ module G = Pack.Digraph
  *)
 val fu_to_graph: Bc.finfo -> G.t
 
-
+val print_node: Bc.finfo -> G.V.t -> unit
+    
 (*
  * Prints the cycles out to the buffer as a comment. For example:
  *
@@ -27,6 +28,8 @@ val fu_to_graph: Bc.finfo -> G.t
  *
  *)
 val show_cycles: Buffer.t -> Bc.finfo -> G.V.t list list -> unit
+
+val dump_cycles: Bc.finfo -> G.V.t list list -> unit
 
 (*
  *

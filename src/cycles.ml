@@ -7,7 +7,6 @@ open ExtString
 
 module G = Pack.Digraph
 
-
 let int_to_blockname fu i = (List.nth fu.fblocks i).bname
   
 	     
@@ -20,6 +19,10 @@ let create_indices fu n =
   let indices = Hashtbl.create n in
     List.iter (fun blk -> Hashtbl.add indices blk.bname blk.bindex) fu.fblocks;
     indices
+
+let print_node fu e =
+  Printf.eprintf "node %s [%s]\n" (Llvm_pp.string_of_var fu.fname) (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e)))
+
       
 let fu_to_graph fu =
   (* the number of blocks a.k.a nodes *)
@@ -32,8 +35,11 @@ let fu_to_graph fu =
   let get_index = (fun v -> nodes.(Hashtbl.find indices v)) in
   let add_edge = (fun v0 v1 -> (G.add_edge g (get_index v0)(get_index v1))) in
     Hashtbl.iter add_edge  edges;
+    (* (Trevor.iter (fun e -> print_node fu e) g); *)
     g
 
+
+		     
 
 let show_cycles b fu ll =
   let length = (List.length ll) in
@@ -49,6 +55,21 @@ let show_cycles b fu ll =
     in
       List.iter show_cycle ll;
       Printf.bprintf b ";;\n"
+
+let dump_cycles fu ll =
+  let length = (List.length ll) in
+    Printf.eprintf  
+      ";; Function %s contains %d cycle%s\n"
+      (Llvm_pp.string_of_var fu.fname)
+      length
+      (if length > 1 then "s" else "");
+    let dump_cycle l = 
+      Printf.eprintf  ";; ";
+      List.iter (fun e -> (Printf.eprintf "%s -> " (Llvm_pp.string_of_var (int_to_blockname fu (G.V.label e))))) l;
+      Printf.eprintf  "\n";
+    in
+      List.iter dump_cycle ll;
+      Printf.eprintf ";;\n"
 
 let cycle_to_edge fu l =
   let len = List.length l in
