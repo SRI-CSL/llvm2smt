@@ -14,7 +14,7 @@ PKGS= -package ocamlgraph -package extlib
 
 all: ${EXES}
 
-llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx cycles.cmx johnson.cmx smt.cmx llvm2smt.cmx
+llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx cycles.cmx smt.cmx llvm2smt.cmx
 	ocamlfind ocamlopt $(LIBS) $^ -linkpkg ${PKGS} -o $@
 
 rawparse: ${CORE} rawparse.cmx

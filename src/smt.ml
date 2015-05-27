@@ -12,11 +12,7 @@ open Dl
 open Bc   
 open Util
 
-   (*
-open Graph
-   *)
-
-module Trevor = Graph.Topological.Make(Cycles.G)
+module TopSort = Graph.Topological.Make(Cycles.G)
    
 (*
  * Size of the address space in bits
@@ -624,7 +620,22 @@ let smt_condition fu (v0, cond) =
        | Distinct(t, v, const_list) -> "distinct"
        | Unsupported -> failwith "Unsupported predecessor condition!"
     )
+
     
+(*
+ *
+ * Returns a list of all the currently unseen predecessors of the block.
+ *
+ *)
+let get_predecessor_block_list fu block =
+  if block.bseen
+  then
+    []
+  else
+    let pred_list = Bc_manip.get_predecessors fu block.bname in 
+    let candidates = List.map (fun n -> (Bc_manip.lookup_block fu n)) pred_list in
+      List.filter (fun b -> not b.bseen) candidates
+	
 (*
  * Translates a list of cfg_edges into a list of
  * smt terms.
@@ -640,13 +651,14 @@ let smt_condition_list fu cfg_pred_list =
  *)
 let smt_block_entry_condition b fu state binfo =
   let ename = get_entry_condition_name binfo.bindex in
-  let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in 
+  let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in
+  let seen_pred_list =  List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).bseen) cfg_pred_list in
     bprintf b ";; %s \n" ename;
-    if cfg_pred_list = []
+    if seen_pred_list = []
     then
       bprintf b "(define-fun %s () Bool true)\n" ename
     else
-      let cond_list = smt_condition_list fu cfg_pred_list in
+      let cond_list = smt_condition_list fu seen_pred_list in
 	bprintf b "(define-fun %s () Bool\n" ename;
 	if List.length cond_list = 1
 	then
@@ -660,78 +672,49 @@ let smt_block_entry_condition b fu state binfo =
 	bprintf b ")\n"
 
 
+
 (*
  * Prefixes an informative comment about a block prior to its
  * corresponding sequence of SMT definitions/declarations.
  *)
-let smt_block_comment  b fu binfo preds_no_cycles =
+let smt_block_comment  b fu binfo =
   let blkname = (Llvm_pp.string_of_var binfo.bname) in
-  let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in 
-  let pred_list_no_cycles = (Hashtbl.find_all preds_no_cycles binfo.bname) in
+  let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in
+  let unseen = get_predecessor_block_list fu binfo in 
     (* Printf.eprintf "processing block %s\n" blkname; *)
     bprintf b ";; BLOCK %s with index %d\n" blkname binfo.bindex;
     bprintf b ";; Predecessors:";
     List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) pred_list;
     bprintf b "\n";
-    bprintf b ";; Predecessors (no-cycles):";
-    List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) pred_list_no_cycles;
-    bprintf b "\n"
-	  
+    if unseen <> []
+    then
+      begin
+	bprintf b ";; Backward pointers:";
+	List.iter (fun blk -> (bprintf b " %s" (Llvm_pp.string_of_var blk.bname))) unseen;
+	bprintf b "\n";
+      end
+      
 (*
  * Converts a block to a sequence of SMT definitions/declarations
  *)
-let block_to_smt b fu state binfo preds_no_cycles =
+let block_to_smt b fu state binfo =
   if not binfo.bseen
   then
     begin
-      smt_block_comment b fu binfo preds_no_cycles;
+      smt_block_comment b fu binfo;
       smt_block_entry_condition b fu state binfo;
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
       bprintf b "\n";
     end;
   binfo.bseen <- true
 
-(*
- *
- * Returns a list of all the currently unseen predecessors of the block.
- *
- *)
-let get_predecessor_block_list fu block preds_no_cycles =
-  if block.bseen
-  then
-    []
-  else
-    let pred_list = Hashtbl.find_all preds_no_cycles block.bname in 
-    let candidates = List.map (fun n -> (Bc_manip.lookup_block fu n)) pred_list in
-      List.filter (fun b -> not b.bseen) candidates
-	
-let rec block_list_to_smt b fu state block_list preds_no_cycles  =
-  match block_list with
-    | [] -> ()
-    | block :: rest ->
-	let pred_blocks = get_predecessor_block_list fu block preds_no_cycles in
-	  if pred_blocks == []
-	  then
-	    begin
-	      (* no predecessors; just process the block, then the rest *)
-	      block_to_smt b fu state block preds_no_cycles;
-	      block_list_to_smt b fu state rest preds_no_cycles
-	    end
-	  else
-	    begin
-	      (* we are going to handle the block so mark it seen; the
-	       * handle i's predecessors
-	       *)
-	      block.bseen <- true;
-	      block_list_to_smt b fu state pred_blocks preds_no_cycles;
-	      (* now mark it as unseen so we can handle it *)
-	      block.bseen <- false;
-	      block_to_smt b fu state block preds_no_cycles;
-	      (* on to the rest *)
-	      block_list_to_smt b fu state rest preds_no_cycles
-	    end
-	    
 
+	
+let node_to_smt b fu state node =
+  let block = Cycles.node_to_block fu node in
+    block_to_smt b fu state block
+
+      
 let fun_to_smt b fu state =
   begin
     (* Resetting the counter just causes headaches.
@@ -747,31 +730,11 @@ let fun_to_smt b fu state =
     if fu.fblocks  <> []
     then
       let graph = Cycles.fu_to_graph fu in
-      let ll = Johnson.find_all_cycles graph in
-      let preds_no_cycles =
-	if List.length ll > 0
-	then
-	  (* these are the backward edges: going from the last element node
-	   * in the cycle to the first element in the cycle.
-	   *)
-	  let edges = Cycles.cycles_to_edges fu ll in
-	  let preds = Hashtbl.copy fu.predecessors in
-	  let snip = (fun (v0, v1) -> (Hashtbl.remove preds v1)) in
-	    (List.iter snip edges);
-
-	    (Trevor.iter (fun e -> Cycles.print_node fu e) graph); 
-	    
-	    (* (Cycles.dump_cycles fu ll); *)
-	    (* ((Cycles.show_cycles b fu ll); *)
-	    (* (Bc_manip.print_neighbors preds); *)
-	    preds
-	else
-	  fu.predecessors
-      in	
+	(* (TopSort.iter (fun node -> Cycles.print_node fu node) graph);  *)
 	declare_state b state;
 	declare_parameters b state;
 	bprintf b "\n";
-	block_list_to_smt b fu state fu.fblocks preds_no_cycles;
+	(TopSort.iter (fun node -> (node_to_smt b fu state node)) graph); 
 	Buffer.add_char b '\n'
     else
       bprintf b "\n"
