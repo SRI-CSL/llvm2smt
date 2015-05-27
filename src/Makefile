@@ -51,7 +51,9 @@ smt:  llvm2smt
 	./llvm2smt ${BITCODE}/sums_auto3.ll > ${BITCODE}/sums_auto3.smt
 
 primes:  llvm2smt
-	./llvm2smt ${BITCODE}/primes_opt_auto4.ll > ${BITCODE}/primes_opt_auto4.smt
+	./llvm2smt ${BITCODE}/primes_opt_auto2.ll > ${BITCODE}/primes_opt_auto2.smt
+#	./llvm2smt ${BITCODE}/primes_opt_auto3.ll > ${BITCODE}/primes_opt_auto3.smt
+#	./llvm2smt ${BITCODE}/primes_opt_auto4.ll > ${BITCODE}/primes_opt_auto4.smt
 
 clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}

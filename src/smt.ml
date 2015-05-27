@@ -12,7 +12,7 @@ open Dl
 open Bc   
 open Util
 
-module TopSort = Graph.Topological.Make(Cycles.G)
+module TopSort = Graph.Topological.Make_stable(Cycles.G)
    
 (*
  * Size of the address space in bits
@@ -730,7 +730,7 @@ let fun_to_smt b fu state =
     if fu.fblocks  <> []
     then
       let graph = Cycles.fu_to_graph fu in
-	(* (TopSort.iter (fun node -> Cycles.print_node fu node) graph);  *)
+	(TopSort.iter (fun node -> Cycles.print_node fu node) graph);  
 	declare_state b state;
 	declare_parameters b state;
 	bprintf b "\n";
