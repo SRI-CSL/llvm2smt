@@ -15,6 +15,8 @@ module Vertex =
 
 module GG = Imperative.Digraph.Concrete(Vertex)
 
+module TopSort = Topological.Make(GG)
+
 let fu_to_gg fu = 
   let graph = GG.create () in
   let lookup = Bc_manip.lookup_block fu in
