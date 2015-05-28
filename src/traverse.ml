@@ -15,12 +15,19 @@ module Vertex =
 
 module GG = Imperative.Digraph.Concrete(Vertex)
 
-module TopSort = Topological.Make(GG)
+(* module TopSort = Topological.Make(GG) *)
 
-let fu_to_gg fu = 
+let fu_to_graph fu = 
   let graph = GG.create () in
   let lookup = Bc_manip.lookup_block fu in
   let add_edge = (fun b0 b1 -> (GG.add_edge graph (lookup b0) (lookup b1))) in
     Hashtbl.iter add_edge fu.successors;
     graph
+
+
+
+let print_node fu e =
+  Printf.eprintf "node %s [%s]\n" (Llvm_pp.string_of_var fu.fname) (Llvm_pp.string_of_var e.bname)
+
+let node_to_block node = node
 

@@ -12,7 +12,7 @@ open Dl
 open Bc   
 open Util
 
-module TopSort = Graph.Topological.Make_stable(Cycles.G)
+module TopSort = Graph.Topological.Make_stable(Traverse.GG)
    
 (*
  * Size of the address space in bits
@@ -709,12 +709,10 @@ let block_to_smt b fu state binfo =
   binfo.bseen <- true
 
 
-	
 let node_to_smt b fu state node =
-  let block = Cycles.node_to_block fu node in
+  let block = Traverse.node_to_block node in
     block_to_smt b fu state block
-
-      
+    
 let fun_to_smt b fu state =
   begin
     (* Resetting the counter just causes headaches.
@@ -729,8 +727,8 @@ let fun_to_smt b fu state =
     bprintf b ";; %s\n" (Bc_pp.string_of_fparams fu.fparams);
     if fu.fblocks  <> []
     then
-      let graph = Cycles.fu_to_graph fu in
-	(TopSort.iter (fun node -> Cycles.print_node fu node) graph);  
+      let graph = Traverse.fu_to_graph fu in
+	(TopSort.iter (fun node -> Traverse.print_node fu node) graph);  
 	declare_state b state;
 	declare_parameters b state;
 	bprintf b "\n";
