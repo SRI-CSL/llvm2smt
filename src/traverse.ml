@@ -28,7 +28,7 @@ let fu_to_graph fu =
 
 
 let print_node fu e =
-  Printf.eprintf "node %s [%s]\n" (Llvm_pp.string_of_var fu.fname) (Llvm_pp.string_of_var e.bname)
+  Printf.eprintf "node %s [%s] rank = %d\n" (Llvm_pp.string_of_var fu.fname) (Llvm_pp.string_of_var e.bname) e.brank
 
 let node_to_block node = node
 
@@ -52,4 +52,10 @@ let rank fu v =
       | (h::tl) -> max h.brank (max_rank tl)
   in
     v.brank <- 1 + max_rank (List.map (Bc_manip.lookup_block fu) (Bc_manip.get_predecessors fu v.bname))
+
+let set_ranks fu =
+  let graph = fu_to_reverse_graph fu in
+    Dfs.postfix (rank fu) graph;
+    List.iter (print_node fu) fu.fblocks
+
 

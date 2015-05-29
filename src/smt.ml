@@ -727,13 +727,16 @@ let fun_to_smt b fu state =
     bprintf b ";; %s\n" (Bc_pp.string_of_fparams fu.fparams);
     if fu.fblocks  <> []
     then
-      let graph = Traverse.fu_to_graph fu in
-	(TopSort.iter (fun node -> Traverse.print_node fu node) graph);  
-	declare_state b state;
-	declare_parameters b state;
-	bprintf b "\n";
-	(TopSort.iter (fun node -> (node_to_smt b fu state node)) graph); 
-	Buffer.add_char b '\n'
+      begin
+	Traverse.set_ranks fu;
+	let graph = Traverse.fu_to_graph fu in
+	  (*	(TopSort.iter (fun node -> Traverse.print_node fu node) graph);  *)
+	  declare_state b state;
+	  declare_parameters b state;
+	  bprintf b "\n";
+	  (TopSort.iter (fun node -> (node_to_smt b fu state node)) graph); 
+	  Buffer.add_char b '\n'
+      end
     else
       bprintf b "\n"
   end

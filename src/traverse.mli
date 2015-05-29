@@ -15,4 +15,5 @@ val node_to_block:  GG.V.t -> Bc.binfo
 
 val index_to_block: Bc.finfo -> int -> Bc.binfo
 
+val set_ranks: Bc.finfo -> unit
       
