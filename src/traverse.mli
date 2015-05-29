@@ -13,4 +13,6 @@ val print_node: Bc.finfo -> GG.V.t -> unit
  *)
 val node_to_block:  GG.V.t -> Bc.binfo
 
+val index_to_block: Bc.finfo -> int -> Bc.binfo
+
       

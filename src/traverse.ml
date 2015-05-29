@@ -15,6 +15,8 @@ module Vertex =
 
 module GG = Imperative.Digraph.Concrete(Vertex)
 
+module Dfs = Traverse.Dfs(GG)
+
 (* module TopSort = Topological.Make(GG) *)
 
 let fu_to_graph fu = 
@@ -25,9 +27,29 @@ let fu_to_graph fu =
     graph
 
 
-
 let print_node fu e =
   Printf.eprintf "node %s [%s]\n" (Llvm_pp.string_of_var fu.fname) (Llvm_pp.string_of_var e.bname)
 
 let node_to_block node = node
+
+let index_to_block fu i = List.nth fu.fblocks i
+
+
+(*
+ * Assign a rank to all nodes
+ *)
+let fu_to_reverse_graph fu =
+  let graph = GG.create () in
+  let lookup = Bc_manip.lookup_block fu in
+  let add_edge = (fun b0 b1 -> (GG.add_edge graph (lookup b0) (lookup b1))) in
+    Hashtbl.iter add_edge fu.predecessors;
+    graph
+
+let rank fu v =
+  let rec max_rank l = 
+    match l with
+      | [] -> 0
+      | (h::tl) -> max h.brank (max_rank tl)
+  in
+    v.brank <- 1 + max_rank (List.map (Bc_manip.lookup_block fu) (Bc_manip.get_predecessors fu v.bname))
 
