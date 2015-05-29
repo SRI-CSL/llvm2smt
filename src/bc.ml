@@ -50,7 +50,8 @@ type binfo = {
    * n.b. this is not always the same as its label because of unnamed parameters
    * in function (see fcounter).
    *)
-  mutable bindex: int
+  mutable bindex: int;
+  mutable brank: int
 }
 
 (*

@@ -102,7 +102,7 @@ let assign_block_numbers cu =
         (fun {bname=name; binstrs=instrs; bseen=seen; bindex=index; } ->
            let name', num' = number_block !num (name, instrs) in
 	   let i = !indexref in 
-	   let blk = {bname=name'; binstrs=instrs; bseen=seen; bindex=i;} in 
+	   let blk = {bname=name'; binstrs=instrs; bseen=seen; bindex=i; brank=0; } in 
              num := num';
 	     indexref := i + 1;
 	     blk;
@@ -325,7 +325,8 @@ let value_map g f =
   (f.fblocks <-
     (List.map
       (fun bl ->
-        {bname=bl.bname; binstrs=List.map (fun (nopt,i) -> (nopt, imap i)) bl.binstrs; bseen=bl.bseen; bindex=bl.bindex;})
+        {bname=bl.bname; 
+	 binstrs=List.map (fun (nopt,i) -> (nopt, imap i)) bl.binstrs; bseen=bl.bseen; bindex=bl.bindex; brank=bl.brank; })
       f.fblocks))
 
       
