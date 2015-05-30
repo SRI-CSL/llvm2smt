@@ -730,7 +730,7 @@ let fun_to_smt b fu state =
       begin
 	Traverse.set_ranks fu;
 	let graph = Traverse.fu_to_graph fu in
-	  (TopSort.iter (fun node -> Traverse.print_node fu node) graph); 
+	  (* (TopSort.iter (fun node -> Traverse.print_node fu node) graph);  *)
 	  declare_state b state;
 	  declare_parameters b state;
 	  bprintf b "\n";
