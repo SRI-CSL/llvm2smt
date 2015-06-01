@@ -12,8 +12,6 @@ open Dl
 open Bc   
 open Util
 
-module TopSort = Graph.Topological.Make_stable(Traverse.GG)
-   
 (*
  * Size of the address space in bits
  *)
@@ -682,7 +680,7 @@ let smt_block_comment  b fu binfo =
   let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in
   let unseen = get_predecessor_block_list fu binfo in 
     (* Printf.eprintf "processing block %s\n" blkname; *)
-    bprintf b ";; BLOCK %s with index %d\n" blkname binfo.bindex;
+    bprintf b ";; BLOCK %s with index %d and rank = %d\n" blkname binfo.bindex binfo.brank;
     bprintf b ";; Predecessors:";
     List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) pred_list;
     bprintf b "\n";
@@ -705,21 +703,12 @@ let block_to_smt b fu state binfo =
       smt_block_entry_condition b fu state binfo;
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
       bprintf b "\n";
-    end;
-  binfo.bseen <- true
+      binfo.bseen <- true
+    end
 
 
-let node_to_smt b fu state node =
-  let block = Traverse.node_to_block node in
-    block_to_smt b fu state block
-    
 let fun_to_smt b fu state =
   begin
-    (* Resetting the counter just causes headaches.
-       state.mem_idx <- 0;
-       state.sp_idx <- 0;
-    *)
-    (* Printf.eprintf "processing Function %s\n" (Llvm_pp.string_of_var fu.fname);  *)
     state.fu  <- Some(fu);
     bprintf b "\n;; Function: ";
     name_to_smt b fu.fname;
@@ -728,13 +717,13 @@ let fun_to_smt b fu state =
     if fu.fblocks  <> []
     then
       begin
-	Traverse.set_ranks fu;
-	let graph = Traverse.fu_to_graph fu in
-	  (* (TopSort.iter (fun node -> Traverse.print_node fu node) graph);  *)
+	Bc_manip.set_ranks fu;
+	let compare b1 b2 = Pervasives.compare b1.brank b2.brank in 
+	let block_list = List.sort compare fu.fblocks in 
 	  declare_state b state;
 	  declare_parameters b state;
 	  bprintf b "\n";
-	  (TopSort.iter (fun node -> (node_to_smt b fu state node)) graph); 
+	  List.iter (fun blk -> block_to_smt b fu state blk) block_list;
 	  Buffer.add_char b '\n'
       end
     else

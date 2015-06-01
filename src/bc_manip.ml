@@ -490,3 +490,24 @@ let compute_cfg_predecessors cu =
  *)
 let lookup_block f name = 
   List.find (fun b -> b.bname = name) f.fblocks
+
+
+
+let rec set_rank_aux fu node stack current =
+  begin
+    if node.brank < current
+    then
+      node.brank <- current;
+    List.iter
+      (fun pred ->
+	 if not (List.mem pred.bindex stack)
+	 then
+	   (set_rank_aux fu pred (pred.bindex :: stack) (current + 1)))
+      (List.map (lookup_block fu) (get_successors fu  node.bname))
+  end
+  
+
+let set_ranks fu =
+  let root = List.nth fu.fblocks 0 in 
+    set_rank_aux fu root [ root.bindex ] 1
+      

@@ -85,3 +85,8 @@ val get_cfg_predecessors: Bc.finfo -> Llvm.var -> Bc.cfg_edge list
  *)
 val lookup_block: Bc.finfo -> Llvm.var -> Bc.binfo
     
+
+(*
+ *  Compute the ranks of the blocks (rank = maximum length of path without a cycle.
+ *)
+val set_ranks: Bc.finfo -> unit
