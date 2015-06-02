@@ -51,7 +51,10 @@ let state_fu st =
        | Some fu -> fu
        | None -> failwith "state fu field (i.e. a finfo) not set!")
     
-
+let init_state fu st =
+  st.fu <- Some(fu);
+  st.mem_idx <- st.mem_idx + 1;
+  st.sp_idx  <- st.sp_idx + 1
 
 (*
  * Compute padding in bits NOT bytes
@@ -169,18 +172,26 @@ let sp_ref st =
 
 (*
  * SMT name: b = buffer, argument = var
+ * - for locals, we add the function name as a suffix
  *)
-let name_to_smt b = function
-  | Id(true, i) -> bprintf b "|@%d|" i
-  | Id(false, i)      -> bprintf b "|%%%d|" i
-  | Name(true, name)  -> bprintf b "|@%s|" name
-  | Name(false, name) -> bprintf b "|%%%s|" name
+let name_to_smt b st var =
+  let f = st.fu in
+  let fu_name = 
+    (match f with 
+       | Some fi -> "_" ^ (Llvm_pp.string_of_var fi.fname)
+       | None -> "")
+  in
+    (match var with
+      | Id(true, i) -> bprintf b "|@%d|" i
+      | Id(false, i)      -> bprintf b "|%%%d%s|" i fu_name
+      | Name(true, name)  -> bprintf b "|@%s|" name
+      | Name(false, name) -> bprintf b "|%%%s%s|" name fu_name)
 
 (*
  * SMT name string: argument = var
  *)
-let name_to_smt_string v =
-  Util.spr name_to_smt v
+let name_to_smt_string st v =
+  Util.spr (fun b -> name_to_smt b st) v
 
 (*
  * SMT type for tau
@@ -245,7 +256,7 @@ let rec val_typ_to_smt b st (typ, v) =
 
 and bool_val_to_smt b st v =
   (match v with
-     | Var x -> name_to_smt b x
+     | Var x -> name_to_smt b st x
      | True -> bprintf b "true"
      | False -> bprintf b "false"
      | And (x, y) -> binop_to_smt b st "and" x y
@@ -256,7 +267,7 @@ and bool_val_to_smt b st v =
 
 and val_to_smt b st (typ, v) =
   (match v with
-     | Var x          -> name_to_smt b x
+     | Var x          -> name_to_smt b st x
      | Null           -> zero_vector b st.addr_width
      | Zero           -> zero_vector b (bitwidth st typ)
      | Int n          -> bprintf b "(_ bv%s %d)" (Big_int.string_of_big_int n) (bitwidth st typ)
@@ -485,7 +496,7 @@ let instr_effect_to_string st rhs =
 let instr_assign b st n rhs =
   begin
     bprintf b "(define-fun ";
-    name_to_smt b n;
+    name_to_smt b st n;
     bprintf b " () ";
     typ_to_smt b st (Bc_manip.typ_of_var st.cu (state_fu st) n);
     bprintf b " ";
@@ -506,7 +517,7 @@ let instr_assign_to_string st n rhs =
 let decl_to_smt b st n =
   begin
     bprintf b "(declare-fun ";
-    name_to_smt b n;
+    name_to_smt b st n;
     bprintf b " () ";
     typ_to_smt b st (Bc_manip.typ_of_var st.cu (state_fu st) n);
     bprintf b ")"
@@ -554,7 +565,7 @@ let declare_parameters b st =
       | (ty, _, v) :: tl ->
 	  let x, new_ctr  = match v with Some k -> (k, ctr) | None -> Id(false, ctr), (ctr + 1) in 
 	    bprintf b "(declare-fun ";
-	    name_to_smt b x;
+	    name_to_smt b st x;
 	    bprintf b " () ";
 	    typ_to_smt b st ty;
 	    bprintf b ")\n";
@@ -577,7 +588,7 @@ let declare_globals b st =
   let declare_global ginfo =
     bprintf b ";; %s %s = %s\n" (Llvm_pp.string_of_var ginfo.gname) (Llvm_pp.string_of_typ ginfo.gtyp) (opt_val ginfo.gvalue);
     bprintf b "(declare-fun ";
-    name_to_smt b ginfo.gname;
+    name_to_smt b st ginfo.gname;
     bprintf b " () ";
     typ_to_smt b st (Pointer(ginfo.gtyp, None));
     bprintf b ")\n"
@@ -585,14 +596,14 @@ let declare_globals b st =
     List.iter declare_global st.cu.cglobals    
 
  (*
-  * We use the index of the block not it's name
+  * We use the index of the block not its name
   * to name the condition. block names can get
   * seriously ugly when C++ is the source of the
   * bitcode.
   *
   *)
-let get_entry_condition_name i =
-  "block_" ^ (string_of_int i) ^ "_entry_condition"
+let get_entry_condition_name fstr i =
+  fstr ^ "_block_" ^ (string_of_int i) ^ "_entry_condition"
 
   (*
    * Translates a cfg_edge into a smt term.
@@ -602,11 +613,12 @@ let get_entry_condition_name i =
    * come from v0.
    *
    *)
-let smt_condition fu (v0, cond) =
+let smt_condition fu st (v0, cond) =
+  let fstr = Llvm_pp.string_of_var fu.fname in
   let pblk = Bc_manip.lookup_block fu v0 in
-  let entry_cond_name = get_entry_condition_name pblk.bindex in 
+  let entry_cond_name = get_entry_condition_name fstr pblk.bindex in 
   let smt_eq_condition v const =
-    let register = name_to_smt_string (Bc_manip.value_to_var v) in
+    let register = name_to_smt_string st (Bc_manip.value_to_var v) in
     let conjunct = match const with
       | True -> register
       | False -> "(not "^register^")"
@@ -638,9 +650,9 @@ let get_predecessor_block_list fu block =
  * Translates a list of cfg_edges into a list of
  * smt terms.
  *)
-let smt_condition_list fu cfg_pred_list =
+let smt_condition_list fu st cfg_pred_list =
   List.map
-    (fun e -> (smt_condition fu e))
+    (fun e -> (smt_condition fu st e))
     cfg_pred_list
 
 
@@ -648,7 +660,8 @@ let smt_condition_list fu cfg_pred_list =
  * Outputs the block entry condition 
  *)
 let smt_block_entry_condition b fu state binfo =
-  let ename = get_entry_condition_name binfo.bindex in
+  let fstr = Llvm_pp.string_of_var fu.fname in
+  let ename = get_entry_condition_name fstr binfo.bindex in
   let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in
   let seen_pred_list =  List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).bseen) cfg_pred_list in
     bprintf b ";; %s \n" ename;
@@ -656,7 +669,7 @@ let smt_block_entry_condition b fu state binfo =
     then
       bprintf b "(define-fun %s () Bool true)\n" ename
     else
-      let cond_list = smt_condition_list fu seen_pred_list in
+      let cond_list = smt_condition_list fu state seen_pred_list in
 	bprintf b "(define-fun %s () Bool\n" ename;
 	if List.length cond_list = 1
 	then
@@ -675,7 +688,7 @@ let smt_block_entry_condition b fu state binfo =
  * Prefixes an informative comment about a block prior to its
  * corresponding sequence of SMT definitions/declarations.
  *)
-let smt_block_comment  b fu binfo =
+let smt_block_comment b fu binfo =
   let blkname = (Llvm_pp.string_of_var binfo.bname) in
   let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in
   let unseen = get_predecessor_block_list fu binfo in 
@@ -709,9 +722,9 @@ let block_to_smt b fu state binfo =
 
 let fun_to_smt b fu state =
   begin
-    state.fu  <- Some(fu);
+    init_state fu state;
     bprintf b "\n;; Function: ";
-    name_to_smt b fu.fname;
+    name_to_smt b state fu.fname;
     bprintf b "\n";
     bprintf b ";; %s\n" (Bc_pp.string_of_fparams fu.fparams);
     if fu.fblocks  <> []
@@ -724,7 +737,7 @@ let fun_to_smt b fu state =
 	  declare_parameters b state;
 	  bprintf b "\n";
 	  List.iter (fun blk -> block_to_smt b fu state blk) block_list;
-	  Buffer.add_char b '\n'
+	  Buffer.add_char b '\n';	  
       end
     else
       bprintf b "\n"
