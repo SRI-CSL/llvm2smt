@@ -10,12 +10,10 @@ CORE=util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_manip.cmx bc_pp.cmx llparse.
 
 TESTS=https_examples.darwin http_examples.i386 yices_main minigzip-3.5 minisat.darwin
 
-#PKGS= -package ocamlgraph -package extlib
 
 all: ${EXES}
 
 llvm2smt: ${CORE} llvm_parser.cmx prelude.cmx smt.cmx llvm2smt.cmx
-#	ocamlfind ocamlopt $(LIBS) $^ -linkpkg ${PKGS} -o $@
 	ocamlopt $(LIBS) $^ -o $@
 
 rawparse: ${CORE} rawparse.cmx
@@ -60,11 +58,9 @@ clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
 
 %.cmi: %.mli
-#	ocamlfind ocamlc -c $< ${PKGS}
 	ocamlc -c $<
 
 %.cmx: %.ml
-#	ocamlfind ocamlopt -c $< -o $@ ${PKGS}
 	ocamlopt -c $< -o $@ 
 
 %.ml: %.mll
