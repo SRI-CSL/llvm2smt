@@ -34,13 +34,15 @@ let get_addr_width cu =
  * - mem_idx: to give a unique id to each memory state
  * - sp_idx: to give a unique id to each stack pointer
  * - fu = function (or None)
- * We also store the compilaation unit and address width
+ * - retval = return value (either a typ_val pair or None)
+ * We also store the compilation unit and address width
  * - these are needed to get type and bitsize information
  *)
 type state = {
   mutable mem_idx: int;
   mutable sp_idx: int;
   mutable fu: Bc.finfo option;
+  mutable retval: (typ * value) option;
   cu: Bc.cunit;
   addr_width: int;
 }
@@ -54,7 +56,11 @@ let state_fu st =
 let init_state fu st =
   st.fu <- Some(fu);
   st.mem_idx <- st.mem_idx + 1;
-  st.sp_idx  <- st.sp_idx + 1
+  st.sp_idx  <- st.sp_idx + 1;
+  st.retval <- None
+
+let state_store_return st x =
+  st.retval <- x
 
 (*
  * Compute padding in bits NOT bytes
@@ -481,6 +487,8 @@ let instr_effect b st rhs =
 	let msg = (Llvm_pp.string_of_rhs rhs) in
 	  eprintf "WARNING: %s" msg;
 	  raise (InstructionNotSupported msg)
+    | Return(x,_) -> 
+	state_store_return st x
     | _ ->  ()
 	
 let instr_effect_to_string st rhs =
@@ -704,7 +712,23 @@ let smt_block_comment b fu binfo =
 	List.iter (fun blk -> (bprintf b " %s" (Llvm_pp.string_of_var blk.bname))) unseen;
 	bprintf b "\n";
       end
-      
+
+
+(*
+ * Add a definition for the returned value (if any)
+ *)
+let declare_result b state =
+  match state.retval with
+    | None -> ()
+    | Some(tau, v) ->
+	let fu = state_fu state in 
+	let fstr = Llvm_pp.string_of_var fu.fname in 
+	  bprintf b "(define-fun %s_result () " fstr;
+	  typ_to_smt b state tau;
+	  bprintf b " ";
+	  val_typ_to_smt b state (tau, v);
+	  bprintf b ")\n"
+    
 (*
  * Converts a block to a sequence of SMT definitions/declarations
  *)
@@ -737,7 +761,8 @@ let fun_to_smt b fu state =
 	  declare_parameters b state;
 	  bprintf b "\n";
 	  List.iter (fun blk -> block_to_smt b fu state blk) block_list;
-	  Buffer.add_char b '\n';	  
+	  Buffer.add_char b '\n';
+	  declare_result b state
       end
     else
       bprintf b "\n"
@@ -746,7 +771,7 @@ let fun_to_smt b fu state =
   
 let cu_to_smt b cu =
   let aw = get_addr_width cu in 
-  let state = { mem_idx = 0; sp_idx = 0; fu = None; cu = cu; addr_width = aw; } in 
+  let state = { mem_idx = 0; sp_idx = 0; fu = None; cu = cu; addr_width = aw; retval = None; } in 
     Prelude.print_prelude b aw;
     declare_globals b state;
     bprintf b "\n";
