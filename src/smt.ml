@@ -704,6 +704,7 @@ let block_to_smt b fu state binfo =
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
       bprintf b "\n";
       binfo.bseen <- true
+      (* HOMEWORK: smt_block_exit_condition b fu state binfo; *)
     end
 
 
