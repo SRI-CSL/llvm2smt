@@ -542,12 +542,18 @@ let decl_to_string st n =
     decl_to_smt b st n;
     Buffer.contents b
 
+
+let commentify str =
+  let subst =  Str.global_replace (Str.regexp "\n") "\n;; " in
+    (subst (String.trim str))
+      
 (*
  * Convert instruction to smt
  * - st = state
  *)
 let instr_to_smt b st (v, rhs) =
-  bprintf b ";;%s" (Llvm_pp.string_of_instr (v, rhs));
+  (* FIX ME  multiline instructions *)
+  bprintf b ";; %s\n" (commentify (Llvm_pp.string_of_instr (v, rhs)));
   (* according to the grammar the None case must be in { call, store, fence } U Terminators *)
   match v with 
     | None ->
