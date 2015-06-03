@@ -446,47 +446,51 @@ let add_cfg_successor cfg_successors key var cond =
 (*
  * Convert a list of pairs ((typ, v1), (typ2, value)) to values (all the types should be the same)
  *)
-let list_of_values = List.map (fun (_, (_, y)) -> y)
   
 let make_cfg_neighbors f cfg_predecessors cfg_successors =
-  List.iter
-    (fun bl ->
-       let add target condition =
-	 begin
-	   add_cfg_predecessor cfg_predecessors target bl.bname condition;
-	   add_cfg_successor cfg_successors target bl.bname condition
-	 end
-       in
-	 (* The terminator instructions are: ret, br, switch, indirectbr, invoke, resume, and unreachable. *)
-	 match List.rev bl.binstrs with
-	   | (_,i)::_ ->
-	       (match i with
-		  | Br((_,target), None, _) ->
-		      add target Uncond
+  (*
+   * Convert a list of pairs (typ, val1), (typ2, val2)) to 
+   * a list  of val1.
+   *)
+  let list_of_values = List.map (fun ((_, y), _) -> y) in
+    List.iter
+      (fun bl ->
+	 let add target condition =
+	   begin
+	     add_cfg_predecessor cfg_predecessors target bl.bname condition;
+	     add_cfg_successor cfg_successors target bl.bname condition
+	   end
+	 in
+	   (* The terminator instructions are: ret, br, switch, indirectbr, invoke, resume, and unreachable. *)
+	   match List.rev bl.binstrs with
+	     | (_,i)::_ ->
+		 (match i with
+		    | Br((_,target), None, _) ->
+			add target Uncond
 
-		  | Br((typ, v),Some((_,target1),(_,target2)),_) ->
-		      add target1 (Eq(typ, v, True));
-		      add target2 (Eq(typ, v, False))
+		    | Br((typ, v),Some((_,target1),(_,target2)),_) ->
+			add target1 (Eq(typ, v, True));
+			add target2 (Eq(typ, v, False))
 
-		  | Switch((typ, v),(_,default_target),targets,_) ->
-		      add default_target (Distinct(typ, v, list_of_values targets));
-		      List.iter
-			(fun ((typ2,v2),(_,target)) -> add target (Eq(typ, v, v2)))
-			targets
+		    | Switch((typ, v),(_,default_target),targets,_) ->
+			add default_target (Distinct(typ, v, list_of_values targets));
+			List.iter
+			  (fun ((typ2,v2),(_,target)) -> add target (Eq(typ, v, v2)))
+			  targets
 
-		  | Indirectbr(_, targets,_) ->
-		      List.iter
-			(fun (_,target) -> add target Unsupported)
-			targets
+		    | Indirectbr(_, targets,_) ->
+			List.iter
+			  (fun (_,target) -> add target Unsupported)
+			  targets
 
-		  | Invoke(_,_,_,_,_,_,(_,target1),(_,target2),_) ->
-		      add target1 Unsupported; 
-		      add target2 Unsupported
+		    | Invoke(_,_,_,_,_,_,(_,target1),(_,target2),_) ->
+			add target1 Unsupported; 
+			add target2 Unsupported
 
-		  | _ -> (* N.B. 'resume', 'ret', and 'unreachable' have no successors *)
-		      ())
-	   | _ -> ())
-    f.fblocks
+		    | _ -> (* N.B. 'resume', 'ret', and 'unreachable' have no successors *)
+			())
+	     | _ -> ())
+      f.fblocks
 
     
 let compute_cfg_neighbors_of_finfo f =

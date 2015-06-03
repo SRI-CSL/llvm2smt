@@ -329,6 +329,12 @@ and icmp_to_smt b st cmp left right = (* Comparison: cmp = operation, left/right
 
 
 (*
+ * Convert typ, val to a string
+ *)
+let val_typ_to_smt_string st (typ, v) =
+  Util.spr (fun b -> val_typ_to_smt b st) (typ, v)
+
+(*
  * Alloca: with a constant size
  * - ty = type of elements
  * - n = number of elements 
@@ -613,48 +619,70 @@ let declare_globals b st =
 let get_entry_condition_name fstr i =
   fstr ^ "_block_" ^ (string_of_int i) ^ "_entry_condition"
 
-  (*
-   * Translates a cfg_edge into a smt term.
-   * (v0, cond) is the cfg_edge
-   * v0 is the name of predecessor block
-   * cond is the branching condition under which we
-   * come from v0.
-   *
-   *)
+
+(*
+ * Deal with branch conditions
+ * - smt_eq_condition entry_cond typ v const:
+ *   v is a value of type typ
+ *   const is a constant of type typ
+ *
+ * - smt_disticnt_condition entry_cond typ v const_list
+ *   v is a value of type typ
+ *   const_list is a list of constants of type typ 
+ *   the function produces 
+ *     (and entry_cond (not (= v c_1)) ... (not (= (v c_n))))
+ *)
+let smt_eq_condition st entry_cond typ v const =
+  let register = name_to_smt_string st (Bc_manip.value_to_var v) in
+  let conjunct = 
+    match const with
+      | True -> register
+      | False -> "(not "^register^")"
+      | _ -> "(= " ^ register ^ " " ^ (val_typ_to_smt_string st (typ, const)) ^ ")"
+  in
+    "(and " ^entry_cond^" "^conjunct^")"
+
+let smt_distinct_condition st entry_cond typ v const_list =
+  let register = name_to_smt_string st (Bc_manip.value_to_var v) in
+  let diseq c = "(not (= " ^ register ^ " " ^ (val_typ_to_smt_string st (typ, c)) ^ "))" in
+  let conjuncts = List.fold_left (fun s c -> s ^ " " ^ (diseq c))  "" const_list in
+    "(and " ^ entry_cond ^ " " ^ conjuncts ^ ")"
+
+
+(*
+ * Translates a cfg_edge into a smt term.
+ * (v0, cond) is the cfg_edge
+ * v0 is the name of predecessor block
+ * cond is the branching condition under which we
+ * come from v0.
+ *)
 let smt_precondition fu st (v0, cond) =
   let fstr = Llvm_pp.string_of_var fu.fname in
   let pblk = Bc_manip.lookup_block fu v0 in
   let entry_cond_name = get_entry_condition_name fstr pblk.bindex in 
-  let smt_eq_condition v const =
-    let register = name_to_smt_string st (Bc_manip.value_to_var v) in
-    let conjunct = match const with
-      | True -> register
-      | False -> "(not "^register^")"
-      | _ -> failwith "Unexpected value in a eq_condition!" in
-      "(and " ^entry_cond_name^" "^conjunct^")" in 
     (match cond with
-       | Uncond -> entry_cond_name;
-       | Eq(t, v, const) -> smt_eq_condition v const;
-       | Distinct(t, v, const_list) -> "distinct"   (* FIXME!! *)
+       | Uncond -> entry_cond_name
+       | Eq(t, v, const) -> 
+	   smt_eq_condition st entry_cond_name t v const
+       | Distinct(t, v, const_list) -> 
+	   smt_distinct_condition st entry_cond_name t v const_list
        | Unsupported -> failwith "Unsupported predecessor condition!"
     )
 
 let smt_postcondition fu st cblk (v0, cond) =
   let fstr = Llvm_pp.string_of_var fu.fname in
   let entry_cond_name = get_entry_condition_name fstr cblk.bindex in 
-  let smt_eq_condition v const =
-    let register = name_to_smt_string st (Bc_manip.value_to_var v) in
-    let conjunct = match const with
-      | True -> register
-      | False -> "(not "^register^")"
-      | _ -> failwith "Unexpected value in a eq_condition!" in
-      "(not (and " ^entry_cond_name^" "^conjunct^"))" in 
-  (match cond with
-     | Eq(t, v, const) -> smt_eq_condition v const;
-     | Distinct(t, v, const_list) -> "distinct"   (* FIXME!! *)
-     | Uncond -> failwith "Unconditonal backward pointer!";
-     | Unsupported -> failwith "Unsupported predecessor condition!"
-  )
+  let smt_cond = 
+    (match cond with
+       | Eq(t, v, const) -> 
+	   smt_eq_condition st entry_cond_name t v const
+       | Distinct(t, v, const_list) -> 
+	   smt_distinct_condition st entry_cond_name t v const_list
+       | Uncond -> failwith "Unconditonal backward pointer!";
+       | Unsupported -> failwith "Unsupported predecessor condition!"
+    )
+  in
+    "(not " ^ smt_cond ^ ")"
 
     
 (*

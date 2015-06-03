@@ -49,6 +49,9 @@ stress: parse
 smt:  llvm2smt
 	./llvm2smt ${BITCODE}/sums_auto3.ll > ${BITCODE}/sums_auto3.smt
 
+switch:  llvm2smt
+	./llvm2smt ${BITCODE}/switch.ll > ${BITCODE}/switch.smt
+
 primes:  llvm2smt
 	./llvm2smt ${BITCODE}/primes_opt_auto2.ll > ${BITCODE}/primes_opt_auto2.smt
 #	./llvm2smt ${BITCODE}/primes_opt_auto3.ll > ${BITCODE}/primes_opt_auto3.smt
