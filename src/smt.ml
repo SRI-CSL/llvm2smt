@@ -621,7 +621,7 @@ let get_entry_condition_name fstr i =
    * come from v0.
    *
    *)
-let smt_condition fu st (v0, cond) =
+let smt_precondition fu st (v0, cond) =
   let fstr = Llvm_pp.string_of_var fu.fname in
   let pblk = Bc_manip.lookup_block fu v0 in
   let entry_cond_name = get_entry_condition_name fstr pblk.bindex in 
@@ -635,9 +635,26 @@ let smt_condition fu st (v0, cond) =
     (match cond with
        | Uncond -> entry_cond_name;
        | Eq(t, v, const) -> smt_eq_condition v const;
-       | Distinct(t, v, const_list) -> "distinct"
+       | Distinct(t, v, const_list) -> "distinct"   (* FIXME!! *)
        | Unsupported -> failwith "Unsupported predecessor condition!"
     )
+
+let smt_postcondition fu st cblk (v0, cond) =
+  let fstr = Llvm_pp.string_of_var fu.fname in
+  let entry_cond_name = get_entry_condition_name fstr cblk.bindex in 
+  let smt_eq_condition v const =
+    let register = name_to_smt_string st (Bc_manip.value_to_var v) in
+    let conjunct = match const with
+      | True -> register
+      | False -> "(not "^register^")"
+      | _ -> failwith "Unexpected value in a eq_condition!" in
+      "(not (and " ^entry_cond_name^" "^conjunct^"))" in 
+  (match cond with
+     | Eq(t, v, const) -> smt_eq_condition v const;
+     | Distinct(t, v, const_list) -> "distinct"   (* FIXME!! *)
+     | Uncond -> failwith "Unconditonal backward pointer!";
+     | Unsupported -> failwith "Unsupported predecessor condition!"
+  )
 
     
 (*
@@ -658,10 +675,15 @@ let get_predecessor_block_list fu block =
  * Translates a list of cfg_edges into a list of
  * smt terms.
  *)
-let smt_condition_list fu st cfg_pred_list =
+let smt_precondition_list fu st cfg_pred_list =
   List.map
-    (fun e -> (smt_condition fu st e))
+    (fun e -> (smt_precondition fu st e))
     cfg_pred_list
+
+let smt_postcondition_list fu st binfo cfg_succ_list =
+  List.map
+    (fun e -> (smt_postcondition fu st binfo e))
+    cfg_succ_list
 
 
 (*
@@ -677,7 +699,7 @@ let smt_block_entry_condition b fu state binfo =
     then
       bprintf b "(define-fun %s () Bool true)\n" ename
     else
-      let cond_list = smt_condition_list fu state seen_pred_list in
+      let cond_list = smt_precondition_list fu state seen_pred_list in
 	bprintf b "(define-fun %s () Bool\n" ename;
 	if List.length cond_list = 1
 	then
@@ -691,7 +713,7 @@ let smt_block_entry_condition b fu state binfo =
 	bprintf b ")\n"
 
 (*
- * Outputs the block exit condition 
+ * Outputs the block exit condition  
  *)
 let smt_block_exit_condition b fu state binfo = 
   let my_rank = binfo.brank in
@@ -705,6 +727,10 @@ let smt_block_exit_condition b fu state binfo =
 	bprintf b ";; BACKWARD ARROWS: ";
 	List.iter (fun (bname, cond) -> (bprintf b " %s" (Llvm_pp.string_of_var bname))) backward_successor_list;
 	bprintf b "\n";
+
+	let cond_list = smt_postcondition_list fu state binfo backward_successor_list in
+	  List.iter (fun c -> bprintf b "        %s\n" c) cond_list
+	    
       end
     
 
