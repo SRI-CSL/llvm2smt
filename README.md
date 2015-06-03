@@ -6,7 +6,7 @@ Experimental translation of llvm bitcode to smt.
 Prerequisites
 ==============
 
-Ocaml plus ocamlgraph
+Ocaml
 
 
 
