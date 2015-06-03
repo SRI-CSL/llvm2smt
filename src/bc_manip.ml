@@ -413,27 +413,34 @@ let make_neighbors f predecessors successors =
     f.fblocks
 
     
-    
-    
 let compute_neighbors_of_finfo f =
   (make_neighbors f f.predecessors f.successors)
   
 let compute_neighbors cu =
   List.iter compute_neighbors_of_finfo cu.cfuns
     
-    
 (*
  * PROVISIONAL: MORE DATA IN THE PREDECESSOR TABLE
  *)
 let get_cfg_predecessors f bname = 
-  Hashtbl.find_all f.cfg_table bname
+  Hashtbl.find_all f.cfg_predecessors bname
+
+let get_cfg_successors f bname = 
+  Hashtbl.find_all f.cfg_successors bname
 
 
-let add_cfg_predecessor cfg_table key var cond =
+let add_cfg_predecessor cfg_predecessors key var cond =
   (match key with
-     | (Var v)  -> Hashtbl.add cfg_table v (var, cond)
-     | (Basicblock v) -> Hashtbl.add cfg_table v (var, cond)
+     | (Var v)  -> Hashtbl.add cfg_predecessors v (var, cond)
+     | (Basicblock v) -> Hashtbl.add cfg_predecessors v (var, cond)
      | _  -> failwith("Unexpected key value for add_cfg_predecessor " ^ (Llvm_pp.string_of_value key))
+  )
+
+let add_cfg_successor cfg_successors key var cond =
+  (match key with
+     | (Var v)  -> Hashtbl.add cfg_successors var (v, cond)
+     | (Basicblock v) -> Hashtbl.add cfg_successors var (v, cond)
+     | _  -> failwith("Unexpected key value for add_cfg_successor " ^ (Llvm_pp.string_of_value key))
   )
 
 (*
@@ -441,10 +448,15 @@ let add_cfg_predecessor cfg_table key var cond =
  *)
 let list_of_values = List.map (fun (_, (_, y)) -> y)
   
-let make_cfg_predecessors f cfg_table =
+let make_cfg_neighbors f cfg_predecessors cfg_successors =
   List.iter
     (fun bl ->
-       let add target condition =  add_cfg_predecessor cfg_table target bl.bname condition in
+       let add target condition =
+	 begin
+	   add_cfg_predecessor cfg_predecessors target bl.bname condition;
+	   add_cfg_successor cfg_successors target bl.bname condition
+	 end
+       in
 	 (* The terminator instructions are: ret, br, switch, indirectbr, invoke, resume, and unreachable. *)
 	 match List.rev bl.binstrs with
 	   | (_,i)::_ ->
@@ -477,11 +489,11 @@ let make_cfg_predecessors f cfg_table =
     f.fblocks
 
     
-let compute_cfg_predecessors_of_finfo f =
-  make_cfg_predecessors f f.cfg_table
+let compute_cfg_neighbors_of_finfo f =
+  make_cfg_neighbors f f.cfg_predecessors f.cfg_successors
 
-let compute_cfg_predecessors cu =
-  List.iter compute_cfg_predecessors_of_finfo cu.cfuns
+let compute_cfg_neighbors cu =
+  List.iter compute_cfg_neighbors_of_finfo cu.cfuns
 
 
 

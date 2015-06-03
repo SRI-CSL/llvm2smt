@@ -9,7 +9,7 @@ let parse ch =
 
     Bc_manip.compute_neighbors cu;
 
-    Bc_manip.compute_cfg_predecessors cu;
+    Bc_manip.compute_cfg_neighbors cu;
 
     Bc_manip.assign_vartyps cu;
 

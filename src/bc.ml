@@ -79,7 +79,7 @@ type cfg_condition =
 
 type cfg_edge = var * cfg_condition
 
-type cfg_predecessors = (var, cfg_edge) Hashtbl.t
+type cfg_neighbors = (var, cfg_edge) Hashtbl.t
 
 
 (*
@@ -115,7 +115,8 @@ type finfo = {
   context: vtbl;      (* local symbol table *)
   predecessors: neighbors;
   successors: neighbors;
-  cfg_table: cfg_predecessors;
+  cfg_predecessors: cfg_neighbors;
+  cfg_successors: cfg_neighbors;
   mutable flinkage: linkage option;
   mutable fvisibility: visibility option;
   mutable fstorageclass: dll_storageclass option;
