@@ -701,8 +701,11 @@ let smt_block_exit_condition b fu state binfo =
     then
       bprintf b ";; No backward arrows\n"
     else
-      bprintf b ";; BACKWARD ARROWS!\n"
-    
+      begin
+	bprintf b ";; BACKWARD ARROWS: ";
+	List.iter (fun (bname, cond) -> (bprintf b " %s" (Llvm_pp.string_of_var bname))) backward_successor_list;
+	bprintf b "\n";
+      end
     
 
 (*
