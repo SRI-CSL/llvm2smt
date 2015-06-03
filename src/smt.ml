@@ -686,6 +686,71 @@ let smt_postcondition_list fu st binfo cfg_succ_list =
     cfg_succ_list
 
 
+
+
+
+let get_backward_successor_list fu state binfo = 
+  let my_rank = binfo.brank in
+  let cfg_successors_list = Bc_manip.get_cfg_successors fu binfo.bname in
+    List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).brank < my_rank) cfg_successors_list
+      
+(*
+ * Outputs the block exit condition  
+ *)
+let smt_block_exit_comment b fu state binfo backward_successor_list =
+  if backward_successor_list = []
+  then
+    bprintf b ";; No backward arrows\n"
+  else
+    begin
+      bprintf b ";; BACKWARD ARROWS: ";
+      List.iter (fun (bname, cond) -> (bprintf b " %s" (Llvm_pp.string_of_var bname))) backward_successor_list;
+      bprintf b "\n";
+    end
+    
+(*
+ * Outputs the block exit condition  
+ *)
+let smt_block_exit_condition b fu state binfo backward_successor_list =
+  if backward_successor_list <> []
+  then
+    let cond_list = smt_postcondition_list fu state binfo backward_successor_list in
+      begin
+	bprintf b "(assert \n";
+	if List.length cond_list = 1
+	then
+	  bprintf b "    %s\n" (List.nth cond_list 0)
+	else
+	  begin
+	    bprintf b "    (and\n";
+	    List.iter (fun c -> bprintf b "        %s\n" c) cond_list;
+	    bprintf b "    )\n";
+	  end;
+	bprintf b ")\n"
+      end
+      
+
+(*
+ * Prefixes an informative comment about a block prior to its
+ * corresponding sequence of SMT definitions/declarations.
+ *)
+let smt_block_entry_comment b fu binfo =
+  let blkname = (Llvm_pp.string_of_var binfo.bname) in
+  let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in
+  let unseen = get_predecessor_block_list fu binfo in 
+    (* Printf.eprintf "processing block %s\n" blkname; *)
+    bprintf b ";; BLOCK %s with index %d and rank = %d\n" blkname binfo.bindex binfo.brank;
+    bprintf b ";; Predecessors:";
+    List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) pred_list;
+    bprintf b "\n";
+    if unseen <> []
+    then
+      begin
+	bprintf b ";; Backward pointers:";
+	List.iter (fun blk -> (bprintf b " %s" (Llvm_pp.string_of_var blk.bname))) unseen;
+	bprintf b "\n";
+      end
+
 (*
  * Outputs the block entry condition 
  *)
@@ -712,60 +777,6 @@ let smt_block_entry_condition b fu state binfo =
 	  end;
 	bprintf b ")\n"
 
-(*
- * Outputs the block exit condition  
- *)
-let smt_block_exit_condition b fu state binfo = 
-  let my_rank = binfo.brank in
-  let cfg_successors_list = Bc_manip.get_cfg_successors fu binfo.bname in
-  let backward_successor_list =  List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).brank < my_rank) cfg_successors_list in
-    if backward_successor_list = []
-    then
-      bprintf b ";; No backward arrows\n"
-    else
-      begin
-	bprintf b ";; BACKWARD ARROWS: ";
-	List.iter (fun (bname, cond) -> (bprintf b " %s" (Llvm_pp.string_of_var bname))) backward_successor_list;
-	bprintf b "\n";
-
-	let cond_list = smt_postcondition_list fu state binfo backward_successor_list in
-	  begin
-	    bprintf b "(assert \n";
-	    if List.length cond_list = 1
-	    then
-	      bprintf b "    %s\n" (List.nth cond_list 0)
-	    else
-	      begin
-		bprintf b "    (and\n";
-		List.iter (fun c -> bprintf b "        %s\n" c) cond_list;
-		bprintf b "    )\n";
-	      end;
-	    bprintf b ")\n"
-	  end
-      end
-    
-
-(*
- * Prefixes an informative comment about a block prior to its
- * corresponding sequence of SMT definitions/declarations.
- *)
-let smt_block_comment b fu binfo =
-  let blkname = (Llvm_pp.string_of_var binfo.bname) in
-  let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in
-  let unseen = get_predecessor_block_list fu binfo in 
-    (* Printf.eprintf "processing block %s\n" blkname; *)
-    bprintf b ";; BLOCK %s with index %d and rank = %d\n" blkname binfo.bindex binfo.brank;
-    bprintf b ";; Predecessors:";
-    List.iter (fun v -> (bprintf b " %s" (Llvm_pp.string_of_var v))) pred_list;
-    bprintf b "\n";
-    if unseen <> []
-    then
-      begin
-	bprintf b ";; Backward pointers:";
-	List.iter (fun blk -> (bprintf b " %s" (Llvm_pp.string_of_var blk.bname))) unseen;
-	bprintf b "\n";
-      end
-
 
 (*
  * Add a definition for the returned value (if any)
@@ -789,12 +800,14 @@ let block_to_smt b fu state binfo =
   if not binfo.bseen
   then
     begin
-      smt_block_comment b fu binfo;
+      smt_block_entry_comment b fu binfo;
       smt_block_entry_condition b fu state binfo;
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
-      smt_block_exit_condition b fu state binfo; 
-      bprintf b "\n";
-      binfo.bseen <- true;
+      let backward_successor_list = get_backward_successor_list fu state binfo in 
+	smt_block_exit_comment b fu state binfo backward_successor_list; 
+	smt_block_exit_condition b fu state binfo backward_successor_list;
+	bprintf b "\n";
+	binfo.bseen <- true;
     end
 
 
