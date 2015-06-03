@@ -729,8 +729,19 @@ let smt_block_exit_condition b fu state binfo =
 	bprintf b "\n";
 
 	let cond_list = smt_postcondition_list fu state binfo backward_successor_list in
-	  List.iter (fun c -> bprintf b "        %s\n" c) cond_list
-	    
+	  begin
+	    bprintf b "(assert \n";
+	    if List.length cond_list = 1
+	    then
+	      bprintf b "    %s\n" (List.nth cond_list 0)
+	    else
+	      begin
+		bprintf b "    (and\n";
+		List.iter (fun c -> bprintf b "        %s\n" c) cond_list;
+		bprintf b "    )\n";
+	      end;
+	    bprintf b ")\n"
+	  end
       end
     
 
