@@ -690,7 +690,20 @@ let smt_block_entry_condition b fu state binfo =
 	  end;
 	bprintf b ")\n"
 
-
+(*
+ * Outputs the block exit condition 
+ *)
+let smt_block_exit_condition b fu state binfo = 
+  let my_rank = binfo.brank in
+  let cfg_successors_list = Bc_manip.get_cfg_successors fu binfo.bname in
+  let backward_successor_list =  List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).brank < my_rank) cfg_successors_list in
+    if backward_successor_list = []
+    then
+      bprintf b ";; No backward arrows\n"
+    else
+      bprintf b ";; BACKWARD ARROWS!\n"
+    
+    
 
 (*
  * Prefixes an informative comment about a block prior to its
@@ -739,9 +752,9 @@ let block_to_smt b fu state binfo =
       smt_block_comment b fu binfo;
       smt_block_entry_condition b fu state binfo;
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
+      smt_block_exit_condition b fu state binfo; 
       bprintf b "\n";
-      binfo.bseen <- true
-      (* HOMEWORK: smt_block_exit_condition b fu state binfo; *)
+      binfo.bseen <- true;
     end
 
 
