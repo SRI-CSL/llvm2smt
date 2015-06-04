@@ -277,8 +277,22 @@ and val_to_smt b st (typ, v) =
      | Null           -> zero_vector b st.addr_width
      | Zero           -> zero_vector b (bitwidth st typ)
      | Int n          -> bprintf b "(_ bv%s %d)" (Big_int.string_of_big_int n) (bitwidth st typ)
+     | Trunc(x, ty) ->
+	 let n = (bitwidth st ty) in
+	   bprintf b "((_ extract %d 0) " (n - 1);
+	   val_typ_to_smt b st x;
+	   bprintf b ")"
+     | Zext((tx, x), ty) ->
+	 let n = (bitwidth st ty) - (bitwidth st tx) in
+	   bprintf b "((_ zero_extend %d) " n;
+	   val_typ_to_smt b st (tx, x);
+	   bprintf b ")"
+     | Sext((tx, x), ty) ->
+	 let n = (bitwidth st ty) - (bitwidth st tx) in
+	   bprintf b "((_ sign_extend %d) " n;
+	   val_typ_to_smt b st (tx, x);
+	   bprintf b ")"
 	 (*
-	   | Trunc(x, y)          -> bprintf b "trunc(%a to %a)" bpr_typ_value x         bpr_typ y
 	   | Zext(x, y)           -> bprintf b "zext(%a to %a)" bpr_typ_value x          bpr_typ y
 	   | Sext(x, y)           -> bprintf b "sext(%a to %a)" bpr_typ_value x          bpr_typ y
 	   | Bitcast(x, y)        -> bprintf b "bitcast (%a to %a)" bpr_typ_value x      bpr_typ y
@@ -432,11 +446,22 @@ let rhs_to_smt b st i =
       | Select(_)                -> Util.nfailwith ("malformed Select instruction: " ^ (Llvm_pp.string_of_rhs i))
       | Alloca(_)                -> bprintf b "%s" (sp_ref st)
       | Load(_, _, (ty, v), _, _, _) -> load_to_smt b st i ty v
-
+      | Trunc(x, ty, _) ->
+	  let n = (bitwidth st ty) in
+	    bprintf b "((_ extract %d 0) " (n - 1);
+	    val_typ_to_smt b st x;
+	    bprintf b ")"
+      | Zext((tx, x), ty, _) ->
+	  let n = (bitwidth st ty) - (bitwidth st tx) in
+	    bprintf b "((_ zero_extend %d) " n;
+	    val_typ_to_smt b st (tx, x);
+	    bprintf b ")"
+      | Sext((tx, x), ty, _) ->
+	  let n = (bitwidth st ty) - (bitwidth st tx) in
+	    bprintf b "((_ sign_extend %d) " n;
+	    val_typ_to_smt b st (tx, x);
+	    bprintf b ")"
       (*
-	| Trunc(x, y, md)          ->
-	| Zext(x, y, md)           ->
-	| Sext(x, y, md)           ->
 	| Bitcast(x, y, md)        ->
 	| Addrspacecast(x, y, md)  ->
 	| Inttoptr(x, y, md)       ->
