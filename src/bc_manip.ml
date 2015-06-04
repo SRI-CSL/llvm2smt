@@ -366,58 +366,14 @@ let value_to_var value =
  * - f must be a Bc.finfo
  * - bname must be a block name
  *)
-let get_predecessors f bname = 
-  Hashtbl.find_all f.predecessors bname
+let get_predecessors f bname =
+  let cfgs = Hashtbl.find_all f.cfg_predecessors bname in
+    List.map (fun (v, e) -> v) cfgs
 
 let get_successors f bname = 
-  Hashtbl.find_all f.successors bname
+  let cfgs = Hashtbl.find_all f.cfg_successors bname in
+    List.map (fun (v, e) -> v) cfgs
 
-let print_neighbors neighbors =
-  let print_edge = (fun v0 v1 -> Printf.eprintf "edge: %s -> %s\n" (Llvm_pp.string_of_var v0) (Llvm_pp.string_of_var v1)) in
-    Hashtbl.iter print_edge neighbors
-      
-
-let make_neighbors f predecessors successors =
-  List.iter
-    (fun bl ->
-       let add target =
-	 let src = bl.bname in
-	 let dst = (value_to_var target) in 
-	   begin
-	     Hashtbl.add predecessors dst src;
-	     Hashtbl.add successors src dst;
-	   end
-       in
-	 (* The terminator instructions are: ret, br, switch, indirectbr, invoke, resume, and unreachable. *)
-	 match List.rev bl.binstrs with
-	   | (_,i)::_ ->
-	       (match i with
-		  | Br((_,target), None, _) ->
-		      add target
-		  | Br(_,Some((_,target1),(_,target2)),_) ->
-		      add target1; add target2
-		  | Indirectbr(_,targets,_) ->
-		      List.iter
-			(fun (_,target) -> add target)
-			targets
-		  | Switch(_,(_,default_target),targets,_) ->
-		      add default_target;
-		      List.iter
-			(fun (_,(_,target)) -> add target)
-			targets
-		  | Invoke(_,_,_,_,_,_,(_,target1),(_,target2),_) ->
-		      add target1; add target2
-		  | _ -> (* N.B. 'resume', 'ret', and 'unreachable' have no successors *)
-		      ())
-	   | _ -> ())
-    f.fblocks
-
-    
-let compute_neighbors_of_finfo f =
-  (make_neighbors f f.predecessors f.successors)
-  
-let compute_neighbors cu =
-  List.iter compute_neighbors_of_finfo cu.cfuns
     
 (*
  * PROVISIONAL: MORE DATA IN THE PREDECESSOR TABLE

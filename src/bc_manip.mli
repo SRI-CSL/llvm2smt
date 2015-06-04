@@ -60,19 +60,6 @@ val typ_of_var: Bc.cunit -> Bc.finfo -> Llvm.var -> Llvm.typ
 val value_to_var: Llvm.value -> Llvm.var
 
 (*
- * Compute the predecessor tables of each funit in 
- * a compilation unit.
- *
- *)
-val compute_neighbors: Bc.cunit -> unit
-
-val get_predecessors: Bc.finfo -> Llvm.var -> Llvm.var list 
-    
-val get_successors: Bc.finfo -> Llvm.var -> Llvm.var list
-
-val print_neighbors: Bc.neighbors -> unit
-
-(*
  * Compute the cfg predecessor and successor tables of each funit in 
  * a compilation unit.
  *)
@@ -82,6 +69,9 @@ val get_cfg_predecessors: Bc.finfo -> Llvm.var -> Bc.cfg_edge list
 
 val get_cfg_successors: Bc.finfo -> Llvm.var -> Bc.cfg_edge list 
 
+val get_predecessors: Bc.finfo -> Llvm.var -> Llvm.var list 
+    
+val get_successors: Bc.finfo -> Llvm.var -> Llvm.var list
 
 (*
  * Get a block given its name.

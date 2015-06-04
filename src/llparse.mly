@@ -429,8 +429,6 @@ function_header:
                              {
                                { Bc.fcounter = ref 0;
 				 Bc.context =  Hashtbl.create 11;
-				 Bc.predecessors =  Hashtbl.create 11;
-				 Bc.successors =  Hashtbl.create 11;
 				 Bc.cfg_predecessors =  Hashtbl.create 11;
 				 Bc.cfg_successors =  Hashtbl.create 11;
 				 Bc.flinkage = $1;

@@ -83,25 +83,6 @@ type cfg_neighbors = (var, cfg_edge) Hashtbl.t
 
 
 (*
- * predecessors:
- *
- * Each pair in the hashtable is an edge in the cfg.
- * Each edge is of the form: target_block to source_block.
- * In other words edge stores the reverse of control flow.
- *
- * In the hashtable, the key is the target name and the
- * value is the source block name.
- *
- * successors:
- *
- *  The inverse of predecessors.
- *  
- *)
-
-type neighbors = (var, var) Hashtbl.t
-
-
-(*
  * Function parameters:
  * the boolean flag is to support functions with variable numbers
  * of arguments (varargs stuff):
@@ -113,8 +94,6 @@ type function_parameters = (typ * param_attribute list * var option) list * bool
 type finfo = {
   fcounter: int ref;  (* counter used to produce local variables and types *)
   context: vtbl;      (* local symbol table *)
-  predecessors: neighbors;
-  successors: neighbors;
   cfg_predecessors: cfg_neighbors;
   cfg_successors: cfg_neighbors;
   mutable flinkage: linkage option;

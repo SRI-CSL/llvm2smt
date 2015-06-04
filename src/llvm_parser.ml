@@ -7,8 +7,6 @@ let parse ch =
 
     Bc_manip.assign_block_numbers cu;
 
-    Bc_manip.compute_neighbors cu;
-
     Bc_manip.compute_cfg_neighbors cu;
 
     Bc_manip.assign_vartyps cu;
