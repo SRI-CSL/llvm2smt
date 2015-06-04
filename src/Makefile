@@ -54,6 +54,10 @@ switch:  llvm2smt
 	./llvm2smt ${BITCODE}/switch.ll > ${BITCODE}/switch.smt
 	yices-smt2 ${BITCODE}/switch.smt
 
+rot13:  llvm2smt
+	./llvm2smt ${BITCODE}/rot13.ll > ${BITCODE}/rot13.smt
+	yices-smt2 ${BITCODE}/rot13.smt
+
 primes:  llvm2smt
 	./llvm2smt ${BITCODE}/primes_opt_auto2.ll > ${BITCODE}/primes_opt_auto2.smt
 #	./llvm2smt ${BITCODE}/primes_opt_auto3.ll > ${BITCODE}/primes_opt_auto3.smt
