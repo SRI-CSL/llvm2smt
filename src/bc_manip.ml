@@ -466,17 +466,18 @@ let lookup_block f name =
 
 
 let rec set_rank_aux fu node stack current =
-  begin
     if node.brank < current
     then
-      node.brank <- current;
-    List.iter
-      (fun pred ->
-	 if not (List.mem pred.bindex stack)
-	 then
-	   (set_rank_aux fu pred (pred.bindex :: stack) (current + 1)))
-      (List.map (lookup_block fu) (get_successors fu  node.bname))
-  end
+      begin 
+	node.brank <- current;
+	let pred_blocks = (List.map (lookup_block fu) (get_successors fu  node.bname)) in
+	List.iter
+	  (fun pred ->
+	     if not (List.mem pred.bindex stack)
+	     then
+	       (set_rank_aux fu pred (pred.bindex :: stack) (current + 1)))
+	  pred_blocks
+      end
   
 
 let set_ranks fu =

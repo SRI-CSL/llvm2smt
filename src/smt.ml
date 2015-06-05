@@ -888,7 +888,7 @@ let fun_to_smt b fu state =
 	  declare_state b state;
 	  declare_parameters b state;
 	  bprintf b "\n";
-	  List.iter (fun blk -> block_to_smt b fu state blk) block_list;
+	  List.iter (fun blk -> block_to_smt b fu state blk) block_list; 
 	  Buffer.add_char b '\n';
 	  declare_result b state
       end

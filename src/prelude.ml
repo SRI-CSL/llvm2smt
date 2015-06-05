@@ -50,6 +50,12 @@ let constants aw =
 
 let writes = "
 ;;
+;; Write a little endian 1 bit value (8 bit aligned) at address x in mem
+;;
+(define-fun write1 ((mem Mem) (x Address) (v Bool)) Mem
+  (store mem x (ite v #x01 #x00)))
+
+;;
 ;; Write a little endian 8bit value at address x in mem
 ;;
 (define-fun write8 ((mem Mem) (x Address) (v I8)) Mem

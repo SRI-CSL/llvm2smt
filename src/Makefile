@@ -63,6 +63,11 @@ primes:  llvm2smt
 #	./llvm2smt ${BITCODE}/primes_opt_auto3.ll > ${BITCODE}/primes_opt_auto3.smt
 #	./llvm2smt ${BITCODE}/primes_opt_auto4.ll > ${BITCODE}/primes_opt_auto4.smt
 
+
+yices:  llvm2smt
+	./llvm2smt ${BITCODE}/yices_main.ll > ${BITCODE}/yices_main.smt
+	yices-smt2 ${BITCODE}/yices_main.smt
+
 clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
 
