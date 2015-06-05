@@ -99,6 +99,13 @@ let writes = "
 
 let reads = "
 ;;
+;; Read a little endian 1 bit value (8 bit aligned) at address x in mem
+;; - returns a Boolean: true if what's stored at address x is non-zero
+;;
+(define-fun read1 ((mem Mem) (x Address)) Bool
+   (not (= (select mem x) #x00)))
+
+;;
 ;; Read a little endian 8bit value at address x in mem
 ;;
 (define-fun read8 ((mem Mem) (x Address)) I8

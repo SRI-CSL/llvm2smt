@@ -2,6 +2,12 @@
  * Utilites. More to come.
  *)
 open Printf
+
+(*
+ * Set this to true to avoid raising exceptions
+ *)
+let debug = false
+
    
 let between s bpr b =
   let rec loop = function
@@ -53,8 +59,6 @@ let spr bpr x =
   let b = Buffer.create 100 in
   bpr b x;
   Buffer.contents b
-
-let debug = true
 
 let nfailwith msg =
   if debug

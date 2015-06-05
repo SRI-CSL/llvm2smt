@@ -283,19 +283,50 @@ and val_to_smt b st (typ, v) =
 	   val_typ_to_smt b st x;
 	   bprintf b ")"
      | Zext((tx, x), ty) ->
-	 let n = (bitwidth st ty) - (bitwidth st tx) in
-	   bprintf b "((_ zero_extend %d) " n;
-	   val_typ_to_smt b st (tx, x);
-	   bprintf b ")"
+	 if is_bool st tx then
+	   let n = (bitwidth st ty) in
+	     bprintf b "(ite ";
+	     val_typ_to_smt b st (tx, x);
+	     bprintf b " (_ bv1 %d) (_ bv0 %d))" n n;
+	 else
+	   let n = (bitwidth st ty) - (bitwidth st tx) in
+	     bprintf b "((_ zero_extend %d) " n;
+	     val_typ_to_smt b st (tx, x);
+	     bprintf b ")"
      | Sext((tx, x), ty) ->
-	 let n = (bitwidth st ty) - (bitwidth st tx) in
-	   bprintf b "((_ sign_extend %d) " n;
-	   val_typ_to_smt b st (tx, x);
-	   bprintf b ")"
+	 if is_bool st tx then
+	   let n = (bitwidth st ty) in
+	     bprintf b "(ite ";
+	     val_typ_to_smt b st (tx, x);
+	     bprintf b " (bvneg (_ bv1 %d)) (_ bv0 %d))" n n;
+	 else
+	   let n = (bitwidth st ty) - (bitwidth st tx) in
+	     bprintf b "((_ sign_extend %d) " n;
+	     val_typ_to_smt b st (tx, x);
+	     bprintf b ")"	       
      | Bitcast(x, ty) -> (* no op *)
 	 val_typ_to_smt b st x
+     | Inttoptr((tx, x), ty) ->
+	 let np = (bitwidth st tx) in  (* pointer size *)
+	 let n = (bitwidth st ty) in   (* converted to integer of n bits *)
+	   if np < n then
+	     (* zero extend *)
+	     begin
+	       bprintf b "((_ zero_extend %d) " (n - np);
+	       val_typ_to_smt b st (tx, x);
+	       bprintf b ")"
+	     end
+	   else if np > n then
+	     (* truncate *)
+	     begin
+	       bprintf b "((_ extract %d 0) " (n - 1);
+	       val_typ_to_smt b st (tx, x);
+	       bprintf b ")"
+	     end
+	   else
+	     (* no op *)
+	     val_typ_to_smt b st (tx, x)
 	 (*
-	   | Inttoptr(x, y)       -> bprintf b "inttoptr (%a to %a)" bpr_typ_value x     bpr_typ y
 	   | Ptrtoint(x, y)       -> bprintf b "ptrtoint (%a to %a)" bpr_typ_value x      bpr_typ y
 	   | Getelementptr(inbounds, x) -> bprintf b "getelementptr %a(%a)" (yes "inbounds ") inbounds bpr_typ_value_list x
 	 *)
@@ -451,35 +482,73 @@ let rhs_to_smt b st i =
 	    val_typ_to_smt b st x;
 	    bprintf b ")"
       | Zext((tx, x), ty, _) ->
-	  let n = (bitwidth st ty) - (bitwidth st tx) in
-	    bprintf b "((_ zero_extend %d) " n;
-	    val_typ_to_smt b st (tx, x);
-	    bprintf b ")"
+	 if is_bool st tx then
+	   let n = (bitwidth st ty) in
+	     bprintf b "(ite ";
+	     val_typ_to_smt b st (tx, x);
+	     bprintf b " (_ bv1 %d) (_ bv0 %d))" n n;
+	 else
+	   let n = (bitwidth st ty) - (bitwidth st tx) in
+	     bprintf b "((_ zero_extend %d) " n;
+	     val_typ_to_smt b st (tx, x);
+	     bprintf b ")"
       | Sext((tx, x), ty, _) ->
-	  let n = (bitwidth st ty) - (bitwidth st tx) in
-	    bprintf b "((_ sign_extend %d) " n;
-	    val_typ_to_smt b st (tx, x);
-	    bprintf b ")"
+	 if is_bool st tx then
+	   let n = (bitwidth st ty) in
+	     bprintf b "(ite ";
+	     val_typ_to_smt b st (tx, x);
+	     bprintf b " (bvneg (_ bv1 %d)) (_ bv0 %d))" n n;
+	 else
+	   let n = (bitwidth st ty) - (bitwidth st tx) in
+	     bprintf b "((_ sign_extend %d) " n;
+	     val_typ_to_smt b st (tx, x);
+	     bprintf b ")"
       | Bitcast(x, ty, _) -> (* no op *)
 	  val_typ_to_smt b st x
+      | Inttoptr((tx,x), ty, _) ->
+	  let np = (bitwidth st tx) in  (* pointer size *)
+	  let n = (bitwidth st ty) in   (* converted to integer of n bits *)
+	    if np < n then
+	      (* zero extend *)
+	      begin
+		bprintf b "((_ zero_extend %d) " (n - np);
+		val_typ_to_smt b st (tx, x);
+		bprintf b ")"
+	      end
+	    else if np > n then
+	      (* truncate *)
+	      begin
+		bprintf b "((_ extract %d 0) " (n - 1);
+		val_typ_to_smt b st (tx, x);
+		bprintf b ")"
+	      end
+	    else
+	      (* no op *)
+	      val_typ_to_smt b st (tx, x)
+
       (*
+	Feasible
 	| Addrspacecast(x, y, md)  ->
-	| Inttoptr(x, y, md)       ->
 	| Ptrtoint(x, y, md)       ->
-	| Va_arg(x, y, md)         ->
 	| Getelementptr(inbounds, x, md) ->
-	| Shufflevector(x, md) ->
-	| Insertelement(x, md) ->
-	| Extractelement(x, md) ->
 	| Phi(ty, incoming, md) ->
-	| Landingpad(x, y, z, w, md) ->
-	| Call(is_tail_call, callconv, retattrs, callee_ty, callee_name, operands, callattrs, md) ->
+	| Extractvalue(x, y, md) ->
+	| Insertvalue(x, y, z, md) ->
+
+	Maybe, but probably not easy
 	| Cmpxchg(x, y, z, w, v, u, t, md) ->
 	| Atomicrmw(x, y, z, w, v, u, md) ->
 	| Fence(x, y, md) ->
-	| Extractvalue(x, y, md) ->
-	| Insertvalue(x, y, z, md) ->
-	
+	| Shufflevector(x, md) ->
+	| Insertelement(x, md) ->
+	| Extractelement(x, md) ->
+
+	Can't support
+	| Va_arg(x, y, md)         ->
+	| Landingpad(x, y, z, w, md) ->
+	| Call(is_tail_call, callconv, retattrs, callee_ty, callee_name, operands, callattrs, md) ->
+
+	Terminators
 	| Unreachable md ->
 	| Return(None, md) ->
 	| Return(Some(x, y), md) ->
@@ -487,7 +556,7 @@ let rhs_to_smt b st i =
 	| Br(x, Some(y, z), md) ->
 	| Indirectbr(x, y, md) ->	   
 	| Resume(x, md) ->
-	| Switch(x, y, z, md) ->	   
+	| Switch(x, y, z, md) ->
 	| Invoke(x, y, z, w, v, u, t, s, md) ->
 
       *)
