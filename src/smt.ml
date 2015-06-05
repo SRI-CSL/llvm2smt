@@ -292,10 +292,9 @@ and val_to_smt b st (typ, v) =
 	   bprintf b "((_ sign_extend %d) " n;
 	   val_typ_to_smt b st (tx, x);
 	   bprintf b ")"
+     | Bitcast(x, ty) -> (* no op *)
+	 val_typ_to_smt b st x;
 	 (*
-	   | Zext(x, y)           -> bprintf b "zext(%a to %a)" bpr_typ_value x          bpr_typ y
-	   | Sext(x, y)           -> bprintf b "sext(%a to %a)" bpr_typ_value x          bpr_typ y
-	   | Bitcast(x, y)        -> bprintf b "bitcast (%a to %a)" bpr_typ_value x      bpr_typ y
 	   | Inttoptr(x, y)       -> bprintf b "inttoptr (%a to %a)" bpr_typ_value x     bpr_typ y
 	   | Ptrtoint(x, y)       -> bprintf b "ptrtoint (%a to %a)" bpr_typ_value x      bpr_typ y
 	   | Getelementptr(inbounds, x) -> bprintf b "getelementptr %a(%a)" (yes "inbounds ") inbounds bpr_typ_value_list x
@@ -461,8 +460,9 @@ let rhs_to_smt b st i =
 	    bprintf b "((_ sign_extend %d) " n;
 	    val_typ_to_smt b st (tx, x);
 	    bprintf b ")"
+      | Bitcast(x, ty, _) -> (* no op *)
+	  val_typ_to_smt b st x;
       (*
-	| Bitcast(x, y, md)        ->
 	| Addrspacecast(x, y, md)  ->
 	| Inttoptr(x, y, md)       ->
 	| Ptrtoint(x, y, md)       ->
