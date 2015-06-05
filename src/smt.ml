@@ -293,7 +293,7 @@ and val_to_smt b st (typ, v) =
 	   val_typ_to_smt b st (tx, x);
 	   bprintf b ")"
      | Bitcast(x, ty) -> (* no op *)
-	 val_typ_to_smt b st x;
+	 val_typ_to_smt b st x
 	 (*
 	   | Inttoptr(x, y)       -> bprintf b "inttoptr (%a to %a)" bpr_typ_value x     bpr_typ y
 	   | Ptrtoint(x, y)       -> bprintf b "ptrtoint (%a to %a)" bpr_typ_value x      bpr_typ y
@@ -461,7 +461,7 @@ let rhs_to_smt b st i =
 	    val_typ_to_smt b st (tx, x);
 	    bprintf b ")"
       | Bitcast(x, ty, _) -> (* no op *)
-	  val_typ_to_smt b st x;
+	  val_typ_to_smt b st x
       (*
 	| Addrspacecast(x, y, md)  ->
 	| Inttoptr(x, y, md)       ->
@@ -709,13 +709,15 @@ let smt_postcondition fu st cblk (v0, cond) =
 	   smt_eq_condition st entry_cond_name t v const
        | Distinct(t, v, const_list) -> 
 	   smt_distinct_condition st entry_cond_name t v const_list
-       | Uncond -> failwith "Unconditonal backward pointer!";
+       | Uncond ->
+(*	   failwith ("Unconditonal backward pointer! in function " ^ fstr ^ ", block " ^ (Llvm_pp.string_of_var cblk.bname)); *)
+	   entry_cond_name	   
        | Unsupported -> failwith "Unsupported predecessor condition!"
     )
   in
     "(not " ^ smt_cond ^ ")"
 
-    
+
 (*
  *
  * Returns a list of all the currently unseen predecessors of the block.
@@ -851,7 +853,7 @@ let declare_result b state =
 	  bprintf b " ";
 	  val_typ_to_smt b state (tau, v);
 	  bprintf b ")\n"
-    
+	    
 (*
  * Converts a block to a sequence of SMT definitions/declarations
  *)
