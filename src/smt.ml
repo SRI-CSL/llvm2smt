@@ -271,61 +271,68 @@ and bool_val_to_smt b st v =
      | Icmp(cmp, x, y) -> icmp_to_smt b st cmp x y
      | _ -> Util.nfailwith ("bool value not supported: " ^  (Llvm_pp.string_of_value v)))
 
+and trunc_to_smt b st x ty =
+  let n = (bitwidth st ty) in
+    bprintf b "((_ extract %d 0) " (n - 1);
+    val_typ_to_smt b st x;
+    bprintf b ")"
+
+and zext_to_smt b st tx x ty = 
+  if is_bool st tx then
+    let n = (bitwidth st ty) in
+      bprintf b "(ite ";
+      val_typ_to_smt b st (tx, x);
+      bprintf b " (_ bv1 %d) (_ bv0 %d))" n n;
+  else
+    let n = (bitwidth st ty) - (bitwidth st tx) in
+      bprintf b "((_ zero_extend %d) " n;
+      val_typ_to_smt b st (tx, x);
+      bprintf b ")"
+
+and sext_to_smt b st tx x ty = 
+  if is_bool st tx then
+    let n = (bitwidth st ty) in
+      bprintf b "(ite ";
+      val_typ_to_smt b st (tx, x);
+      bprintf b " (bvneg (_ bv1 %d)) (_ bv0 %d))" n n;
+  else
+    let n = (bitwidth st ty) - (bitwidth st tx) in
+      bprintf b "((_ sign_extend %d) " n;
+      val_typ_to_smt b st (tx, x);
+      bprintf b ")"	       
+
+and inttoptr_to_smt b st tx x ty = 
+  let np = (bitwidth st tx) in  (* pointer size *)
+  let n = (bitwidth st ty) in   (* converted to integer of n bits *)
+    if np < n then
+      (* zero extend *)
+      begin
+	bprintf b "((_ zero_extend %d) " (n - np);
+	val_typ_to_smt b st (tx, x);
+	bprintf b ")"
+      end
+    else if np > n then
+      (* truncate *)
+      begin
+	bprintf b "((_ extract %d 0) " (n - 1);
+	val_typ_to_smt b st (tx, x);
+	bprintf b ")"
+      end
+    else
+      (* no op *)
+      val_typ_to_smt b st (tx, x)
+	
 and val_to_smt b st (typ, v) =
   (match v with
-     | Var x          -> name_to_smt b st x
-     | Null           -> zero_vector b st.addr_width
-     | Zero           -> zero_vector b (bitwidth st typ)
-     | Int n          -> bprintf b "(_ bv%s %d)" (Big_int.string_of_big_int n) (bitwidth st typ)
-     | Trunc(x, ty) ->
-	 let n = (bitwidth st ty) in
-	   bprintf b "((_ extract %d 0) " (n - 1);
-	   val_typ_to_smt b st x;
-	   bprintf b ")"
-     | Zext((tx, x), ty) ->
-	 if is_bool st tx then
-	   let n = (bitwidth st ty) in
-	     bprintf b "(ite ";
-	     val_typ_to_smt b st (tx, x);
-	     bprintf b " (_ bv1 %d) (_ bv0 %d))" n n;
-	 else
-	   let n = (bitwidth st ty) - (bitwidth st tx) in
-	     bprintf b "((_ zero_extend %d) " n;
-	     val_typ_to_smt b st (tx, x);
-	     bprintf b ")"
-     | Sext((tx, x), ty) ->
-	 if is_bool st tx then
-	   let n = (bitwidth st ty) in
-	     bprintf b "(ite ";
-	     val_typ_to_smt b st (tx, x);
-	     bprintf b " (bvneg (_ bv1 %d)) (_ bv0 %d))" n n;
-	 else
-	   let n = (bitwidth st ty) - (bitwidth st tx) in
-	     bprintf b "((_ sign_extend %d) " n;
-	     val_typ_to_smt b st (tx, x);
-	     bprintf b ")"	       
-     | Bitcast(x, ty) -> (* no op *)
-	 val_typ_to_smt b st x
-     | Inttoptr((tx, x), ty) ->
-	 let np = (bitwidth st tx) in  (* pointer size *)
-	 let n = (bitwidth st ty) in   (* converted to integer of n bits *)
-	   if np < n then
-	     (* zero extend *)
-	     begin
-	       bprintf b "((_ zero_extend %d) " (n - np);
-	       val_typ_to_smt b st (tx, x);
-	       bprintf b ")"
-	     end
-	   else if np > n then
-	     (* truncate *)
-	     begin
-	       bprintf b "((_ extract %d 0) " (n - 1);
-	       val_typ_to_smt b st (tx, x);
-	       bprintf b ")"
-	     end
-	   else
-	     (* no op *)
-	     val_typ_to_smt b st (tx, x)
+     | Var x             -> name_to_smt b st x
+     | Null              -> zero_vector b st.addr_width
+     | Zero              -> zero_vector b (bitwidth st typ)
+     | Int n             -> bprintf b "(_ bv%s %d)" (Big_int.string_of_big_int n) (bitwidth st typ)
+     | Trunc(x, ty)      -> trunc_to_smt b st x ty
+     | Zext((tx, x), ty) -> zext_to_smt b st tx x ty
+     | Sext((tx, x), ty) -> sext_to_smt b st tx x ty
+     | Bitcast(x, ty)    -> val_typ_to_smt b st x  (* no op *)
+     | Inttoptr((tx, x), ty) -> inttoptr_to_smt b st tx x ty
 	 (*
 	   | Ptrtoint(x, y)       -> bprintf b "ptrtoint (%a to %a)" bpr_typ_value x      bpr_typ y
 	   | Getelementptr(inbounds, x) -> bprintf b "getelementptr %a(%a)" (yes "inbounds ") inbounds bpr_typ_value_list x
@@ -476,55 +483,11 @@ let rhs_to_smt b st i =
       | Select(_)                -> Util.nfailwith ("malformed Select instruction: " ^ (Llvm_pp.string_of_rhs i))
       | Alloca(_)                -> bprintf b "%s" (sp_ref st)
       | Load(_, _, (ty, v), _, _, _) -> load_to_smt b st i ty v
-      | Trunc(x, ty, _) ->
-	  let n = (bitwidth st ty) in
-	    bprintf b "((_ extract %d 0) " (n - 1);
-	    val_typ_to_smt b st x;
-	    bprintf b ")"
-      | Zext((tx, x), ty, _) ->
-	 if is_bool st tx then
-	   let n = (bitwidth st ty) in
-	     bprintf b "(ite ";
-	     val_typ_to_smt b st (tx, x);
-	     bprintf b " (_ bv1 %d) (_ bv0 %d))" n n;
-	 else
-	   let n = (bitwidth st ty) - (bitwidth st tx) in
-	     bprintf b "((_ zero_extend %d) " n;
-	     val_typ_to_smt b st (tx, x);
-	     bprintf b ")"
-      | Sext((tx, x), ty, _) ->
-	 if is_bool st tx then
-	   let n = (bitwidth st ty) in
-	     bprintf b "(ite ";
-	     val_typ_to_smt b st (tx, x);
-	     bprintf b " (bvneg (_ bv1 %d)) (_ bv0 %d))" n n;
-	 else
-	   let n = (bitwidth st ty) - (bitwidth st tx) in
-	     bprintf b "((_ sign_extend %d) " n;
-	     val_typ_to_smt b st (tx, x);
-	     bprintf b ")"
-      | Bitcast(x, ty, _) -> (* no op *)
-	  val_typ_to_smt b st x
-      | Inttoptr((tx,x), ty, _) ->
-	  let np = (bitwidth st tx) in  (* pointer size *)
-	  let n = (bitwidth st ty) in   (* converted to integer of n bits *)
-	    if np < n then
-	      (* zero extend *)
-	      begin
-		bprintf b "((_ zero_extend %d) " (n - np);
-		val_typ_to_smt b st (tx, x);
-		bprintf b ")"
-	      end
-	    else if np > n then
-	      (* truncate *)
-	      begin
-		bprintf b "((_ extract %d 0) " (n - 1);
-		val_typ_to_smt b st (tx, x);
-		bprintf b ")"
-	      end
-	    else
-	      (* no op *)
-	      val_typ_to_smt b st (tx, x)
+      | Trunc(x, ty, _)          -> trunc_to_smt b st x ty
+      | Zext((tx, x), ty, _)     -> zext_to_smt b st tx x ty
+      | Sext((tx, x), ty, _)     -> sext_to_smt b st tx x ty
+      | Bitcast(x, ty, _)        -> val_typ_to_smt b st x (* no op *)
+      | Inttoptr((tx, x), ty, _) -> inttoptr_to_smt b st tx x ty
 
       (*
 	Feasible
