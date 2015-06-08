@@ -333,8 +333,8 @@ and val_to_smt b st (typ, v) =
      | Sext((tx, x), ty) -> sext_to_smt b st tx x ty
      | Bitcast(x, ty)    -> val_typ_to_smt b st x  (* no op *)
      | Inttoptr((tx, x), ty) -> inttoptr_to_smt b st tx x ty
+     | Ptrtoint((tx, x), ty) -> inttoptr_to_smt b st tx x ty
 	 (*
-	   | Ptrtoint(x, y)       -> bprintf b "ptrtoint (%a to %a)" bpr_typ_value x      bpr_typ y
 	   | Getelementptr(inbounds, x) -> bprintf b "getelementptr %a(%a)" (yes "inbounds ") inbounds bpr_typ_value_list x
 	 *)
      | Select([c;t;e]) -> ite_to_smt b st c t e
@@ -488,11 +488,11 @@ let rhs_to_smt b st i =
       | Sext((tx, x), ty, _)     -> sext_to_smt b st tx x ty
       | Bitcast(x, ty, _)        -> val_typ_to_smt b st x (* no op *)
       | Inttoptr((tx, x), ty, _) -> inttoptr_to_smt b st tx x ty
+      | Ptrtoint((tx, x), ty, _) -> inttoptr_to_smt b st tx x ty
 
       (*
 	Feasible
 	| Addrspacecast(x, y, md)  ->
-	| Ptrtoint(x, y, md)       ->
 	| Getelementptr(inbounds, x, md) ->
 	| Phi(ty, incoming, md) ->
 	| Extractvalue(x, y, md) ->

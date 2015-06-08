@@ -24,7 +24,6 @@ llparse.mli
 
 #test generation
 *.out.ll
-*.smt
 
 #executables
 dltest
