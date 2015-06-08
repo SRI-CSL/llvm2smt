@@ -318,6 +318,7 @@ and inttoptr_to_smt b st tx x ty =
 	val_typ_to_smt b st (tx, x);
 	bprintf b ")"
       end
+      
     else
       (* no op *)
       val_typ_to_smt b st (tx, x)
