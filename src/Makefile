@@ -58,6 +58,10 @@ rot13:  llvm2smt
 	./llvm2smt ${BITCODE}/rot13.ll > ${BITCODE}/rot13.smt
 	yices-smt2 ${BITCODE}/rot13.smt
 
+int2ptr:  llvm2smt
+	./llvm2smt ${BITCODE}/int2ptr.ll > ${BITCODE}/int2ptr.smt
+	yices-smt2 ${BITCODE}/int2ptr.smt
+
 primes:  llvm2smt
 	./llvm2smt ${BITCODE}/primes_opt_auto2.ll > ${BITCODE}/primes_opt_auto2.smt
 #	./llvm2smt ${BITCODE}/primes_opt_auto3.ll > ${BITCODE}/primes_opt_auto3.smt
