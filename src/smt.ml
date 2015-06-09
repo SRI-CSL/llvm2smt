@@ -248,6 +248,11 @@ let icmp_op_to_smt = function
   | I.Uge -> "bvuge"
 
 
+(* we'll need a similar beast to fetch the return type, i.e.
+   the type of the thing pointed to ... or just return (etyp, current)
+   at the base case.
+*)
+      
 let gep_offset st typ etyp z =
   let gep_offset st typ etyp z current =
     (match z with
