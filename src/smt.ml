@@ -248,14 +248,16 @@ let icmp_op_to_smt = function
   | I.Uge -> "bvuge"
 
 
-let gep_type_at st etyp vi =
+let rec gep_type_at st etyp vi =
   match etyp with
     | Vartyp(vt) ->
-	let vty = (Bc_manip.typ_of_var st.cu (state_fu st) vt) in 
-	  failwith("gep_type_at: global lookup of etype = "^(Llvm_pp.string_of_typ etyp)^" found "^(Llvm_pp.string_of_typ vty)^"\n")
+	let vty = (Bc_manip.typ_of_var st.cu (state_fu st) vt)
+	in
+	  (* (Printf.eprintf "gep_type_at: global lookup of etype = %s found %s\n" (Llvm_pp.string_of_typ etyp) (Llvm_pp.string_of_typ vty)); *)
+	  gep_type_at st vty vi
     | Structtyp(packed, typ_list) ->
-	let i = (val_to_int vi) in
-	  List.nth typ_list (i - 1)   
+	let i = (val_to_int vi) in 
+	    List.nth typ_list i
     | Arraytyp(length, etyp0) -> etyp0
     | Pointer(etyp0, _) -> etyp0  (* Are we treating pointers as arrays? *)
 	(*
