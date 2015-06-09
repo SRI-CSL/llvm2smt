@@ -250,7 +250,9 @@ let icmp_op_to_smt = function
 
 let gep_type_at st etyp vi =
   match etyp with
-    | Vartyp(vt) -> failwith("gep_type_at: need to globally lookup etype = "^(Llvm_pp.string_of_typ etyp)^"\n")
+    | Vartyp(vt) ->
+	let vty = (Bc_manip.typ_of_var st.cu (state_fu st) vt) in 
+	  failwith("gep_type_at: global lookup of etype = "^(Llvm_pp.string_of_typ etyp)^" found "^(Llvm_pp.string_of_typ vty)^"\n")
     | Structtyp(packed, typ_list) ->
 	let i = (val_to_int vi) in
 	  List.nth typ_list (i - 1)   
