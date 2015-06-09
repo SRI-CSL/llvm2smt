@@ -265,6 +265,22 @@ let rec gep_type_at st etyp vi =
 	*)
     | _ -> failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
 	    
+
+(* ARRRRGH: this can't return a number when we have variable vi *)
+let rec offset_of st typ vi =
+  (match typ with
+     | Vartyp(vt) ->
+	 let vty = (Bc_manip.typ_of_var st.cu (state_fu st) vt)
+	 in
+	  (* (Printf.eprintf "gep_type_at: global lookup of etype = %s found %s\n" (Llvm_pp.string_of_typ etyp) (Llvm_pp.string_of_typ vty)); *)
+	   offset_of st vty vi
+     | Structtyp(packed, typ_list) -> 1
+     | Arraytyp(length, etyp0) -> 1
+     | Pointer(etyp0, _) -> 0  (* Are we treating pointers as arrays? *)
+     | _ -> failwith("offset_of: typ = "^(Llvm_pp.string_of_typ typ)^", vi = "^(Llvm_pp.string_of_value vi)^"\n"))
+
+  
+
 (*
   if etyp is a struct then i must be an integer constant.
   
@@ -286,7 +302,8 @@ let gep_offset st typ etyp z =
        | [] -> (etyp, current)
        | (ti, vi) :: z0  ->
 	   let etyp0 = gep_type_at st etyp vi in
-	     gep_offset_aux st typ etyp0 z0 (current + 1))
+	   let offset = (offset_of  st etyp vi) in 
+	     gep_offset_aux st typ etyp0 z0 (current + offset))
   in
     gep_offset_aux st typ etyp z 0
       
