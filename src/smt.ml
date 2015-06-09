@@ -444,6 +444,7 @@ and gep_to_smt b st (tx, x) z =
 	 let (aty, apolylist) = gep_offset st tx tx z in
 	   begin
 	     print_offset_list apolylist;
+	     Printf.eprintf " Points to: %s\n" (Llvm_pp.string_of_typ aty);
 	     val_typ_to_smt b st (tx, x)  (* no op for now *)
 	   end
      | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
