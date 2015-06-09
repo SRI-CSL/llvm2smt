@@ -260,12 +260,25 @@ let print_offset_list offset =
     )
   in
     begin
-      Printf.eprintf "0";
       List.iter print_polyoffset offset;
       Printf.eprintf "\n"
     end
 
-      
+let is_zero_poly p =
+    (match p with 
+       | (0, _) -> true
+       | _ -> false)
+
+
+let add_to_offset p o =
+    if (is_zero_poly p)
+    then
+      o
+    else
+      (match o with
+	| [] -> [p]
+	| hd :: tl  -> if (is_zero_poly hd) then p :: tl else p :: o)
+	
 		
 let rec gep_type_at st etyp vi =
   match etyp with
@@ -345,7 +358,7 @@ let gep_offset st typ etyp z =
        | (ti, vi) :: z0  ->
 	   let etyp0 = gep_type_at st etyp vi in
 	   let offset = (offset_of st etyp vi) in 
-	     gep_offset_aux st typ etyp0 z0  (offset :: current))
+	     gep_offset_aux st typ etyp0 z0  ( add_to_offset offset current) )
   in
     gep_offset_aux st typ etyp z [(0, None)]
       
