@@ -248,16 +248,31 @@ let icmp_op_to_smt = function
   | I.Uge -> "bvuge"
 
 
-(* we'll need a similar beast to fetch the return type, i.e.
-   the type of the thing pointed to ... or just return (etyp, current)
-   at the base case.
-*)
+let gep_type_at st etyp vi =
+  match etyp with
+    | Structtyp(packed, typ_list) ->
+	let i = (val_to_int vi) in
+	  List.nth typ_list (i - 1)   
+    | Arraytyp(length, etyp0) -> etyp0
+    | Pointer(etyp0, _) -> etyp0  (* Are we treating pointers as arrays? *)
+	(*
+	  | Vector  of int * typ                         
+	*)
+    | _ ->  (* this is odd; need to discuss this *)
+	if (val_to_int vi) = 0
+	then
+	  etyp
+	else
+	  failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
+
       
 let gep_offset st typ etyp z =
   let gep_offset st typ etyp z current =
     (match z with
-       | [] -> current
-       | (ti, i) :: z0  ->
+       | [] -> (etyp, current)
+       | (ti, vi) :: z0  ->
+	   let etyp0 = gep_type_at st etyp vi in
+	     
 (*
   if etyp is a struct then i must be an integer constant.
   
@@ -273,7 +288,7 @@ let gep_offset st typ etyp z =
   if etyp is a vector then some research is required.
   
 *)
-	   current)
+	   (etyp0, current)) (* dummy for now *)
   in
     gep_offset st typ etyp z 0
       
