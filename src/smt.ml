@@ -248,6 +248,10 @@ let icmp_op_to_smt = function
   | I.Uge -> "bvuge"
 
 
+let gep_offset st typ etyp z = 0
+
+			       
+      
 (*
  * Typed value --> converted to an SMT expression
  * Raise Exception InstructionNotSupported ... 
@@ -301,9 +305,9 @@ and sext_to_smt b st tx x ty =
       val_typ_to_smt b st (tx, x);
       bprintf b ")"	       
 
-and inttoptr_to_smt b st tx x ty = 
-  let np = (bitwidth st tx) in  (* pointer size *)
-  let n = (bitwidth st ty) in   (* converted to integer of n bits *)
+and int_ptr_to_smt b st tx x ty = 
+  let np = (bitwidth st tx) in  (* source size *)
+  let n = (bitwidth st ty) in   (* destination *)
     if np < n then
       (* zero extend *)
       begin
@@ -322,6 +326,15 @@ and inttoptr_to_smt b st tx x ty =
     else
       (* no op *)
       val_typ_to_smt b st (tx, x)
+
+and gep_to_smt b st (tx, x) z =
+  (match tx with
+     | Pointer(totyp, _) ->
+	 let answer = gep_offset st tx totyp z in
+	   val_typ_to_smt b st (tx, x)  (* no op for now *)
+     | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
+  )
+	      
 	
 and val_to_smt b st (typ, v) =
   (match v with
@@ -333,11 +346,9 @@ and val_to_smt b st (typ, v) =
      | Zext((tx, x), ty) -> zext_to_smt b st tx x ty
      | Sext((tx, x), ty) -> sext_to_smt b st tx x ty
      | Bitcast(x, ty)    -> val_typ_to_smt b st x  (* no op *)
-     | Inttoptr((tx, x), ty) -> inttoptr_to_smt b st tx x ty
-     | Ptrtoint((tx, x), ty) -> inttoptr_to_smt b st tx x ty
-	 (*
-	   | Getelementptr(inbounds, x) -> bprintf b "getelementptr %a(%a)" (yes "inbounds ") inbounds bpr_typ_value_list x
-	 *)
+     | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty
+     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty
+     | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z
      | Select([c;t;e]) -> ite_to_smt b st c t e
      | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
 	 
@@ -488,13 +499,13 @@ let rhs_to_smt b st i =
       | Zext((tx, x), ty, _)     -> zext_to_smt b st tx x ty
       | Sext((tx, x), ty, _)     -> sext_to_smt b st tx x ty
       | Bitcast(x, ty, _)        -> val_typ_to_smt b st x (* no op *)
-      | Inttoptr((tx, x), ty, _) -> inttoptr_to_smt b st tx x ty
-      | Ptrtoint((tx, x), ty, _) -> inttoptr_to_smt b st tx x ty
+      | Inttoptr((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
+      | Ptrtoint((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
+      | Getelementptr(inbounds, (tx, x) :: z, _) -> gep_to_smt b st (tx, x) z
 
       (*
 	Feasible
 	| Addrspacecast(x, y, md)  ->
-	| Getelementptr(inbounds, x, md) ->
 	| Phi(ty, incoming, md) ->
 	| Extractvalue(x, y, md) ->
 	| Insertvalue(x, y, z, md) ->

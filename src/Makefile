@@ -72,6 +72,11 @@ yices:  llvm2smt
 	./llvm2smt ${BITCODE}/yices_main.ll > ${BITCODE}/yices_main.smt
 	yices-smt2 ${BITCODE}/yices_main.smt
 
+gepstress: llvm2smt
+	for sourcebits in ${TESTS} ; do \
+	    ./llvm2smt ${BITCODE}/$${sourcebits}.ll > ${BITCODE}/$${sourcebits}.smt ; \
+        done
+
 clean:
 	$(RM) *~ *.cmx *.cmi *.cmo *.o llparse.ml llparse.mli llparse.mli lllex.ml ${EXES}
 

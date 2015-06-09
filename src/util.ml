@@ -4,9 +4,9 @@
 open Printf
 
 (*
- * Set this to true to avoid raising exceptions
+ * Set this to true to avoid raising exceptions (like seeing double(s))
  *)
-let debug = false
+let debug = true
 
    
 let between s bpr b =
