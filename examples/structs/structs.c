@@ -2,6 +2,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/* 
+   need to write 
+   make_sN
+   read_sN
+   print_SN
+*/
+
 typedef struct {
   char c;
 } s0;

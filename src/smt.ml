@@ -247,7 +247,7 @@ let icmp_op_to_smt = function
   | I.Ule -> "bvule"
   | I.Uge -> "bvuge"
 
-type polyoffset = int * (var option)
+type polyoffset = int * ((typ * value) option)
 
 type offset = polyoffset list
 
@@ -255,8 +255,7 @@ let print_offset_list offset =
   let print_polyoffset po =
     (match po with
        | (n, None)  -> Printf.eprintf " + %d" n
-       | (n, Some v) -> Printf.eprintf " + (%d * %s)" n (Llvm_pp.string_of_value v)
-
+       | (n, Some (t, v)) -> Printf.eprintf " + (%d * %s : %s)" n (Llvm_pp.string_of_value v) (Llvm_pp.string_of_typ t)
     )
   in
     begin
@@ -298,11 +297,11 @@ let rec gep_type_at st etyp vi =
     | _ -> failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
 	    
 
-let make_offset st ty vi =
+let make_offset st ty ti vi =
   let sz = bytewidth st ty in
     (match vi with
        | Int(n)  -> (sz * (Big_int.int_of_big_int n), None)   (* should we worry about trucation? *)
-       | _ -> (sz, Some(vi)))
+       | _ -> (sz, Some((ti, vi))))
 
 let offset_in_struct st packed typ_list i =
   let rec offset_in_struct_aux typ_list i sum =
@@ -318,17 +317,17 @@ let offset_in_struct st packed typ_list i =
     
       
 (* this can't return a number when we have variable vi *)
-let rec offset_of st typ vi =
+let rec offset_of st typ ti vi =
   (match typ with
      | Vartyp(vt) ->
 	 let vty = (Bc_manip.typ_of_var st.cu (state_fu st) vt)
 	 in
 	  (* (Printf.eprintf "gep_type_at: global lookup of etype = %s found %s\n" (Llvm_pp.string_of_typ etyp) (Llvm_pp.string_of_typ vty)); *)
-	   offset_of st vty vi
+	   offset_of st vty ti vi
      | Structtyp(packed, typ_list) ->
 	 let i = (val_to_int vi) in ((offset_in_struct st packed typ_list i), None)
-     | Arraytyp(length, etyp0) ->  (make_offset st etyp0 vi)
-     | Pointer(etyp0, _) -> (make_offset st etyp0 vi)
+     | Arraytyp(length, etyp0) ->  (make_offset st etyp0 ti vi)
+     | Pointer(etyp0, _) -> (make_offset st etyp0 ti vi)
      | _ -> failwith("offset_of: typ = "^(Llvm_pp.string_of_typ typ)^", vi = "^(Llvm_pp.string_of_value vi)^"\n"))
 
   
@@ -357,7 +356,7 @@ let gep_offset st typ etyp z =
        | [] -> (etyp, current)
        | (ti, vi) :: z0  ->
 	   let etyp0 = gep_type_at st etyp vi in
-	   let offset = (offset_of st etyp vi) in 
+	   let offset = (offset_of st etyp ti vi) in 
 	     gep_offset_aux st typ etyp0 z0  ( add_to_offset offset current) )
   in
     gep_offset_aux st typ etyp z [(0, None)]
@@ -369,7 +368,7 @@ let gep_offset st typ etyp z =
  *)
 exception InstructionNotSupported of string
 
-let rec val_typ_to_smt b st (typ, v) =
+let rec typ_val_to_smt b st (typ, v) =
   if is_bool st typ then 
     bool_val_to_smt b st v 
   else 
@@ -389,31 +388,31 @@ and bool_val_to_smt b st v =
 and trunc_to_smt b st x ty =
   let n = (bitwidth st ty) in
     bprintf b "((_ extract %d 0) " (n - 1);
-    val_typ_to_smt b st x;
+    typ_val_to_smt b st x;
     bprintf b ")"
 
 and zext_to_smt b st tx x ty = 
   if is_bool st tx then
     let n = (bitwidth st ty) in
       bprintf b "(ite ";
-      val_typ_to_smt b st (tx, x);
+      typ_val_to_smt b st (tx, x);
       bprintf b " (_ bv1 %d) (_ bv0 %d))" n n;
   else
     let n = (bitwidth st ty) - (bitwidth st tx) in
       bprintf b "((_ zero_extend %d) " n;
-      val_typ_to_smt b st (tx, x);
+      typ_val_to_smt b st (tx, x);
       bprintf b ")"
 
 and sext_to_smt b st tx x ty = 
   if is_bool st tx then
     let n = (bitwidth st ty) in
       bprintf b "(ite ";
-      val_typ_to_smt b st (tx, x);
+      typ_val_to_smt b st (tx, x);
       bprintf b " (bvneg (_ bv1 %d)) (_ bv0 %d))" n n;
   else
     let n = (bitwidth st ty) - (bitwidth st tx) in
       bprintf b "((_ sign_extend %d) " n;
-      val_typ_to_smt b st (tx, x);
+      typ_val_to_smt b st (tx, x);
       bprintf b ")"	       
 
 and int_ptr_to_smt b st tx x ty = 
@@ -423,29 +422,29 @@ and int_ptr_to_smt b st tx x ty =
       (* zero extend *)
       begin
 	bprintf b "((_ zero_extend %d) " (n - np);
-	val_typ_to_smt b st (tx, x);
+	typ_val_to_smt b st (tx, x);
 	bprintf b ")"
       end
     else if np > n then
       (* truncate *)
       begin
 	bprintf b "((_ extract %d 0) " (n - 1);
-	val_typ_to_smt b st (tx, x);
+	typ_val_to_smt b st (tx, x);
 	bprintf b ")"
       end
       
     else
       (* no op *)
-      val_typ_to_smt b st (tx, x)
+      typ_val_to_smt b st (tx, x)
 
 and gep_to_smt b st (tx, x) z =
   (match tx with
      | Pointer(totyp, _) ->
 	 let (aty, apolylist) = gep_offset st tx tx z in
 	   begin
-	     print_offset_list apolylist;
+	     print_offset_list apolylist; 
 	     Printf.eprintf " Points to: %s\n" (Llvm_pp.string_of_typ aty);
-	     val_typ_to_smt b st (tx, x)  (* no op for now *)
+	     typ_val_to_smt b st (tx, x)  (* no op for now *)
 	   end
      | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
   )
@@ -460,7 +459,7 @@ and val_to_smt b st (typ, v) =
      | Trunc(x, ty)      -> trunc_to_smt b st x ty
      | Zext((tx, x), ty) -> zext_to_smt b st tx x ty
      | Sext((tx, x), ty) -> sext_to_smt b st tx x ty
-     | Bitcast(x, ty)    -> val_typ_to_smt b st x  (* no op *)
+     | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)
      | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty
      | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty
      | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z
@@ -483,33 +482,33 @@ and val_to_smt b st (typ, v) =
   
 and binop_to_smt b st op left right =
   bprintf b "(%s " op;
-  val_typ_to_smt b st left;
+  typ_val_to_smt b st left;
   bprintf b " ";
-  val_typ_to_smt b st right;
+  typ_val_to_smt b st right;
   bprintf b ")"
 
 and ite_to_smt b st cond left right = (* if cond then left else right *)
   bprintf b "(if ";
-  val_typ_to_smt b st cond;
+  typ_val_to_smt b st cond;
   bprintf b " ";
-  val_typ_to_smt b st left;
+  typ_val_to_smt b st left;
   bprintf b " ";
-  val_typ_to_smt b st right;
+  typ_val_to_smt b st right;
   bprintf b ")"
 
 and icmp_to_smt b st cmp left right = (* Comparison: cmp = operation, left/right = integer arguments *)
   bprintf b "(%s " (icmp_op_to_smt cmp);
-  val_typ_to_smt b st left;
+  typ_val_to_smt b st left;
   bprintf b " ";
-  val_typ_to_smt b st right;
+  typ_val_to_smt b st right;
   bprintf b ")"
 
 
 (*
  * Convert typ, val to a string
  *)
-let val_typ_to_smt_string st (typ, v) =
-  Util.spr (fun b -> val_typ_to_smt b st) (typ, v)
+let typ_val_to_smt_string st (typ, v) =
+  Util.spr (fun b -> typ_val_to_smt b st) (typ, v)
 
 (*
  * Alloca: with a constant size
@@ -560,7 +559,7 @@ let load_to_smt b st i ty v =
 	 let n = bitwidth st t in
 	   begin
 	     bprintf b "(read%d %s " n (mem_ref st);
-	     val_typ_to_smt b st (ty, v);
+	     typ_val_to_smt b st (ty, v);
 	     bprintf b ")" 
 	   end
      | _ -> Util.nfailwith ("malformed Load instruction: " ^ (Llvm_pp.string_of_rhs i)))
@@ -579,9 +578,9 @@ let store_to_smt b st ty v p =
   let old_mem = st.mem_idx in
   let new_mem = old_mem + 1 in
     bprintf b "(define-fun memory%d () Mem (write%d memory%d " new_mem n old_mem;
-    val_typ_to_smt b st p;
+    typ_val_to_smt b st p;
     bprintf b " ";
-    val_typ_to_smt b st (ty, v);
+    typ_val_to_smt b st (ty, v);
     bprintf b "))";
     st.mem_idx <- new_mem
 	
@@ -612,7 +611,7 @@ let rhs_to_smt b st i =
       | Trunc(x, ty, _)          -> trunc_to_smt b st x ty
       | Zext((tx, x), ty, _)     -> zext_to_smt b st tx x ty
       | Sext((tx, x), ty, _)     -> sext_to_smt b st tx x ty
-      | Bitcast(x, ty, _)        -> val_typ_to_smt b st x (* no op *)
+      | Bitcast(x, ty, _)        -> typ_val_to_smt b st x (* no op *)
       | Inttoptr((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Ptrtoint((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Getelementptr(inbounds, (tx, x) :: z, _) -> gep_to_smt b st (tx, x) z
@@ -827,13 +826,13 @@ let smt_eq_condition st entry_cond typ v const =
     match const with
       | True -> register
       | False -> "(not "^register^")"
-      | _ -> "(= " ^ register ^ " " ^ (val_typ_to_smt_string st (typ, const)) ^ ")"
+      | _ -> "(= " ^ register ^ " " ^ (typ_val_to_smt_string st (typ, const)) ^ ")"
   in
     "(and " ^entry_cond^" "^conjunct^")"
 
 let smt_distinct_condition st entry_cond typ v const_list =
   let register = name_to_smt_string st (Bc_manip.value_to_var v) in
-  let diseq c = "(not (= " ^ register ^ " " ^ (val_typ_to_smt_string st (typ, c)) ^ "))" in
+  let diseq c = "(not (= " ^ register ^ " " ^ (typ_val_to_smt_string st (typ, c)) ^ "))" in
   let conjuncts = List.fold_left (fun s c -> s ^ " " ^ (diseq c))  "" const_list in
     "(and " ^ entry_cond ^ " " ^ conjuncts ^ ")"
 
@@ -1009,7 +1008,7 @@ let declare_result b state =
 	  bprintf b "(define-fun %s_result () " fstr;
 	  typ_to_smt b state tau;
 	  bprintf b " ";
-	  val_typ_to_smt b state (tau, v);
+	  typ_val_to_smt b state (tau, v);
 	  bprintf b ")\n"
 	    
 (*

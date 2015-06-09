@@ -8,7 +8,7 @@ EXES=rawparse parse dltest llvm2smt
 
 CORE=util.cmx llvm.cmx llvm_pp.cmx dl.cmx bc.cmx bc_manip.cmx bc_pp.cmx llparse.cmx lllex.cmx
 
-TESTS=https_examples.darwin http_examples.i386 yices_main minigzip-3.5 minisat.darwin
+TESTS=http_examples.i386 https_examples.darwin yices_main minigzip-3.5 minisat.darwin
 
 
 all: ${EXES}
@@ -57,6 +57,9 @@ switch:  llvm2smt
 rot13:  llvm2smt
 	./llvm2smt ${BITCODE}/rot13.ll > ${BITCODE}/rot13.smt
 	yices-smt2 ${BITCODE}/rot13.smt
+
+structs:  llvm2smt
+	./llvm2smt ${BITCODE}/structs.ll > ${BITCODE}/structs.smt
 
 int2ptr:  llvm2smt
 	./llvm2smt ${BITCODE}/int2ptr.ll > ${BITCODE}/int2ptr.smt
