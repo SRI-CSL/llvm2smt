@@ -248,10 +248,31 @@ let icmp_op_to_smt = function
   | I.Uge -> "bvuge"
 
 
-let gep_offset st typ etyp z = 0
+let gep_offset st typ etyp z =
+  let gep_offset st typ etyp z current =
+    (match z with
+       | [] -> current
+       | (ti, i) :: z0  ->
+(*
+  if etyp is a struct then i must be an integer constant.
+  
+  if etyp is an array [ len * etype0 ] then we will be doing a rec call to:
 
-			       
+      gep_offset st typ etyp0 z0 (current + (i * sizeof(etype0)))
+  
+  if etype is a struct then we can compute the i-th member type etype0 and again
+  do a recursive call to:
+
+      gep_offset st typ etyp0 z0 (current + offset_of(etype, i))
+
+  if etyp is a vector then some research is required.
+  
+*)
+	   current)
+  in
+    gep_offset st typ etyp z 0
       
+
 (*
  * Typed value --> converted to an SMT expression
  * Raise Exception InstructionNotSupported ... 
