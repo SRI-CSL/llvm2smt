@@ -247,6 +247,9 @@ let icmp_op_to_smt = function
   | I.Ule -> "bvule"
   | I.Uge -> "bvuge"
 
+type polyoffset = int * (var option)
+
+type offset = polyoffset list
 
 let rec gep_type_at st etyp vi =
   match etyp with
@@ -266,7 +269,26 @@ let rec gep_type_at st etyp vi =
     | _ -> failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
 	    
 
-(* ARRRRGH: this can't return a number when we have variable vi *)
+let make_offset st ty vi =
+  let sz = bytewidth st ty in
+    (match vi with
+       | Int(n)  -> (sz * (Big_int.int_of_big_int n), None)   (* should we worry about trucation? *)
+       | _ -> (sz, Some(vi)))
+
+let offset_in_struct st packed typ_list i =
+  let rec offset_in_struct_aux typ_list i sum =
+    if i = 0
+    then
+      sum
+    else 
+      (match typ_list with
+	 | [] -> sum
+	 | hd :: tl -> offset_in_struct_aux tl (i - 1) sum + (bytewidth st hd))
+  in
+    (offset_in_struct_aux typ_list i 0)
+    
+      
+(* this can't return a number when we have variable vi *)
 let rec offset_of st typ vi =
   (match typ with
      | Vartyp(vt) ->
@@ -274,9 +296,10 @@ let rec offset_of st typ vi =
 	 in
 	  (* (Printf.eprintf "gep_type_at: global lookup of etype = %s found %s\n" (Llvm_pp.string_of_typ etyp) (Llvm_pp.string_of_typ vty)); *)
 	   offset_of st vty vi
-     | Structtyp(packed, typ_list) -> 1
-     | Arraytyp(length, etyp0) -> 1
-     | Pointer(etyp0, _) -> 0  (* Are we treating pointers as arrays? *)
+     | Structtyp(packed, typ_list) ->
+	 let i = (val_to_int vi) in ((offset_in_struct st packed typ_list i), None)
+     | Arraytyp(length, etyp0) ->  (make_offset st etyp0 vi)
+     | Pointer(etyp0, _) -> (make_offset st etyp0 vi)
      | _ -> failwith("offset_of: typ = "^(Llvm_pp.string_of_typ typ)^", vi = "^(Llvm_pp.string_of_value vi)^"\n"))
 
   
@@ -294,6 +317,9 @@ let rec offset_of st typ vi =
       gep_offset st typ etyp0 z0 (current + offset_of(etype, i))
 
   if etyp is a vector then some research is required.
+
+  N.B. since we may encounter non constant indexes "current" will be of
+  type offset (i.e. a list of polyoffsets)
   
 *)
 let gep_offset st typ etyp z =
@@ -302,10 +328,10 @@ let gep_offset st typ etyp z =
        | [] -> (etyp, current)
        | (ti, vi) :: z0  ->
 	   let etyp0 = gep_type_at st etyp vi in
-	   let offset = (offset_of  st etyp vi) in 
-	     gep_offset_aux st typ etyp0 z0 (current + offset))
+	   let offset = (offset_of st etyp vi) in 
+	     gep_offset_aux st typ etyp0 z0  (offset :: current))
   in
-    gep_offset_aux st typ etyp z 0
+    gep_offset_aux st typ etyp z [(0, None)]
       
 
 (*
