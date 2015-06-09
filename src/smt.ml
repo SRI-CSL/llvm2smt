@@ -250,6 +250,7 @@ let icmp_op_to_smt = function
 
 let gep_type_at st etyp vi =
   match etyp with
+    | Vartyp(vt) -> failwith("gep_type_at: need to globally lookup etype = "^(Llvm_pp.string_of_typ etyp)^"\n")
     | Structtyp(packed, typ_list) ->
 	let i = (val_to_int vi) in
 	  List.nth typ_list (i - 1)   
@@ -258,15 +259,8 @@ let gep_type_at st etyp vi =
 	(*
 	  | Vector  of int * typ                         
 	*)
-    | _ ->   failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
-      
-let gep_offset st typ etyp z =
-  let gep_offset st typ etyp z current =
-    (match z with
-       | [] -> (etyp, current)
-       | (ti, vi) :: z0  ->
-	   let etyp0 = gep_type_at st etyp vi in
-	     
+    | _ -> failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
+	    
 (*
   if etyp is a struct then i must be an integer constant.
   
@@ -282,9 +276,15 @@ let gep_offset st typ etyp z =
   if etyp is a vector then some research is required.
   
 *)
-	   (etyp0, current)) (* dummy for now *)
+let gep_offset st typ etyp z =
+  let rec gep_offset_aux st typ etyp z current =
+    (match z with
+       | [] -> (etyp, current)
+       | (ti, vi) :: z0  ->
+	   let etyp0 = gep_type_at st etyp vi in
+	     gep_offset_aux st typ etyp0 z0 (current + 1))
   in
-    gep_offset st typ etyp z 0
+    gep_offset_aux st typ etyp z 0
       
 
 (*
@@ -386,7 +386,6 @@ and val_to_smt b st (typ, v) =
      | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z
      | Select([c;t;e]) -> ite_to_smt b st c t e
      | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
-	 
      | Add(_, _, x, y) -> binop_to_smt b st "bvadd" x y
      | Sub(_, _, x, y) -> binop_to_smt b st "bvsub" x y
      | Mul(_, _, x, y) -> binop_to_smt b st "bvmul" x y
