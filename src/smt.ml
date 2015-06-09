@@ -258,13 +258,7 @@ let gep_type_at st etyp vi =
 	(*
 	  | Vector  of int * typ                         
 	*)
-    | _ ->  (* this is odd; need to discuss this *)
-	if (val_to_int vi) = 0
-	then
-	  etyp
-	else
-	  failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
-
+    | _ ->   failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
       
 let gep_offset st typ etyp z =
   let gep_offset st typ etyp z current =
@@ -371,7 +365,7 @@ and int_ptr_to_smt b st tx x ty =
 and gep_to_smt b st (tx, x) z =
   (match tx with
      | Pointer(totyp, _) ->
-	 let answer = gep_offset st tx totyp z in
+	 let answer = gep_offset st tx tx z in
 	   val_typ_to_smt b st (tx, x)  (* no op for now *)
      | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
   )
