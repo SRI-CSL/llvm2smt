@@ -251,6 +251,22 @@ type polyoffset = int * (var option)
 
 type offset = polyoffset list
 
+let print_offset_list offset =
+  let print_polyoffset po =
+    (match po with
+       | (n, None)  -> Printf.eprintf " + %d" n
+       | (n, Some v) -> Printf.eprintf " + (%d * %s)" n (Llvm_pp.string_of_value v)
+
+    )
+  in
+    begin
+      Printf.eprintf "0";
+      List.iter print_polyoffset offset;
+      Printf.eprintf "\n"
+    end
+
+      
+		
 let rec gep_type_at st etyp vi =
   match etyp with
     | Vartyp(vt) ->
@@ -412,8 +428,11 @@ and int_ptr_to_smt b st tx x ty =
 and gep_to_smt b st (tx, x) z =
   (match tx with
      | Pointer(totyp, _) ->
-	 let answer = gep_offset st tx tx z in
-	   val_typ_to_smt b st (tx, x)  (* no op for now *)
+	 let (aty, apolylist) = gep_offset st tx tx z in
+	   begin
+	     print_offset_list apolylist;
+	     val_typ_to_smt b st (tx, x)  (* no op for now *)
+	   end
      | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
   )
 	      
