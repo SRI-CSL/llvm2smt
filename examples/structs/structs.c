@@ -117,26 +117,42 @@ s7* make_s7(char c, short s, int j){
 
 
 int main(int argc, char* argv[]){
-  s0 x0 = { '0' };
-  s1 x1;
-  s2 x2;
-  s3 x3;
-  s4 x4;
-  s5 x5;
-  s6 x6;
   
-  s7 z0;
-  
-  fprintf(stderr, "sizeof(%s) = %d, x0.c = %c\n", "x0", (int)sizeof(x0), x0.c);
-  fprintf(stderr, "sizeof(%s) = %d\n", "x1", (int)sizeof(x1));
-  fprintf(stderr, "sizeof(%s) = %d\n", "x2", (int)sizeof(x2));
-  fprintf(stderr, "sizeof(%s) = %d\n", "x3", (int)sizeof(x3));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s0", (int)sizeof(s0), (int)offsetof(s0, c));
+  fprintf(stderr, "\n");
 
-  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "x4", (int)sizeof(x4), (int)offsetof(s4, d));
-  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "x5", (int)sizeof(x5), (int)offsetof(s5, i64));
-  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "x6", (int)sizeof(x6), (int)offsetof(s6, f));
- 
-  fprintf(stderr, "sizeof(%s) = %d\n", "s7", (int)sizeof(z0));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s1", (int)sizeof(s1), (int)offsetof(s1, c));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s1", (int)sizeof(s1), (int)offsetof(s1, d));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s1", (int)sizeof(s1), (int)offsetof(s1, s));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s1", (int)sizeof(s1), (int)offsetof(s1, n));
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s2", (int)sizeof(s2), (int)offsetof(s2, c));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s2", (int)sizeof(s2), (int)offsetof(s2, s));
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s3", (int)sizeof(s3), (int)offsetof(s3, c));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s2", (int)sizeof(s3), (int)offsetof(s3, d));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s2", (int)sizeof(s3), (int)offsetof(s3, s));
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s4", (int)sizeof(s4), (int)offsetof(s4, d));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s4", (int)sizeof(s4), (int)offsetof(s4, d));
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s5", (int)sizeof(s5), (int)offsetof(s5, c));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s5", (int)sizeof(s5), (int)offsetof(s5, i64));
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s6", (int)sizeof(s6), (int)offsetof(s6, c));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s6", (int)sizeof(s6), (int)offsetof(s6, f));
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s6", (int)sizeof(s7), (int)offsetof(s7, c));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s6", (int)sizeof(s7), (int)offsetof(s7, s));
+  fprintf(stderr, "sizeof(%s) = %d offset of d = %d\n", "s6", (int)sizeof(s7), (int)offsetof(s7, j));
+  fprintf(stderr, "\n");
+
 
 
 
