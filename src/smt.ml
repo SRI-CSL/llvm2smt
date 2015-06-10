@@ -251,34 +251,41 @@ type polyoffset = int * ((typ * value) option)
 
 type offset = polyoffset list
 
+let print_polyoffset po =
+  (match po with
+     | (n, None)  -> Printf.eprintf "GEP = %d" n
+     | (n, Some (t, v)) -> Printf.eprintf " + (%d * %s : %s)" n (Llvm_pp.string_of_value v) (Llvm_pp.string_of_typ t)
+  )
+
 let print_offset_list offset =
-  let print_polyoffset po =
-    (match po with
-       | (n, None)  -> Printf.eprintf " + %d" n
-       | (n, Some (t, v)) -> Printf.eprintf " + (%d * %s : %s)" n (Llvm_pp.string_of_value v) (Llvm_pp.string_of_typ t)
-    )
-  in
-    begin
-      List.iter print_polyoffset offset;
-      Printf.eprintf "\n"
-    end
+  List.iter print_polyoffset offset
 
 let is_zero_poly p =
     (match p with 
        | (0, _) -> true
        | _ -> false)
 
-
-let add_to_offset p o =
+let add_to_offset p off =
     if (is_zero_poly p)
     then
-      o
+      off
     else
-      (match o with
+      (match off with
 	| [] -> [p]
-	| hd :: tl  -> if (is_zero_poly hd) then p :: tl else p :: o)
-	
-		
+	| hd :: tl  -> if (is_zero_poly hd) then p :: tl else p :: off)
+
+
+let rec canonicalize_aux offset sum rest = 
+  (match offset with
+     | [] -> (sum, None) :: rest
+     | hd :: tl ->
+	 (match hd with
+	    | (n, None) -> canonicalize_aux tl (sum + n) rest
+	    | _ -> canonicalize_aux tl sum (hd :: rest)))
+
+let canonicalize offset =  canonicalize_aux offset 0 []
+			     
+
 let rec gep_type_at st etyp vi =
   match etyp with
     | Vartyp(vt) ->
@@ -316,7 +323,7 @@ let offset_in_struct st packed typ_list i =
     (offset_in_struct_aux typ_list i 0)
     
       
-(* this can't return a number when we have variable vi *)
+    
 let rec offset_of st typ ti vi =
   (match typ with
      | Vartyp(vt) ->
@@ -328,9 +335,8 @@ let rec offset_of st typ ti vi =
 	 let i = (val_to_int vi) in ((offset_in_struct st packed typ_list i), None)
      | Arraytyp(length, etyp0) ->  (make_offset st etyp0 ti vi)
      | Pointer(etyp0, _) -> (make_offset st etyp0 ti vi)
-     | _ -> failwith("offset_of: typ = "^(Llvm_pp.string_of_typ typ)^", vi = "^(Llvm_pp.string_of_value vi)^"\n"))
+     | _ -> failwith("offset_of_aux: typ = "^(Llvm_pp.string_of_typ typ)^", vi = "^(Llvm_pp.string_of_value vi)^"\n"))
 
-  
 
 (*
   if etyp is a struct then i must be an integer constant.
@@ -353,10 +359,10 @@ let rec offset_of st typ ti vi =
 let gep_offset st typ etyp z =
   let rec gep_offset_aux st typ etyp z current =
     (match z with
-       | [] -> (etyp, current)
+       | [] -> (etyp, (canonicalize current))
        | (ti, vi) :: z0  ->
 	   let etyp0 = gep_type_at st etyp vi in
-	   let offset = (offset_of st etyp ti vi) in 
+	   let offset = (offset_of st etyp ti vi) in
 	     gep_offset_aux st typ etyp0 z0  ( add_to_offset offset current) )
   in
     gep_offset_aux st typ etyp z [(0, None)]
@@ -443,7 +449,7 @@ and gep_to_smt b st (tx, x) z =
 	 let (aty, apolylist) = gep_offset st tx tx z in
 	   begin
 	     print_offset_list apolylist; 
-	     Printf.eprintf " Points to: %s\n" (Llvm_pp.string_of_typ aty);
+	     Printf.eprintf " points to: %s\n" (Llvm_pp.string_of_typ aty);
 	     typ_val_to_smt b st (tx, x)  (* no op for now *)
 	   end
      | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
