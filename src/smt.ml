@@ -310,7 +310,7 @@ let make_offset st ty ti vi =
        | Int(n)  -> (sz * (Big_int.int_of_big_int n), None)   (* should we worry about trucation? *)
        | _ -> (sz, Some((ti, vi))))
 
-let offset_in_struct st packed typ_list i =
+let offset_in_packed_struct st packed typ_list i =
   let rec offset_in_struct_aux typ_list i sum =
     if i = 0
     then
@@ -321,9 +321,12 @@ let offset_in_struct st packed typ_list i =
 	 | hd :: tl -> offset_in_struct_aux tl (i - 1) sum + (bytewidth st hd))
   in
     (offset_in_struct_aux typ_list i 0)
+
+
+let offset_in_struct st packed typ_list i =
+  offset_in_packed_struct st packed typ_list i
     
-      
-    
+
 let rec offset_of st typ ti vi =
   (match typ with
      | Vartyp(vt) ->
