@@ -60,6 +60,7 @@ rot13:  llvm2smt
 
 structs:  llvm2smt
 	./llvm2smt ${BITCODE}/structs.ll > ${BITCODE}/structs.smt
+	./llvm2smt ${BITCODE}/packed_structs.ll > ${BITCODE}/packed_structs.smt
 
 int2ptr:  llvm2smt
 	./llvm2smt ${BITCODE}/int2ptr.ll > ${BITCODE}/int2ptr.smt
