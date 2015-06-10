@@ -3,6 +3,12 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+/*
+ *  See 3-2 of http://sco.com/developers/devspecs/abi386-4.pdf
+ *
+ */
+
+
 typedef struct {
   char c;
 } s0;
