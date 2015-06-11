@@ -319,21 +319,46 @@ let make_offset st ty ti vi =
        | Int(n)  -> (sz * (Big_int.int_of_big_int n), None)   (* should we worry about trucation? *)
        | _ -> (sz, Some((ti, vi))))
 
-let offset_in_packed_struct st packed typ_list i =
+let offset_in_packed_struct st typ_list i =
   let rec offset_in_struct_aux typ_list i sum =
-    if i = 0
+    if i == 0
     then
       sum
-    else 
+    else
       (match typ_list with
 	 | [] -> sum
-	 | hd :: tl -> offset_in_struct_aux tl (i - 1) sum + (bytewidth st hd))
+	 | hd :: tl -> offset_in_struct_aux tl (i - 1) sum + (bytewidth st hd)
+      )
   in
     (offset_in_struct_aux typ_list i 0)
 
+
+let offset_in_unpacked_struct st typ_list i =
+  let rec offset_in_unpacked_struct_aux offset typ_list i =
+    if i == 0
+    then
+      offset/8
+    else
+    (match typ_list with
+       | [] -> offset/8
+       | ty::tl ->
+	   let width = bitwidth st ty in
+	   let ty_align = (bit_align st ty) in
+	   let new_offset = offset + (bit_padding ty_align offset) + width  in
+	     offset_in_unpacked_struct_aux new_offset tl (i - 1))
+  in
+    offset_in_unpacked_struct_aux 0 typ_list i
+      
+
+
 (* still need to do the unpacked case *)
 let offset_in_struct st packed typ_list i =
-  offset_in_packed_struct st packed typ_list i
+  if packed
+  then
+    offset_in_packed_struct st typ_list i
+  else
+    offset_in_unpacked_struct st typ_list i
+      
     
 (*
  * gep_step is the recursion step of gep_offset. It returns
