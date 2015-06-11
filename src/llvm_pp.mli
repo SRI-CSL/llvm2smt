@@ -35,6 +35,8 @@ val string_of_var: Llvm.var -> string
 
 val string_of_typ: Llvm.typ -> string
 
+val string_of_typs: Llvm.typ list -> string
+
 val string_of_value: Llvm.value -> string
 
 val string_of_rhs: Llvm.instr -> string

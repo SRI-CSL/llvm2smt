@@ -331,34 +331,33 @@ let offset_in_packed_struct st typ_list i =
       )
   in
     (offset_in_struct_aux typ_list i 0)
-
-
+      
 let offset_in_unpacked_struct st typ_list i =
   let rec offset_in_unpacked_struct_aux offset typ_list i =
-    if i == 0
-    then
-      offset/8
-    else
     (match typ_list with
        | [] -> offset/8
        | ty::tl ->
-	   let width = bitwidth st ty in
-	   let ty_align = (bit_align st ty) in
-	   let new_offset = offset + (bit_padding ty_align offset) + width  in
-	     offset_in_unpacked_struct_aux new_offset tl (i - 1))
+	   if i == 0
+	   then
+	     (offset + (bit_padding (bit_align st ty) offset))/8
+	   else
+	     let width = bitwidth st ty in
+	     let ty_align = (bit_align st ty) in
+	     let new_offset = offset + (bit_padding ty_align offset) + width  in
+	       offset_in_unpacked_struct_aux new_offset tl (i - 1))  
   in
     offset_in_unpacked_struct_aux 0 typ_list i
       
 
-
 (* still need to DEBUG the unpacked case *)
 let offset_in_struct st packed typ_list i =
+  (* Printf.eprintf "offset_in_struct %s %d\n" (Llvm_pp.string_of_typs typ_list) i; *)
   if packed
   then
     offset_in_packed_struct st typ_list i
   else
     offset_in_unpacked_struct st typ_list i
-
+      
       
 (*
  * gep_step is the recursion step of gep_offset. It returns

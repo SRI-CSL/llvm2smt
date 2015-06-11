@@ -203,6 +203,11 @@ and bpr_formal b (typ, pattrs, formal) =
 let string_of_typ t =
   Util.spr bpr_typ t
 
+let rec string_of_typs typs =
+  (match typs with
+     | [] -> ""
+     | ty :: tl -> (string_of_typ ty) ^ " " ^ string_of_typs tl)
+  
     
 let bpr_index_list b l =
   List.iter (bprintf b ", %d") l
