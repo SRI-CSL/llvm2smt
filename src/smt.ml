@@ -247,10 +247,33 @@ let icmp_op_to_smt = function
   | I.Ule -> "bvule"
   | I.Uge -> "bvuge"
 
+(*
+ * These two types are not used. They are just commentary.
+ * To implement GEP we proveide a function
+ *
+ *  gep_offset st typ z
+ *
+ * which returns a pair (etype, offset)
+ *
+ * etype: the type of the thing at the end of the z path in typ.
+ *
+ * offset: the polynomial representing the offset from the
+ * base pointer needed to get to the thing at the end of
+ * the z path in typ.
+ *
+ * The polynomial offset returned by gep_offset is in
+ * canonical form:
+ *
+ *  ((n, None),  (n0, Some(ti0, vi0)),  ...,  (nM, Some(tiM, viM)))
+ *
+ * n can be 0. The non-constant terms can be empty.
+ *
+ *)
 type polyoffset = int * ((typ * value) option)
 
 type offset = polyoffset list
 
+(* prints an offset polynomial *)
 let print_polyoffset po =
   (match po with
      | (n, None)  -> Printf.eprintf "GEP = %d" n
@@ -274,36 +297,17 @@ let add_to_offset p off =
 	| [] -> [p]
 	| hd :: tl  -> if (is_zero_poly hd) then p :: tl else p :: off)
 
-
-let rec canonicalize_aux offset sum rest = 
-  (match offset with
-     | [] -> (sum, None) :: rest
-     | hd :: tl ->
-	 (match hd with
-	    | (n, None) -> canonicalize_aux tl (sum + n) rest
-	    | _ -> canonicalize_aux tl sum (hd :: rest)))
-
-let canonicalize offset =  canonicalize_aux offset 0 []
+let canonicalize offset =
+  let rec canonicalize_aux offset sum rest = 
+    (match offset with
+       | [] -> (sum, None) :: rest
+       | hd :: tl ->
+	   (match hd with
+	      | (n, None) -> canonicalize_aux tl (sum + n) rest
+	      | _ -> canonicalize_aux tl sum (hd :: rest)))
+  in 
+    canonicalize_aux offset 0 []
 			     
-
-let rec gep_type_at st etyp vi =
-  match etyp with
-    | Vartyp(vt) ->
-	let vty = (Bc_manip.typ_of_var st.cu (state_fu st) vt)
-	in
-	  (* (Printf.eprintf "gep_type_at: global lookup of etype = %s found %s\n" (Llvm_pp.string_of_typ etyp) (Llvm_pp.string_of_typ vty)); *)
-	  gep_type_at st vty vi
-    | Structtyp(packed, typ_list) ->
-	let i = (val_to_int vi) in 
-	    List.nth typ_list i
-    | Arraytyp(length, etyp0) -> etyp0
-    | Pointer(etyp0, _) -> etyp0  (* Are we treating pointers as arrays? *)
-	(*
-	  | Vector  of int * typ                         
-	*)
-    | _ -> failwith("gep_type_at: etype = "^(Llvm_pp.string_of_typ etyp)^", vi = "^(Llvm_pp.string_of_value vi)^"\n")
-	    
-
 let make_offset st ty ti vi =
   let sz = bytewidth st ty in
     (match vi with
@@ -322,24 +326,41 @@ let offset_in_packed_struct st packed typ_list i =
   in
     (offset_in_struct_aux typ_list i 0)
 
-
+(* still need to do the unpacked case *)
 let offset_in_struct st packed typ_list i =
   offset_in_packed_struct st packed typ_list i
     
-
-let rec offset_of st typ ti vi =
+(*
+ * gep_step is the recursion step of gep_offset. It returns
+ *
+ * (etyp0, offset0)  the  type and offset of the vi-th
+ * position in typ.'
+ *
+ * This function is only recursive because of the possible need
+ * for a Vartyp lookup.
+ *
+ *)
+let rec gep_step st typ ti vi = 
   (match typ with
      | Vartyp(vt) ->
 	 let vty = (Bc_manip.typ_of_var st.cu (state_fu st) vt)
 	 in
-	  (* (Printf.eprintf "gep_type_at: global lookup of etype = %s found %s\n" (Llvm_pp.string_of_typ etyp) (Llvm_pp.string_of_typ vty)); *)
-	   offset_of st vty ti vi
+	   gep_step st vty ti vi
      | Structtyp(packed, typ_list) ->
-	 let i = (val_to_int vi) in ((offset_in_struct st packed typ_list i), None)
-     | Arraytyp(length, etyp0) ->  (make_offset st etyp0 ti vi)
-     | Pointer(etyp0, _) -> (make_offset st etyp0 ti vi)
+	 let i = (val_to_int vi) in
+	 let etyp0 = List.nth typ_list i in 
+	 let offset0 = ((offset_in_struct st packed typ_list i), None) in
+	   (etyp0, offset0)
+     | Arraytyp(length, etyp0) ->
+	 let offset0 = (make_offset st etyp0 ti vi) in 
+	   (etyp0, offset0)
+     | Pointer(etyp0, _) ->
+	 let offset0 = (make_offset st etyp0 ti vi) in 
+	   (etyp0, offset0)
      | _ -> failwith("offset_of_aux: typ = "^(Llvm_pp.string_of_typ typ)^", vi = "^(Llvm_pp.string_of_value vi)^"\n"))
-
+  
+  
+  
 
 (*
   if etyp is a struct then i must be an integer constant.
@@ -359,16 +380,15 @@ let rec offset_of st typ ti vi =
   type offset (i.e. a list of polyoffsets)
   
 *)
-let gep_offset st typ etyp z =
-  let rec gep_offset_aux st typ etyp z current =
+let gep_offset st etyp z =
+  let rec gep_offset_aux st etyp z current =
     (match z with
        | [] -> (etyp, (canonicalize current))
        | (ti, vi) :: z0  ->
-	   let etyp0 = gep_type_at st etyp vi in
-	   let offset = (offset_of st etyp ti vi) in
-	     gep_offset_aux st typ etyp0 z0  ( add_to_offset offset current) )
+	   let (etyp0, offset) = gep_step st etyp ti vi in
+	     gep_offset_aux st etyp0 z0  ( add_to_offset offset current) )
   in
-    gep_offset_aux st typ etyp z [(0, None)]
+    gep_offset_aux st etyp z [(0, None)]
       
 
 (*
@@ -449,7 +469,7 @@ and int_ptr_to_smt b st tx x ty =
 and gep_to_smt b st (tx, x) z =
   (match tx with
      | Pointer(totyp, _) ->
-	 let (aty, apolylist) = gep_offset st tx tx z in
+	 let (aty, apolylist) = gep_offset st tx z in
 	   begin
 	     print_offset_list apolylist; 
 	     Printf.eprintf " points to: %s\n" (Llvm_pp.string_of_typ aty);
