@@ -349,7 +349,6 @@ let offset_in_unpacked_struct st typ_list i =
     offset_in_unpacked_struct_aux 0 typ_list i
       
 
-(* still need to DEBUG the unpacked case *)
 let offset_in_struct st packed typ_list i =
   (* Printf.eprintf "offset_in_struct %s %d\n" (Llvm_pp.string_of_typs typ_list) i; *)
   if packed
