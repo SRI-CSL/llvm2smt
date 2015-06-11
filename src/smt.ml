@@ -249,7 +249,7 @@ let icmp_op_to_smt = function
 
 (*
  * These two types are not used. They are just commentary.
- * To implement GEP we proveide a function
+ * To implement GEP we provide a function
  *
  *  gep_offset st typ z
  *
@@ -259,7 +259,12 @@ let icmp_op_to_smt = function
  *
  * offset: the polynomial representing the offset from the
  * base pointer needed to get to the thing at the end of
- * the z path in typ.
+ * the z path in typ. i.e. the thing of type etype.
+ *
+ * The offset is a polynomial, since the path may use values as
+ * indexes (thought these can only index through arrays and pointers.
+ * Not structs.
+ *
  *
  * The polynomial offset returned by gep_offset is in
  * canonical form:
