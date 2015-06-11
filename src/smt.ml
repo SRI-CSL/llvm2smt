@@ -351,15 +351,15 @@ let offset_in_unpacked_struct st typ_list i =
       
 
 
-(* still need to do the unpacked case *)
+(* still need to DEBUG the unpacked case *)
 let offset_in_struct st packed typ_list i =
   if packed
   then
     offset_in_packed_struct st typ_list i
   else
     offset_in_unpacked_struct st typ_list i
+
       
-    
 (*
  * gep_step is the recursion step of gep_offset. It returns
  *
