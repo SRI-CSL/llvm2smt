@@ -361,8 +361,8 @@ let offset_in_struct st packed typ_list i =
 (*
  * gep_step is the recursion step of gep_offset. It returns
  *
- * (etyp0, offset0)  the  type and offset of the vi-th
- * position in typ.'
+ * (etyp0, offset0)  the type and offset of the vi-th
+ * position in typ.
  *
  * This function is only recursive because of the possible need
  * for a Vartyp lookup.
