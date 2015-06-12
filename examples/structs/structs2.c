@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 
 /*
@@ -11,6 +12,13 @@ typedef struct foo1 {
     long x;
 } s1;
 
+s1* make_s1(char c){
+  s1* retval = (s1*)malloc(sizeof(s1));
+  retval->c = c;
+  return retval;
+}
+
+
 typedef struct foo2 {
     char c;      /* 1 byte */
     char pad[7]; /* 7 bytes */
@@ -18,15 +26,33 @@ typedef struct foo2 {
     long x;      /* 8 bytes */
 } s2;
 
+s2* make_s2(char c){
+  s2* retval = (s2*)malloc(sizeof(s2));
+  retval->c = c;
+  return retval;
+}
+
 typedef struct foo3 {
     char *p;     /* 8 bytes */
     char c;      /* 1 byte */
 } s3;
 
+s3* make_s3(char c){
+  s3* retval = (s3*)malloc(sizeof(s3));
+  retval->c = c;
+  return retval;
+}
+
 typedef struct foo4 {
     short s;     /* 2 bytes */
     char c;      /* 1 byte */
 } s4;
+
+s4* make_s4(char c){
+  s4* retval = (s4*)malloc(sizeof(s4));
+  retval->c = c;
+  return retval;
+}
 
 typedef struct foo5 {
     short s;
@@ -36,10 +62,22 @@ typedef struct foo5 {
     int septet:7;
 } s5;
 
+s5* make_s5(char c){
+  s5* retval = (s5*)malloc(sizeof(s5));
+  retval->c = c;
+  return retval;
+}
+
 typedef struct foo6 {
     int bigfield:31;
     int littlefield:1;
 } s6;
+
+s6* make_s6(int bigfield){
+  s6* retval = (s6*)malloc(sizeof(s6));
+  retval->bigfield = bigfield;
+  return retval;
+}
 
 typedef struct foo7 {
     int bigfield1:31;
@@ -48,12 +86,24 @@ typedef struct foo7 {
     int littlefield2:1;
 } s7;
 
+s7* make_s7(int bigfield1){
+  s7* retval = (s7*)malloc(sizeof(s7));
+  retval->bigfield1 = bigfield1;
+  return retval;
+}
+
 typedef struct foo8 {
     int bigfield1:31;
     int bigfield2:31;
     int littlefield1:1;
     int littlefield2:1;
 } s8;
+
+s8* make_s8(int bigfield1){
+  s8* retval = (s8*)malloc(sizeof(s8));
+  retval->bigfield1 = bigfield1;
+  return retval;
+}
 
 typedef struct foo9 {
     char c;
@@ -63,17 +113,35 @@ typedef struct foo9 {
     } inner;
 } s9;
 
+s9* make_s9(char c){
+  s9* retval = (s9*)malloc(sizeof(s9));
+  retval->c = c;
+  return retval;
+}
+
 typedef struct foo10 {
     char c;
     struct foo10 *p;
     short x;
 } s10;
 
+s10* make_s10(char c){
+  s10* retval = (s10*)malloc(sizeof(s10));
+  retval->c = c;
+  return retval;
+}
+
 typedef struct foo11 {
     struct foo11 *p;
     short x;
     char c;
 } s11;
+
+s11* make_s11(char c){
+  s11* retval = (s11*)malloc(sizeof(s11));
+  retval->c = c;
+  return retval;
+}
 
 typedef struct foo12 {
     struct foo12_inner {
@@ -82,6 +150,12 @@ typedef struct foo12 {
     } inner;
     char c;
 } s12;
+
+s12* make_s12(char c){
+  s12* retval = (s12*)malloc(sizeof(s12));
+  retval->c = c;
+  return retval;
+}
 
 int main(int argc, char *argv[]){
     printf("sizeof(char *)        = %zu\n", sizeof(char *));
