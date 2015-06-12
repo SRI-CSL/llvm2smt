@@ -21,16 +21,22 @@ target triple = "x86_64-apple-macosx10.9.0"
 %struct.foo12_inner = type <{ i8*, i16 }>
 
 @__stderrp = external global %struct.__sFILE*
-@.str = private unnamed_addr constant [36 x i8] c"sizeof(%s) = %d offset of c   = %d\0A\00", align 1
+@.str = private unnamed_addr constant [36 x i8] c"sizeof(%s) = %d offset of p   = %d\0A\00", align 1
 @.str1 = private unnamed_addr constant [3 x i8] c"s1\00", align 1
-@.str2 = private unnamed_addr constant [3 x i8] c"s2\00", align 1
-@.str3 = private unnamed_addr constant [3 x i8] c"s3\00", align 1
-@.str4 = private unnamed_addr constant [3 x i8] c"s4\00", align 1
-@.str5 = private unnamed_addr constant [3 x i8] c"s5\00", align 1
-@.str6 = private unnamed_addr constant [3 x i8] c"s9\00", align 1
-@.str7 = private unnamed_addr constant [4 x i8] c"s10\00", align 1
-@.str8 = private unnamed_addr constant [4 x i8] c"s11\00", align 1
-@.str9 = private unnamed_addr constant [4 x i8] c"s12\00", align 1
+@.str2 = private unnamed_addr constant [36 x i8] c"sizeof(%s) = %d offset of c   = %d\0A\00", align 1
+@.str3 = private unnamed_addr constant [37 x i8] c"sizeof(%s) = %d offset of x   = %d\0A\0A\00", align 1
+@.str4 = private unnamed_addr constant [3 x i8] c"s2\00", align 1
+@.str5 = private unnamed_addr constant [3 x i8] c"s3\00", align 1
+@.str6 = private unnamed_addr constant [37 x i8] c"sizeof(%s) = %d offset of p   = %d\0A\0A\00", align 1
+@.str7 = private unnamed_addr constant [36 x i8] c"sizeof(%s) = %d offset of s   = %d\0A\00", align 1
+@.str8 = private unnamed_addr constant [3 x i8] c"s4\00", align 1
+@.str9 = private unnamed_addr constant [37 x i8] c"sizeof(%s) = %d offset of c   = %d\0A\0A\00", align 1
+@.str10 = private unnamed_addr constant [3 x i8] c"s5\00", align 1
+@.str11 = private unnamed_addr constant [3 x i8] c"s9\00", align 1
+@.str12 = private unnamed_addr constant [4 x i8] c"s10\00", align 1
+@.str13 = private unnamed_addr constant [36 x i8] c"sizeof(%s) = %d offset of x   = %d\0A\00", align 1
+@.str14 = private unnamed_addr constant [4 x i8] c"s11\00", align 1
+@.str15 = private unnamed_addr constant [4 x i8] c"s12\00", align 1
 
 ; Function Attrs: nounwind ssp uwtable
 define %struct.foo1* @make_s1(i8* %p, i8 signext %c, i64 %x) #0 {
@@ -499,23 +505,41 @@ define i32 @main(i32 %argc, i8** %argv) #0 {
   store i32 %argc, i32* %1, align 4
   store i8** %argv, i8*** %2, align 8
   %3 = load %struct.__sFILE** @__stderrp, align 8
-  %4 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %3, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str1, i32 0, i32 0), i32 17, i32 8)
+  %4 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %3, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str1, i32 0, i32 0), i32 17, i32 0)
   %5 = load %struct.__sFILE** @__stderrp, align 8
-  %6 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %5, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str2, i32 0, i32 0), i32 24, i32 0)
+  %6 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %5, i8* getelementptr inbounds ([36 x i8]* @.str2, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str1, i32 0, i32 0), i32 17, i32 8)
   %7 = load %struct.__sFILE** @__stderrp, align 8
-  %8 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %7, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str3, i32 0, i32 0), i32 9, i32 8)
+  %8 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %7, i8* getelementptr inbounds ([37 x i8]* @.str3, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str1, i32 0, i32 0), i32 17, i32 9)
   %9 = load %struct.__sFILE** @__stderrp, align 8
-  %10 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %9, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str4, i32 0, i32 0), i32 3, i32 2)
+  %10 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %9, i8* getelementptr inbounds ([36 x i8]* @.str2, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str4, i32 0, i32 0), i32 24, i32 0)
   %11 = load %struct.__sFILE** @__stderrp, align 8
-  %12 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %11, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str5, i32 0, i32 0), i32 5, i32 2)
+  %12 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %11, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str1, i32 0, i32 0), i32 17, i32 0)
   %13 = load %struct.__sFILE** @__stderrp, align 8
-  %14 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %13, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str6, i32 0, i32 0), i32 11, i32 0)
+  %14 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %13, i8* getelementptr inbounds ([37 x i8]* @.str3, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str1, i32 0, i32 0), i32 17, i32 9)
   %15 = load %struct.__sFILE** @__stderrp, align 8
-  %16 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %15, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str7, i32 0, i32 0), i32 11, i32 0)
+  %16 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %15, i8* getelementptr inbounds ([36 x i8]* @.str2, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str5, i32 0, i32 0), i32 9, i32 8)
   %17 = load %struct.__sFILE** @__stderrp, align 8
-  %18 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %17, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str8, i32 0, i32 0), i32 11, i32 10)
+  %18 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %17, i8* getelementptr inbounds ([37 x i8]* @.str6, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str5, i32 0, i32 0), i32 9, i32 0)
   %19 = load %struct.__sFILE** @__stderrp, align 8
-  %20 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %19, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str9, i32 0, i32 0), i32 11, i32 10)
+  %20 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %19, i8* getelementptr inbounds ([36 x i8]* @.str7, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str8, i32 0, i32 0), i32 3, i32 0)
+  %21 = load %struct.__sFILE** @__stderrp, align 8
+  %22 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %21, i8* getelementptr inbounds ([37 x i8]* @.str9, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str8, i32 0, i32 0), i32 3, i32 2)
+  %23 = load %struct.__sFILE** @__stderrp, align 8
+  %24 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %23, i8* getelementptr inbounds ([36 x i8]* @.str7, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str10, i32 0, i32 0), i32 5, i32 0)
+  %25 = load %struct.__sFILE** @__stderrp, align 8
+  %26 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %25, i8* getelementptr inbounds ([36 x i8]* @.str2, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str10, i32 0, i32 0), i32 5, i32 2)
+  %27 = load %struct.__sFILE** @__stderrp, align 8
+  %28 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %27, i8* getelementptr inbounds ([36 x i8]* @.str2, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str11, i32 0, i32 0), i32 11, i32 0)
+  %29 = load %struct.__sFILE** @__stderrp, align 8
+  %30 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %29, i8* getelementptr inbounds ([36 x i8]* @.str2, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str12, i32 0, i32 0), i32 11, i32 0)
+  %31 = load %struct.__sFILE** @__stderrp, align 8
+  %32 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %31, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str12, i32 0, i32 0), i32 11, i32 1)
+  %33 = load %struct.__sFILE** @__stderrp, align 8
+  %34 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %33, i8* getelementptr inbounds ([36 x i8]* @.str13, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str12, i32 0, i32 0), i32 11, i32 9)
+  %35 = load %struct.__sFILE** @__stderrp, align 8
+  %36 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %35, i8* getelementptr inbounds ([36 x i8]* @.str2, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str14, i32 0, i32 0), i32 11, i32 10)
+  %37 = load %struct.__sFILE** @__stderrp, align 8
+  %38 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %37, i8* getelementptr inbounds ([36 x i8]* @.str2, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str15, i32 0, i32 0), i32 11, i32 10)
   ret i32 0
 }
 
