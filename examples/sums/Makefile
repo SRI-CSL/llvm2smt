@@ -17,5 +17,6 @@ unfolds:
 
 
 clean:
-	rm -f *.dot *.bc *.ll *.png
+	rm -f *.dot *.bc *.ll *.png *.log
+
 
