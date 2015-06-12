@@ -2,6 +2,9 @@
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-apple-macosx10.9.0"
 
+%struct.__sFILE = type <{ i8*, i32, i32, i16, i16, %struct.__sbuf, i32, i8*, i32 (i8*)*, i32 (i8*, i8*, i32)*, i64 (i8*, i64, i32)*, i32 (i8*, i8*, i32)*, %struct.__sbuf, %struct.__sFILEX*, i32, [3 x i8], [1 x i8], %struct.__sbuf, i32, i64 }>
+%struct.__sFILEX = type opaque
+%struct.__sbuf = type <{ i8*, i32 }>
 %struct.foo1 = type <{ i8*, i8, i64 }>
 %struct.foo2 = type <{ i8, [7 x i8], i8*, i64 }>
 %struct.foo3 = type <{ i8*, i8 }>
@@ -17,25 +20,17 @@ target triple = "x86_64-apple-macosx10.9.0"
 %struct.foo12 = type { %struct.foo12_inner, i8 }
 %struct.foo12_inner = type <{ i8*, i16 }>
 
-@.str = private unnamed_addr constant [29 x i8] c"sizeof(char *)        = %zu\0A\00", align 1
-@.str1 = private unnamed_addr constant [29 x i8] c"sizeof(long)          = %zu\0A\00", align 1
-@.str2 = private unnamed_addr constant [29 x i8] c"sizeof(int)           = %zu\0A\00", align 1
-@.str3 = private unnamed_addr constant [29 x i8] c"sizeof(short)         = %zu\0A\00", align 1
-@.str4 = private unnamed_addr constant [29 x i8] c"sizeof(char)          = %zu\0A\00", align 1
-@.str5 = private unnamed_addr constant [29 x i8] c"sizeof(float)         = %zu\0A\00", align 1
-@.str6 = private unnamed_addr constant [29 x i8] c"sizeof(double)        = %zu\0A\00", align 1
-@.str7 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo1)   = %zu\0A\00", align 1
-@.str8 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo2)   = %zu\0A\00", align 1
-@.str9 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo3)   = %zu\0A\00", align 1
-@.str10 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo4)   = %zu\0A\00", align 1
-@.str11 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo5)   = %zu\0A\00", align 1
-@.str12 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo6)   = %zu\0A\00", align 1
-@.str13 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo7)   = %zu\0A\00", align 1
-@.str14 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo8)   = %zu\0A\00", align 1
-@.str15 = private unnamed_addr constant [29 x i8] c"sizeof(struct foo9)   = %zu\0A\00", align 1
-@.str16 = private unnamed_addr constant [30 x i8] c"sizeof(struct foo10)   = %zu\0A\00", align 1
-@.str17 = private unnamed_addr constant [30 x i8] c"sizeof(struct foo11)   = %zu\0A\00", align 1
-@.str18 = private unnamed_addr constant [30 x i8] c"sizeof(struct foo12)   = %zu\0A\00", align 1
+@__stderrp = external global %struct.__sFILE*
+@.str = private unnamed_addr constant [36 x i8] c"sizeof(%s) = %d offset of c   = %d\0A\00", align 1
+@.str1 = private unnamed_addr constant [3 x i8] c"s1\00", align 1
+@.str2 = private unnamed_addr constant [3 x i8] c"s2\00", align 1
+@.str3 = private unnamed_addr constant [3 x i8] c"s3\00", align 1
+@.str4 = private unnamed_addr constant [3 x i8] c"s4\00", align 1
+@.str5 = private unnamed_addr constant [3 x i8] c"s5\00", align 1
+@.str6 = private unnamed_addr constant [3 x i8] c"s9\00", align 1
+@.str7 = private unnamed_addr constant [4 x i8] c"s10\00", align 1
+@.str8 = private unnamed_addr constant [4 x i8] c"s11\00", align 1
+@.str9 = private unnamed_addr constant [4 x i8] c"s12\00", align 1
 
 ; Function Attrs: nounwind ssp uwtable
 define %struct.foo1* @make_s1(i8* %p, i8 signext %c, i64 %x) #0 {
@@ -503,29 +498,28 @@ define i32 @main(i32 %argc, i8** %argv) #0 {
   %2 = alloca i8**, align 8
   store i32 %argc, i32* %1, align 4
   store i8** %argv, i8*** %2, align 8
-  %3 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str, i32 0, i32 0), i64 8)
-  %4 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str1, i32 0, i32 0), i64 8)
-  %5 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str2, i32 0, i32 0), i64 4)
-  %6 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str3, i32 0, i32 0), i64 2)
-  %7 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str4, i32 0, i32 0), i64 1)
-  %8 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str5, i32 0, i32 0), i64 4)
-  %9 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str6, i32 0, i32 0), i64 8)
-  %10 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str7, i32 0, i32 0), i64 17)
-  %11 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str8, i32 0, i32 0), i64 24)
-  %12 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str9, i32 0, i32 0), i64 9)
-  %13 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str10, i32 0, i32 0), i64 3)
-  %14 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str11, i32 0, i32 0), i64 5)
-  %15 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str12, i32 0, i32 0), i64 4)
-  %16 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str13, i32 0, i32 0), i64 8)
-  %17 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str14, i32 0, i32 0), i64 8)
-  %18 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([29 x i8]* @.str15, i32 0, i32 0), i64 11)
-  %19 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([30 x i8]* @.str16, i32 0, i32 0), i64 11)
-  %20 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([30 x i8]* @.str17, i32 0, i32 0), i64 11)
-  %21 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([30 x i8]* @.str18, i32 0, i32 0), i64 11)
+  %3 = load %struct.__sFILE** @__stderrp, align 8
+  %4 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %3, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str1, i32 0, i32 0), i32 17, i32 8)
+  %5 = load %struct.__sFILE** @__stderrp, align 8
+  %6 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %5, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str2, i32 0, i32 0), i32 24, i32 0)
+  %7 = load %struct.__sFILE** @__stderrp, align 8
+  %8 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %7, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str3, i32 0, i32 0), i32 9, i32 8)
+  %9 = load %struct.__sFILE** @__stderrp, align 8
+  %10 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %9, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str4, i32 0, i32 0), i32 3, i32 2)
+  %11 = load %struct.__sFILE** @__stderrp, align 8
+  %12 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %11, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str5, i32 0, i32 0), i32 5, i32 2)
+  %13 = load %struct.__sFILE** @__stderrp, align 8
+  %14 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %13, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([3 x i8]* @.str6, i32 0, i32 0), i32 11, i32 0)
+  %15 = load %struct.__sFILE** @__stderrp, align 8
+  %16 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %15, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str7, i32 0, i32 0), i32 11, i32 0)
+  %17 = load %struct.__sFILE** @__stderrp, align 8
+  %18 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %17, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str8, i32 0, i32 0), i32 11, i32 10)
+  %19 = load %struct.__sFILE** @__stderrp, align 8
+  %20 = call i32 (%struct.__sFILE*, i8*, ...)* @fprintf(%struct.__sFILE* %19, i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([4 x i8]* @.str9, i32 0, i32 0), i32 11, i32 10)
   ret i32 0
 }
 
-declare i32 @printf(i8*, ...) #1
+declare i32 @fprintf(%struct.__sFILE*, i8*, ...) #1
 
 attributes #0 = { nounwind ssp uwtable "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
 attributes #1 = { "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }

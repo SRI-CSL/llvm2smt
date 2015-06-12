@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 /*
@@ -183,23 +184,30 @@ s12* make_s12(char *p, short x, char c){
 }
 
 int main(int argc, char *argv[]){
-    printf("sizeof(char *)        = %zu\n", sizeof(char *));
-    printf("sizeof(long)          = %zu\n", sizeof(long));
-    printf("sizeof(int)           = %zu\n", sizeof(int));
-    printf("sizeof(short)         = %zu\n", sizeof(short));
-    printf("sizeof(char)          = %zu\n", sizeof(char));
-    printf("sizeof(float)         = %zu\n", sizeof(float));
-    printf("sizeof(double)        = %zu\n", sizeof(double));
-    printf("sizeof(struct foo1)   = %zu\n", sizeof(struct foo1));
-    printf("sizeof(struct foo2)   = %zu\n", sizeof(struct foo2));
-    printf("sizeof(struct foo3)   = %zu\n", sizeof(struct foo3));
-    printf("sizeof(struct foo4)   = %zu\n", sizeof(struct foo4));
-    printf("sizeof(struct foo5)   = %zu\n", sizeof(struct foo5));
-    printf("sizeof(struct foo6)   = %zu\n", sizeof(struct foo6));
-    printf("sizeof(struct foo7)   = %zu\n", sizeof(struct foo7));
-    printf("sizeof(struct foo8)   = %zu\n", sizeof(struct foo8));
-    printf("sizeof(struct foo9)   = %zu\n", sizeof(struct foo9));
-    printf("sizeof(struct foo10)   = %zu\n", sizeof(struct foo10));
-    printf("sizeof(struct foo11)   = %zu\n", sizeof(struct foo11));
-    printf("sizeof(struct foo12)   = %zu\n", sizeof(struct foo12));
+  
+  
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s1", (int)sizeof(s1), (int)offsetof(s1, c));
+
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s2", (int)sizeof(s2), (int)offsetof(s2, c));
+  
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s3", (int)sizeof(s3), (int)offsetof(s3, c));
+  
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s4", (int)sizeof(s4), (int)offsetof(s4, c));
+  
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s5", (int)sizeof(s5), (int)offsetof(s5, c));
+  
+  //fprintf(stderr, "sizeof(%s) = %d offset of bigfield    = %d\n", "s6", (int)sizeof(s6), (int)offsetof(s6, bigfield));
+  
+  //fprintf(stderr, "sizeof(%s) = %d offset of bigfield1   = %d\n", "s7", (int)sizeof(s7), (int)offsetof(s7,  bigfield1));
+  
+  //fprintf(stderr, "sizeof(%s) = %d offset of bigfield1   = %d\n", "s8", (int)sizeof(s8), (int)offsetof(s8, bigfield1));
+  
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s9", (int)sizeof(s9), (int)offsetof(s9, c));
+  
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s10", (int)sizeof(s10), (int)offsetof(s10, c));
+    
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s11", (int)sizeof(s11), (int)offsetof(s11, c));
+  
+  fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s12", (int)sizeof(s12), (int)offsetof(s12, c));
+
 }
