@@ -191,8 +191,8 @@ int main(int argc, char *argv[]){
   fprintf(stderr, "sizeof(%s) = %d offset of x   = %d\n\n", "s1", (int)sizeof(s1), (int)offsetof(s1, x));
 
   fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s2", (int)sizeof(s2), (int)offsetof(s2, c));
-  fprintf(stderr, "sizeof(%s) = %d offset of p   = %d\n", "s1", (int)sizeof(s1), (int)offsetof(s1, p));
-  fprintf(stderr, "sizeof(%s) = %d offset of x   = %d\n\n", "s1", (int)sizeof(s1), (int)offsetof(s1, x));
+  fprintf(stderr, "sizeof(%s) = %d offset of p   = %d\n", "s2", (int)sizeof(s2), (int)offsetof(s2, p));
+  fprintf(stderr, "sizeof(%s) = %d offset of x   = %d\n\n", "s2", (int)sizeof(s2), (int)offsetof(s2, x));
  
   fprintf(stderr, "sizeof(%s) = %d offset of c   = %d\n", "s3", (int)sizeof(s3), (int)offsetof(s3, c));
   fprintf(stderr, "sizeof(%s) = %d offset of p   = %d\n\n", "s3", (int)sizeof(s3), (int)offsetof(s3, p));
