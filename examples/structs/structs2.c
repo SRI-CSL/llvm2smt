@@ -5,83 +5,83 @@
  * Based on packtest.c from http://www.catb.org/esr/structure-packing/
  */
 
-struct foo1 {
+typedef struct foo1 {
     char *p;
     char c;
     long x;
-};
+} s1;
 
-struct foo2 {
+typedef struct foo2 {
     char c;      /* 1 byte */
     char pad[7]; /* 7 bytes */
     char *p;     /* 8 bytes */
     long x;      /* 8 bytes */
-};
+} s2;
 
-struct foo3 {
+typedef struct foo3 {
     char *p;     /* 8 bytes */
     char c;      /* 1 byte */
-};
+} s3;
 
-struct foo4 {
+typedef struct foo4 {
     short s;     /* 2 bytes */
     char c;      /* 1 byte */
-};
+} s4;
 
-struct foo5 {
+typedef struct foo5 {
     short s;
     char c;
     int flip:1;
     int nybble:4;
     int septet:7;
-};
+} s5;
 
-struct foo6 {
+typedef struct foo6 {
     int bigfield:31;
     int littlefield:1;
-};
+} s6;
 
-struct foo7 {
+typedef struct foo7 {
     int bigfield1:31;
     int littlefield1:1;
     int bigfield2:31;
     int littlefield2:1;
-};
+} s7;
 
-struct foo8 {
+typedef struct foo8 {
     int bigfield1:31;
     int bigfield2:31;
     int littlefield1:1;
     int littlefield2:1;
-};
+} s8;
 
-struct foo9 {
+typedef struct foo9 {
     char c;
     struct foo9_inner {
         char *p;
         short x;
     } inner;
-};
+} s9;
 
-struct foo10 {
+typedef struct foo10 {
     char c;
     struct foo10 *p;
     short x;
-};
+} s10;
 
-struct foo11 {
+typedef struct foo11 {
     struct foo11 *p;
     short x;
     char c;
-};
+} s11;
 
-struct foo12 {
+typedef struct foo12 {
     struct foo12_inner {
         char *p;
         short x;
     } inner;
     char c;
-};
+} s12;
 
 int main(int argc, char *argv[]){
     printf("sizeof(char *)        = %zu\n", sizeof(char *));
