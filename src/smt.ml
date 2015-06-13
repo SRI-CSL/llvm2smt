@@ -310,6 +310,7 @@ let canonicalize offset =
        | hd :: tl ->
 	   (match hd with
 	      | (n, None) -> canonicalize_aux tl (sum + n) rest
+	      | (0, _) -> canonicalize_aux tl sum rest
 	      | _ -> canonicalize_aux tl sum (hd :: rest)))
   in 
     canonicalize_aux offset 0 []
