@@ -271,7 +271,7 @@ let icmp_op_to_smt = function
  *
  *  ((n, None),  (n0, Some(ti0, vi0)),  ...,  (nM, Some(tiM, viM)))
  *
- * n can be 0. The non-constant terms can be empty. The index M could
+ * n can be 0, none of the nI are. The non-constant terms can be empty. The index M could
  * be arbitrarily large.
  *
  *)
