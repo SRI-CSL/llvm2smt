@@ -207,8 +207,8 @@ let rec string_of_typs typs =
   (match typs with
      | [] -> ""
      | ty :: tl -> (string_of_typ ty) ^ " " ^ string_of_typs tl)
-  
-    
+
+
 let bpr_index_list b l =
   List.iter (bprintf b ", %d") l
 
