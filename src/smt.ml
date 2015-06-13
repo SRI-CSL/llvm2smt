@@ -262,8 +262,8 @@ let icmp_op_to_smt = function
  * the z path in typ. i.e. the thing of type etype.
  *
  * The offset is a polynomial, since the path may use values as
- * indexes (thought these can only index through arrays and pointers.
- * Not structs.
+ * indexes (though these variable indices can only index through arrays and pointers,
+ * not structs.) 
  *
  *
  * The polynomial offset returned by gep_offset is in
@@ -271,7 +271,8 @@ let icmp_op_to_smt = function
  *
  *  ((n, None),  (n0, Some(ti0, vi0)),  ...,  (nM, Some(tiM, viM)))
  *
- * n can be 0. The non-constant terms can be empty.
+ * n can be 0. The non-constant terms can be empty. The index M could
+ * be arbitrarily large.
  *
  *)
 type polyoffset = int * ((typ * value) option)
