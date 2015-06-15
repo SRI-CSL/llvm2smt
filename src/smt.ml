@@ -394,6 +394,9 @@ let rec gep_step st typ ti vi =
      | Arraytyp(length, etyp0) ->
 	 let offset0 = (make_offset st etyp0 ti vi) in 
 	   (etyp0, offset0)
+     | Vector(length, etyp0) ->
+	 let offset0 = (make_offset st etyp0 ti vi) in 
+	   (etyp0, offset0)
      | Pointer(etyp0, _) ->
 	 let offset0 = (make_offset st etyp0 ti vi) in 
 	   (etyp0, offset0)
