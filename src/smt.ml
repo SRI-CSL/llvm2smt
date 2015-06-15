@@ -289,6 +289,16 @@ let print_polyoffset po =
 let print_offset_list offset =
   List.iter print_polyoffset offset
 
+let bpr_polyoffset b po =
+  (match po with
+     | (n, None)  -> bprintf b ";;;GEP = %d" n
+     | (n, Some (t, v)) -> bprintf b " + (%d * %s : %s)" n (Llvm_pp.string_of_value v) (Llvm_pp.string_of_typ t)
+  )
+
+let bpr_offset_list b offset =
+  List.iter (fun po -> bpr_polyoffset b po) offset
+  
+    
 let is_zero_poly p =
     (match p with 
        | (0, _) -> true
@@ -419,7 +429,16 @@ let gep_offset st etyp z =
 	     gep_offset_aux st etyp0 z0  ( add_to_offset offset current) )
   in
     gep_offset_aux st etyp z [(0, None)]
-      
+
+(*
+ * Forms a non-associate bv addition of the constituent (string representations)
+ * of smt terms in the list. Used in gep_to_smt.
+ *)
+let rec bvsum b plist =
+  (match plist with
+     | [] -> failwith ("bvsum in a conundrum")
+     | [p] -> bprintf b "%s" p
+     | hd :: tl ->  bprintf b "(bvadd %s %a)" hd bvsum tl)
 
 (*
  * Typed value --> converted to an SMT expression
@@ -500,14 +519,33 @@ and gep_to_smt b st (tx, x) z =
   (match tx with
      | Pointer(totyp, _) ->
 	 let (aty, apolylist) = gep_offset st tx z in
-	   begin
-	     print_offset_list apolylist; 
-	     Printf.eprintf " points to: %s\n" (Llvm_pp.string_of_typ aty);
-	     typ_val_to_smt b st (tx, x)  (* no op for now *)
-	   end
+	 let offsets = List.map (fun poly -> polyoffset_to_smt st poly) apolylist in
+	   (*
+	     bpr_offset_list b apolylist;
+	     bprintf b "\n;; GEP HERE\n";
+	   *)
+	   bprintf b "(bvadd ";
+	   val_to_smt b st (tx, x);
+	   bprintf b " ";
+	   bvsum b offsets;
+	   bprintf b ")"
      | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
   )
 	      
+and polyoffset_to_smt st poly =
+  (match poly with
+     | (n, None)  ->  int_to_bv n st.addr_width
+     | (n, Some(ti, vi)) ->
+	 let w = bitwidth st ti in
+	 let c = int_to_bv n w in
+	 let v =  typ_val_to_smt_string st (ti, vi) in
+	 let raw = "(bvmul " ^ c ^ " " ^ v ^ ")" in 
+	   if w < st.addr_width
+	   then
+	     "((_ sign_extend " ^ (string_of_int (st.addr_width - w)) ^ ") " ^ raw ^")"
+	   else
+	     raw
+  ) 
 	
 and val_to_smt b st (typ, v) =
   (match v with
@@ -562,11 +600,7 @@ and icmp_to_smt b st cmp left right = (* Comparison: cmp = operation, left/right
   typ_val_to_smt b st right;
   bprintf b ")"
 
-
-(*
- * Convert typ, val to a string
- *)
-let typ_val_to_smt_string st (typ, v) =
+and typ_val_to_smt_string st (typ, v) =
   Util.spr (fun b -> typ_val_to_smt b st) (typ, v)
 
 (*
