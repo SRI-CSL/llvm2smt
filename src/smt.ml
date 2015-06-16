@@ -33,7 +33,8 @@ let get_addr_width cu =
  * State stores information needed for conversion to SMT
  * - mem_idx: to give a unique id to each memory state
  * - sp_idx: to give a unique id to each stack pointer
- * - fu = function (or None)
+ * - fu = current function (or None)
+ * - blk = current block (or None)
  * - retval = return value (either a typ_val pair or None)
  * We also store the compilation unit and address width
  * - these are needed to get type and bitsize information
@@ -42,6 +43,7 @@ type state = {
   mutable mem_idx: int;
   mutable sp_idx: int;
   mutable fu: Bc.finfo option;
+  mutable blk: Bc.binfo option;
   mutable retval: (typ * value) option;
   cu: Bc.cunit;
   addr_width: int;
@@ -53,8 +55,16 @@ let state_fu st =
        | Some fu -> fu
        | None -> failwith "state fu field (i.e. a finfo) not set!")
     
+let state_blk st =
+  let blk = st.blk  in
+    (match blk with
+       | Some binfo -> binfo
+       | None -> failwith "state blk field (i.e. a binfo) not set!")
+    
+
 let init_state fu st =
   st.fu <- Some(fu);
+  st.blk <- None;
   st.mem_idx <- st.mem_idx + 1;
   st.sp_idx  <- st.sp_idx + 1;
   st.retval <- None
@@ -679,7 +689,29 @@ let store_to_smt b st ty v p =
     typ_val_to_smt b st (ty, v);
     bprintf b "))";
     st.mem_idx <- new_mem
-	
+
+(*
+ * incoming is a (value * value) list of the form
+ *
+ * ( (v0, label0) ... (vN, labelN) )
+ *)
+let phi_to_smt b st ty incoming =
+  let binfo = state_blk st in
+    
+    bprintf b "\n;;PHI(%d): " binfo.bindex;
+    List.iter (fun (v0, v1) ->
+		 begin
+		   bprintf b "(";
+		   Llvm_pp.bpr_value b v0;
+		   bprintf b " ";
+		   Llvm_pp.bpr_value b v1;
+		   bprintf b ") ";
+		 end)
+      incoming;
+    bprintf b "\n"
+      
+  
+ 
 (*
  * Right-hand side of an instruction
  *)
@@ -711,11 +743,11 @@ let rhs_to_smt b st i =
       | Inttoptr((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Ptrtoint((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Getelementptr(inbounds, (tx, x) :: z, _) -> gep_to_smt b st (tx, x) z
-
+      | Phi(ty, incoming, md) -> phi_to_smt b st ty incoming
       (*
+
 	Feasible
 	| Addrspacecast(x, y, md)  ->
-	| Phi(ty, incoming, md) ->
 	| Extractvalue(x, y, md) ->
 	| Insertvalue(x, y, z, md) ->
 
@@ -830,7 +862,6 @@ let commentify str =
  * - st = state
  *)
 let instr_to_smt b st (v, rhs) =
-  (* FIX ME  multiline instructions *)
   bprintf b ";; %s\n" (commentify (Llvm_pp.string_of_instr (v, rhs)));
   (* according to the grammar the None case must be in { call, store, fence } U Terminators *)
   match v with 
@@ -1114,6 +1145,7 @@ let block_to_smt b fu state binfo =
   if not binfo.bseen
   then
     begin
+      state.blk <- Some(binfo);
       smt_block_entry_comment b fu binfo;
       smt_block_entry_condition b fu state binfo;
       List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
@@ -1152,7 +1184,7 @@ let fun_to_smt b fu state =
   
 let cu_to_smt b cu =
   let aw = get_addr_width cu in 
-  let state = { mem_idx = 0; sp_idx = 0; fu = None; cu = cu; addr_width = aw; retval = None; } in 
+  let state = { mem_idx = 0; sp_idx = 0; fu = None; blk = None; cu = cu; addr_width = aw; retval = None; } in 
     Prelude.print_prelude b aw;
     declare_globals b state;
     bprintf b "\n";
