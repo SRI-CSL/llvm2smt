@@ -232,8 +232,12 @@ let typ_to_smt b st tau =
 (*
  * Zero bitvector of n bits
  *)
-let zero_vector b n =
+let bzero_vector b n =
   bprintf b "(_ bv0 %d)" n
+
+let zero_vector n =
+  Util.spr bzero_vector n
+
 
 (*
  * In with the new ...
@@ -599,8 +603,8 @@ and polyoffset_to_smt st poly =
 and val_to_smt b st (typ, v) =
   (match v with
      | Var x             -> name_to_smt b st x
-     | Null              -> zero_vector b st.addr_width
-     | Zero              -> zero_vector b (bitwidth st typ)
+     | Null              -> bzero_vector b st.addr_width
+     | Zero              -> bzero_vector b (bitwidth st typ)
      | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
      | Trunc(x, ty)      -> trunc_to_smt b st x ty
      | Zext((tx, x), ty) -> zext_to_smt b st tx x ty
@@ -788,6 +792,34 @@ let condition_from_block pred_list label =
       | _ -> failwith ("Condition_from_block failed: block " ^ (Llvm_pp.string_of_var label) ^ " not found")
   in loop pred_list
 
+
+(*
+ * Filter out the forward edges from a list of pairs (value, label)
+ * label is of the form (Basicblock xxx)
+ *)
+let get_backward_phi_nodes st incoming =
+  let my_rank = (state_blk st).brank in
+  let fu = (state_fu st) in
+  let is_forward (v, label) =
+    match label with 
+      | Basicblock l -> (Bc_manip.lookup_block fu l).brank < my_rank
+      | _ -> failwith "get_backward_phi_nodes: bad phi label\n"
+  in
+    List.filter is_forward incoming
+
+(*
+ * It's possible for all pairs (value, label) to be forward edges.
+ * This means that the current block can't be executed (its
+ * entry condition is false).
+ * Still we want a type-correct and syntactically correct smt
+ * value for the assigments.
+ * To deal with this, we just create a constant 0 bitvector of the right
+ * type.
+ *)
+let default_value st ty = 
+  let k = bitwidth st ty in
+    if k == 1 then "false" else zero_vector k
+
 (*
  * incoming is a (value * value) list of the form
  *
@@ -807,9 +839,9 @@ let phi_to_smt b st ty incoming =
 	    phi_to_smt_aux tl;
 	    bprintf b ")"
       | (v1, v2) :: tl -> failwith ("Malformed phi expression: v2 is " ^ (Llvm_pp.string_of_value v2) ^ "\n");
-      | [] -> failwith "Malformed phi expression: empty list\n"
+      | [] -> bprintf b "%s" (default_value st ty)
   in
-    phi_to_smt_aux incoming
+    phi_to_smt_aux (get_backward_phi_nodes st incoming)
 
   
  
