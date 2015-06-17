@@ -601,7 +601,7 @@ and val_to_smt b st (typ, v) =
      | Var x             -> name_to_smt b st x
      | Null              -> zero_vector b st.addr_width
      | Zero              -> zero_vector b (bitwidth st typ)
-     | Int n             -> bbig_int_to_bv b n st.addr_width
+     | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
      | Trunc(x, ty)      -> trunc_to_smt b st x ty
      | Zext((tx, x), ty) -> zext_to_smt b st tx x ty
      | Sext((tx, x), ty) -> sext_to_smt b st tx x ty
