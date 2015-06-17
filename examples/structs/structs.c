@@ -117,6 +117,8 @@ s7* make_s7(char c, short s, int j){
 
 
 int main(int argc, char* argv[]){
+
+  s0 foo = { 'k' };
   
   fprintf(stderr, "sizeof(%s) = %d offset of c = %d\n", "s0", (int)sizeof(s0), (int)offsetof(s0, c));
   fprintf(stderr, "\n");
@@ -154,6 +156,7 @@ int main(int argc, char* argv[]){
   fprintf(stderr, "\n");
 
 
+  fprintf(stderr, "%c\n", foo.c);
 
 
   return 0;

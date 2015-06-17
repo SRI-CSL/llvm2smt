@@ -58,6 +58,12 @@ rot13:  llvm2smt
 	./llvm2smt ${BITCODE}/rot13.ll > ${BITCODE}/rot13.smt
 	yices-smt2 ${BITCODE}/rot13.smt
 
+exponentiation:  llvm2smt
+	./llvm2smt ${BITCODE}/exponentiation.ll > ${BITCODE}/exponentiation.smt
+	yices-smt2 ${BITCODE}/exponentiation.smt
+	./llvm2smt ${BITCODE}/exponentiation_auto3.ll > ${BITCODE}/exponentiation_auto3.smt
+	yices-smt2 ${BITCODE}/exponentiation_auto3.smt
+
 structs:  llvm2smt
 	./llvm2smt ${BITCODE}/structs.ll > ${BITCODE}/structs.smt
 	./llvm2smt ${BITCODE}/packed_structs.ll > ${BITCODE}/packed_structs.smt
