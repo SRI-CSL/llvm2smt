@@ -697,7 +697,6 @@ let store_to_smt b st ty v p =
  *)
 let phi_to_smt b st ty incoming =
   let binfo = state_blk st in
-    
     bprintf b "\n;;PHI(%d): " binfo.bindex;
     List.iter (fun (v0, v1) ->
 		 begin
@@ -1079,9 +1078,9 @@ let smt_block_exit_condition b fu state binfo backward_successor_list =
  * Prefixes an informative comment about a block prior to its
  * corresponding sequence of SMT definitions/declarations.
  *)
-let smt_block_entry_comment b fu binfo =
+let smt_block_entry_comment b fu binfo cfg_pred_list =
+  let pred_list = List.map (fun (v, e) -> v) cfg_pred_list in
   let blkname = (Llvm_pp.string_of_var binfo.bname) in
-  let pred_list = (Bc_manip.get_predecessors fu binfo.bname) in
   let unseen = get_predecessor_block_list fu binfo in 
     (* Printf.eprintf "processing block %s\n" blkname; *)
     bprintf b ";; BLOCK %s with index %d and rank = %d\n" blkname binfo.bindex binfo.brank;
@@ -1099,10 +1098,9 @@ let smt_block_entry_comment b fu binfo =
 (*
  * Outputs the block entry condition 
  *)
-let smt_block_entry_condition b fu state binfo =
+let smt_block_entry_condition b fu state binfo cfg_pred_list =
   let fstr = Llvm_pp.string_of_var fu.fname in
   let ename = get_entry_condition_name fstr binfo.bindex in
-  let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in
   let seen_pred_list =  List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).bseen) cfg_pred_list in
     bprintf b ";; %s \n" ename;
     if seen_pred_list = []
@@ -1146,14 +1144,15 @@ let block_to_smt b fu state binfo =
   then
     begin
       state.blk <- Some(binfo);
-      smt_block_entry_comment b fu binfo;
-      smt_block_entry_condition b fu state binfo;
-      List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
-      let backward_successor_list = get_backward_successor_list fu state binfo in 
-	smt_block_exit_comment b fu state binfo backward_successor_list; 
-	smt_block_exit_condition b fu state binfo backward_successor_list;
-	bprintf b "\n";
-	binfo.bseen <- true;
+      let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in 
+	smt_block_entry_comment b fu binfo cfg_pred_list;
+	smt_block_entry_condition b fu state binfo cfg_pred_list;
+	List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
+	let backward_successor_list = get_backward_successor_list fu state binfo in 
+	  smt_block_exit_comment b fu state binfo backward_successor_list; 
+	  smt_block_exit_condition b fu state binfo backward_successor_list;
+	  bprintf b "\n";
+	  binfo.bseen <- true;
     end
 
 
