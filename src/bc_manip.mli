@@ -83,3 +83,18 @@ val lookup_block: Bc.finfo -> Llvm.var -> Bc.binfo
  *  Compute the ranks of the blocks (rank = maximum length of path without a cycle.
  *)
 val set_ranks: Bc.finfo -> unit
+
+
+(*
+ * Name of the entry condition of the i-th block in a finfo
+ * - first argument = name of the function
+ * - second argument = integer index
+ *)
+val get_entry_condition_name: string -> int -> string
+
+(*
+ *
+ * Returns a list of all the currently unseen predecessors of the block.
+ *
+ *)
+val get_predecessor_block_list: Bc.finfo -> Bc.binfo -> Bc.binfo list

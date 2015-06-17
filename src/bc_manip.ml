@@ -484,3 +484,28 @@ let set_ranks fu =
   let root = List.nth fu.fblocks 0 in 
     set_rank_aux fu root [ root.bindex ] 1
       
+ (*
+  * We use the index of the block not its name
+  * to name the condition. block names can get
+  * seriously ugly when C++ is the source of the
+  * bitcode.
+  *
+  *)
+let get_entry_condition_name fstr i =
+  fstr ^ "_block_" ^ (string_of_int i) ^ "_entry_condition"
+
+
+(*
+ *
+ * Returns a list of all the currently unseen predecessors of the block.
+ *
+ *)
+let get_predecessor_block_list fu block =
+  if block.bseen
+  then
+    []
+  else
+    let pred_list = get_predecessors fu block.bname in 
+    let candidates = List.map (fun n -> (lookup_block fu n)) pred_list in
+      List.filter (fun b -> not b.bseen) candidates
+	

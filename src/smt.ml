@@ -699,25 +699,91 @@ let store_to_smt b st ty v p =
     bprintf b "))";
     st.mem_idx <- new_mem
 
+
+(*
+ * Deal with branch conditions
+ * - smt_eq_condition entry_cond typ v const:
+ *   v is a value of type typ
+ *   const is a constant of type typ
+ *
+ * - smt_distinct_condition entry_cond typ v const_list
+ *   v is a value of type typ
+ *   const_list is a list of constants of type typ 
+ *   the function produces 
+ *     (and entry_cond (not (= v c_1)) ... (not (= (v c_n))))
+ *)
+let smt_eq_condition st entry_cond typ v const =
+  let register = name_to_smt_string st (Bc_manip.value_to_var v) in
+  let conjunct = 
+    match const with
+      | True -> register
+      | False -> "(not "^register^")"
+      | _ -> "(= " ^ register ^ " " ^ (typ_val_to_smt_string st (typ, const)) ^ ")"
+  in
+    "(and " ^entry_cond^" "^conjunct^")"
+
+let smt_distinct_condition st entry_cond typ v const_list =
+  let register = name_to_smt_string st (Bc_manip.value_to_var v) in
+  let diseq c = "(not (= " ^ register ^ " " ^ (typ_val_to_smt_string st (typ, c)) ^ "))" in
+  let conjuncts = List.fold_left (fun s c -> s ^ " " ^ (diseq c))  "" const_list in
+    "(and " ^ entry_cond ^ " " ^ conjuncts ^ ")"
+
+
+(*
+ * Translates a cfg_edge into a smt term.
+ * (v0, cond) is the cfg_edge
+ * v0 is the name of predecessor block
+ * cond is the branching condition under which we
+ * come from v0.
+ *)
+let smt_precondition fu st (v0, cond) =
+  let fstr = Llvm_pp.string_of_var fu.fname in
+  let pblk = Bc_manip.lookup_block fu v0 in
+  let entry_cond_name = Bc_manip.get_entry_condition_name fstr pblk.bindex in 
+    (match cond with
+       | Uncond -> entry_cond_name
+       | Eq(t, v, const) -> 
+	   smt_eq_condition st entry_cond_name t v const
+       | Distinct(t, v, const_list) -> 
+	   smt_distinct_condition st entry_cond_name t v const_list
+       | Unsupported -> failwith "Unsupported predecessor condition!"
+    )
+
+
+(*
+ * Return the condition for the egde from src label
+ * - this scans the predecessor list for the current block
+ *)
+let condition_from_block pred_list label =
+  let rec loop l = 
+    match l with
+      | (v, c) :: tl -> if v = label then c else loop tl
+      | _ -> failwith ("Condition_from_block failed: block " ^ (Llvm_pp.string_of_var label) ^ " not found")
+  in loop pred_list
+
 (*
  * incoming is a (value * value) list of the form
  *
  * ( (v0, label0) ... (vN, labelN) )
  *)
 let phi_to_smt b st ty incoming =
-  let binfo = state_blk st in
-    bprintf b "\n;;PHI(%d): " binfo.bindex;
-    List.iter (fun (v0, v1) ->
-		 begin
-		   bprintf b "(";
-		   Llvm_pp.bpr_value b v0;
-		   bprintf b " ";
-		   Llvm_pp.bpr_value b v1;
-		   bprintf b ") ";
-		 end)
-      incoming;
-    bprintf b "\n"
-      
+  let preds = state_preds st in
+  let rec phi_to_smt_aux list = 
+    match list with
+      | [(v, (Basicblock label))] -> typ_val_to_smt b st (ty, v) (* last elsif condition is ignored *)
+      | (v, (Basicblock label)) :: tl ->
+	  let cnd = condition_from_block preds label in
+	  let fu = state_fu st in
+	    bprintf b "(ite %s " (smt_precondition fu st (label, cnd));
+	    typ_val_to_smt b st (ty, v);
+	    bprintf b " ";
+	    phi_to_smt_aux tl;
+	    bprintf b ")"
+      | (v1, v2) :: tl -> failwith ("Malformed phi expression: v2 is " ^ (Llvm_pp.string_of_value v2) ^ "\n");
+      | [] -> failwith "Malformed phi expression: empty list\n"
+  in
+    phi_to_smt_aux incoming
+
   
  
 (*
@@ -751,7 +817,7 @@ let rhs_to_smt b st i =
       | Inttoptr((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Ptrtoint((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Getelementptr(inbounds, (tx, x) :: z, _) -> gep_to_smt b st (tx, x) z
-      | Phi(ty, incoming, md) -> phi_to_smt b st ty incoming
+      | Phi(ty, incoming, _) -> phi_to_smt b st ty incoming
       (*
 
 	Feasible
@@ -932,69 +998,12 @@ let declare_globals b st =
   in
     List.iter declare_global st.cu.cglobals    
 
- (*
-  * We use the index of the block not its name
-  * to name the condition. block names can get
-  * seriously ugly when C++ is the source of the
-  * bitcode.
-  *
-  *)
-let get_entry_condition_name fstr i =
-  fstr ^ "_block_" ^ (string_of_int i) ^ "_entry_condition"
 
 
-(*
- * Deal with branch conditions
- * - smt_eq_condition entry_cond typ v const:
- *   v is a value of type typ
- *   const is a constant of type typ
- *
- * - smt_disticnt_condition entry_cond typ v const_list
- *   v is a value of type typ
- *   const_list is a list of constants of type typ 
- *   the function produces 
- *     (and entry_cond (not (= v c_1)) ... (not (= (v c_n))))
- *)
-let smt_eq_condition st entry_cond typ v const =
-  let register = name_to_smt_string st (Bc_manip.value_to_var v) in
-  let conjunct = 
-    match const with
-      | True -> register
-      | False -> "(not "^register^")"
-      | _ -> "(= " ^ register ^ " " ^ (typ_val_to_smt_string st (typ, const)) ^ ")"
-  in
-    "(and " ^entry_cond^" "^conjunct^")"
-
-let smt_distinct_condition st entry_cond typ v const_list =
-  let register = name_to_smt_string st (Bc_manip.value_to_var v) in
-  let diseq c = "(not (= " ^ register ^ " " ^ (typ_val_to_smt_string st (typ, c)) ^ "))" in
-  let conjuncts = List.fold_left (fun s c -> s ^ " " ^ (diseq c))  "" const_list in
-    "(and " ^ entry_cond ^ " " ^ conjuncts ^ ")"
-
-
-(*
- * Translates a cfg_edge into a smt term.
- * (v0, cond) is the cfg_edge
- * v0 is the name of predecessor block
- * cond is the branching condition under which we
- * come from v0.
- *)
-let smt_precondition fu st (v0, cond) =
-  let fstr = Llvm_pp.string_of_var fu.fname in
-  let pblk = Bc_manip.lookup_block fu v0 in
-  let entry_cond_name = get_entry_condition_name fstr pblk.bindex in 
-    (match cond with
-       | Uncond -> entry_cond_name
-       | Eq(t, v, const) -> 
-	   smt_eq_condition st entry_cond_name t v const
-       | Distinct(t, v, const_list) -> 
-	   smt_distinct_condition st entry_cond_name t v const_list
-       | Unsupported -> failwith "Unsupported predecessor condition!"
-    )
 
 let smt_postcondition fu st cblk (v0, cond) =
   let fstr = Llvm_pp.string_of_var fu.fname in
-  let entry_cond_name = get_entry_condition_name fstr cblk.bindex in 
+  let entry_cond_name = Bc_manip.get_entry_condition_name fstr cblk.bindex in 
   let smt_cond = 
     (match cond with
        | Eq(t, v, const) -> 
@@ -1010,20 +1019,6 @@ let smt_postcondition fu st cblk (v0, cond) =
     "(not " ^ smt_cond ^ ")"
 
 
-(*
- *
- * Returns a list of all the currently unseen predecessors of the block.
- *
- *)
-let get_predecessor_block_list fu block =
-  if block.bseen
-  then
-    []
-  else
-    let pred_list = Bc_manip.get_predecessors fu block.bname in 
-    let candidates = List.map (fun n -> (Bc_manip.lookup_block fu n)) pred_list in
-      List.filter (fun b -> not b.bseen) candidates
-	
 (*
  * Translates a list of cfg_edges into a list of
  * smt terms.
@@ -1081,7 +1076,7 @@ let smt_block_exit_condition b fu state binfo backward_successor_list =
 	  end;
 	bprintf b ")\n"
       end
-      
+
 
 (*
  * Prefixes an informative comment about a block prior to its
@@ -1091,7 +1086,7 @@ let smt_block_entry_comment b fu state binfo =
   let cfg_pred_list = state_preds state in 
   let pred_list = List.map (fun (v, e) -> v) cfg_pred_list in
   let blkname = (Llvm_pp.string_of_var binfo.bname) in
-  let unseen = get_predecessor_block_list fu binfo in 
+  let unseen = Bc_manip.get_predecessor_block_list fu binfo in 
     (* Printf.eprintf "processing block %s\n" blkname; *)
     bprintf b ";; BLOCK %s with index %d and rank = %d\n" blkname binfo.bindex binfo.brank;
     bprintf b ";; Predecessors:";
@@ -1111,7 +1106,7 @@ let smt_block_entry_comment b fu state binfo =
 let smt_block_entry_condition b fu state binfo =
   let cfg_pred_list = state_preds state in 
   let fstr = Llvm_pp.string_of_var fu.fname in
-  let ename = get_entry_condition_name fstr binfo.bindex in
+  let ename = Bc_manip.get_entry_condition_name fstr binfo.bindex in
   let seen_pred_list =  List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).bseen) cfg_pred_list in
     bprintf b ";; %s \n" ename;
     if seen_pred_list = []
