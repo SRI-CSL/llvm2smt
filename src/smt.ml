@@ -81,6 +81,13 @@ let init_state fu st =
 let state_store_return st x =
   st.retval <- x
 
+
+(*
+ * NOTE: If we wanted to be extra careful, we could compute all sizes
+ * as big_int. Integer overflows are not very likely for sizes or alloca 
+ * so we keep ordinary integers for now.
+ *)
+
 (*
  * Compute padding in bits NOT bytes
  *)
@@ -237,6 +244,29 @@ let bzero_vector b n =
 
 let zero_vector n =
   Util.spr bzero_vector n
+
+
+(*
+ * In several places, we may need to generate an arbitrary value of type ty
+ * (e.g., that's how we deal with undef). For now, we just generate
+ * a zero bitvector of the right size (or false).
+ *
+ * This is also used for phi instructions:
+ * It's possible for all pairs (value, label) to be forward edges.
+ * This means that the current block can't be executed (its
+ * entry condition is false).
+ * Still we want a type-correct and syntactically correct smt
+ * value for the assigments.
+ *)
+let bdefault_value b st ty =
+  let k = bitwidth st ty in
+    if k == 1 then bprintf b "false" else bzero_vector b k
+
+let default_value st ty =
+  let b = Buffer.create 64 in
+    bdefault_value b st ty;	  
+    Buffer.contents b
+
 
 
 (*
@@ -605,7 +635,9 @@ and val_to_smt b st (typ, v) =
      | Var x             -> name_to_smt b st x
      | Null              -> bzero_vector b st.addr_width
      | Zero              -> bzero_vector b (bitwidth st typ)
+     | Undef             -> bdefault_value b st typ               (* This is enough for now, but not quite what right *)
      | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
+     | Vector(l)         -> bvector_to_smt b st l
      | Trunc(x, ty)      -> trunc_to_smt b st x ty
      | Zext((tx, x), ty) -> zext_to_smt b st tx x ty
      | Sext((tx, x), ty) -> sext_to_smt b st tx x ty
@@ -653,8 +685,21 @@ and icmp_to_smt b st cmp left right = (* Comparison: cmp = operation, left/right
   typ_val_to_smt b st right;
   bprintf b ")"
 
+and bvector_to_smt b st l =
+  let vector_to_smt_string = 
+    (match l with
+       | hd :: tl -> 
+	   List.fold_left 
+	     (fun str -> (fun a -> "(concat " ^ str ^ " " ^ (typ_val_to_smt_string st a) ^ ")"))
+	     (typ_val_to_smt_string st hd)
+	     tl
+       | _ -> failwith "Empty vector are not allowed")
+  in
+    bprintf b "%s" vector_to_smt_string
+
 and typ_val_to_smt_string st (typ, v) =
   Util.spr (fun b -> typ_val_to_smt b st) (typ, v)
+
 
 (*
  * Alloca: with a constant size
@@ -808,19 +853,6 @@ let get_backward_phi_nodes st incoming =
     List.filter is_forward incoming
 
 (*
- * It's possible for all pairs (value, label) to be forward edges.
- * This means that the current block can't be executed (its
- * entry condition is false).
- * Still we want a type-correct and syntactically correct smt
- * value for the assigments.
- * To deal with this, we just create a constant 0 bitvector of the right
- * type.
- *)
-let default_value st ty = 
-  let k = bitwidth st ty in
-    if k == 1 then "false" else zero_vector k
-
-(*
  * incoming is a (value * value) list of the form
  *
  * ( (v0, label0) ... (vN, labelN) )
@@ -877,6 +909,7 @@ let rhs_to_smt b st i =
       | Ptrtoint((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Getelementptr(inbounds, (tx, x) :: z, _) -> gep_to_smt b st (tx, x) z
       | Phi(ty, incoming, _) -> phi_to_smt b st ty incoming
+
       (*
 
 	Feasible
@@ -885,6 +918,21 @@ let rhs_to_smt b st i =
 	| Insertvalue(x, y, z, md) ->
 
 	Maybe, but probably not easy
+
+	NOTES: the vector instructions Insertelement, Extractelement show
+	up a lot. They are probably easier than Extractvalue and Insertvalue.
+
+	Idea for Extractelement: we consider a vector of type <n x i32> as
+	the concatenation of m 32bit elements. Extractelement just extracts
+	a slice out of this concatenation. For example
+
+           Extractelement v, 0   --> ((_ extract 0 31) v)   assuming v is a vector of i32
+
+           Extractelement v, i   --> may need nested if-then-else if i is not a constant
+
+        For Insertelement: that's similar but the SMT conversion will require juggling of 
+        extract and concat.
+
 	| Cmpxchg(x, y, z, w, v, u, t, md) ->
 	| Atomicrmw(x, y, z, w, v, u, md) ->
 	| Fence(x, y, md) ->
