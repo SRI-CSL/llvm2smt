@@ -35,6 +35,7 @@ let get_addr_width cu =
  * - sp_idx: to give a unique id to each stack pointer
  * - fu = current function (or None)
  * - blk = current block (or None)
+ * - preds = cfg_preds of the current block (or None)
  * - retval = return value (either a typ_val pair or None)
  * We also store the compilation unit and address width
  * - these are needed to get type and bitsize information
@@ -44,6 +45,7 @@ type state = {
   mutable sp_idx: int;
   mutable fu: Bc.finfo option;
   mutable blk: Bc.binfo option;
+  mutable preds: (Bc.cfg_edge list) option;
   mutable retval: (typ * value) option;
   cu: Bc.cunit;
   addr_width: int;
@@ -61,10 +63,17 @@ let state_blk st =
        | Some binfo -> binfo
        | None -> failwith "state blk field (i.e. a binfo) not set!")
     
+let state_preds st =
+  let preds = st.preds  in
+    (match preds with
+       | Some binfo -> binfo
+       | None -> failwith "state preds field (i.e. a binfo) not set!")
+    
 
 let init_state fu st =
   st.fu <- Some(fu);
   st.blk <- None;
+  st.preds <- None;
   st.mem_idx <- st.mem_idx + 1;
   st.sp_idx  <- st.sp_idx + 1;
   st.retval <- None
@@ -1078,7 +1087,8 @@ let smt_block_exit_condition b fu state binfo backward_successor_list =
  * Prefixes an informative comment about a block prior to its
  * corresponding sequence of SMT definitions/declarations.
  *)
-let smt_block_entry_comment b fu binfo cfg_pred_list =
+let smt_block_entry_comment b fu state binfo =
+  let cfg_pred_list = state_preds state in 
   let pred_list = List.map (fun (v, e) -> v) cfg_pred_list in
   let blkname = (Llvm_pp.string_of_var binfo.bname) in
   let unseen = get_predecessor_block_list fu binfo in 
@@ -1098,7 +1108,8 @@ let smt_block_entry_comment b fu binfo cfg_pred_list =
 (*
  * Outputs the block entry condition 
  *)
-let smt_block_entry_condition b fu state binfo cfg_pred_list =
+let smt_block_entry_condition b fu state binfo =
+  let cfg_pred_list = state_preds state in 
   let fstr = Llvm_pp.string_of_var fu.fname in
   let ename = get_entry_condition_name fstr binfo.bindex in
   let seen_pred_list =  List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).bseen) cfg_pred_list in
@@ -1143,10 +1154,13 @@ let block_to_smt b fu state binfo =
   if not binfo.bseen
   then
     begin
-      state.blk <- Some(binfo);
-      let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in 
-	smt_block_entry_comment b fu binfo cfg_pred_list;
-	smt_block_entry_condition b fu state binfo cfg_pred_list;
+      let cfg_pred_list = Bc_manip.get_cfg_predecessors fu binfo.bname in
+	(* keep track of the current block  (used in phi instructions) *)
+	state.blk <- Some(binfo);
+	(* keep track of our predecessors (used in phi instructions) *)
+	state.preds <- Some(cfg_pred_list);
+	smt_block_entry_comment b fu state binfo;
+	smt_block_entry_condition b fu state binfo;
 	List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
 	let backward_successor_list = get_backward_successor_list fu state binfo in 
 	  smt_block_exit_comment b fu state binfo backward_successor_list; 
@@ -1183,7 +1197,7 @@ let fun_to_smt b fu state =
   
 let cu_to_smt b cu =
   let aw = get_addr_width cu in 
-  let state = { mem_idx = 0; sp_idx = 0; fu = None; blk = None; cu = cu; addr_width = aw; retval = None; } in 
+  let state = { mem_idx = 0; sp_idx = 0; fu = None; blk = None; preds = None; cu = cu; addr_width = aw; retval = None; } in 
     Prelude.print_prelude b aw;
     declare_globals b state;
     bprintf b "\n";
