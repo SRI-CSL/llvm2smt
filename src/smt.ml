@@ -235,13 +235,40 @@ let typ_to_smt b st tau =
 let zero_vector b n =
   bprintf b "(_ bv0 %d)" n
 
+(*
+ * In with the new ...
+ *
+ *)
+let bbig_int_to_bv b n w =
+  if (Big_int.sign_big_int n) < 0
+  then
+    bprintf b "(bvneg (_ bv%s %d))" (Big_int.string_of_big_int (Big_int.minus_big_int n)) w
+  else
+    bprintf b "(_ bv%s %d)" (Big_int.string_of_big_int n) w
 
-let int_to_bv n w =
+let big_int_to_bv n w =
   let b = Buffer.create 64 in
-    bprintf b "(_ bv%d %d)" n w;
+    bbig_int_to_bv b n w;	  
     Buffer.contents b
 
 
+(*
+ * Out with the old ???
+ *
+ *)
+let bint_to_bv b n w =
+  if n < 0
+  then
+    bprintf b "(bvneg (_ bv%d %d))" ( - n) w
+  else
+    bprintf b "(_ bv%d %d)" n w
+
+let int_to_bv n w =
+  let b = Buffer.create 64 in
+    bint_to_bv b n w;	  
+    Buffer.contents b
+      
+      
 (*
  * Convert an Int value to an int
  *)
@@ -574,7 +601,7 @@ and val_to_smt b st (typ, v) =
      | Var x             -> name_to_smt b st x
      | Null              -> zero_vector b st.addr_width
      | Zero              -> zero_vector b (bitwidth st typ)
-     | Int n             -> bprintf b "(_ bv%s %d)" (Big_int.string_of_big_int n) (bitwidth st typ)
+     | Int n             -> bbig_int_to_bv b n st.addr_width
      | Trunc(x, ty)      -> trunc_to_smt b st x ty
      | Zext((tx, x), ty) -> zext_to_smt b st tx x ty
      | Sext((tx, x), ty) -> sext_to_smt b st tx x ty
