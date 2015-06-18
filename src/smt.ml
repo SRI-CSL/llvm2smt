@@ -192,8 +192,10 @@ let is_bool st tau = (bitwidth st tau) = 1
 (*
  * return memory<id>
  *)
-let mem_ref st =
-  "memory" ^ (string_of_int st.mem_idx)
+let mem_ref_idx id = "memory" ^ (string_of_int id)
+
+let mem_ref st = mem_ref_idx st.mem_idx
+      
       
 (*
  * Same thing for the stack pointer
@@ -1153,12 +1155,18 @@ let smt_postcondition_list fu st binfo cfg_succ_list =
 
 
 
-
-
+(*
+ * Filters for the predecessors/successors of a block
+ * - they remove the backward arrows
+ *)
 let get_backward_successor_list fu state binfo = 
   let my_rank = binfo.brank in
   let cfg_successors_list = Bc_manip.get_cfg_successors fu binfo.bname in
     List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).brank < my_rank) cfg_successors_list
+      
+let filter_backward_predecessor_list fu binfo predlist = 
+  let my_rank = binfo.brank in
+    List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).brank < my_rank) predlist
       
 (*
  * Outputs the block exit condition  
@@ -1219,7 +1227,7 @@ let smt_block_entry_comment b fu state binfo =
       end
 
 (*
- * Outputs the block entry condition 
+ * Outputs the block entry condition
  *)
 let smt_block_entry_condition b fu state binfo =
   let cfg_pred_list = state_preds state in 
@@ -1244,6 +1252,31 @@ let smt_block_entry_condition b fu state binfo =
 	  end;
 	bprintf b ")\n"
 
+
+(*
+ * Memory phi statement
+ *)
+let smt_block_entry_memory b fu state binfo =
+  let cfg_pred_list = state_preds state in
+  let back_pred_list = filter_backward_predecessor_list fu binfo cfg_pred_list in
+  let rec phi_mem_to_smt list =
+    match list with
+      | [ (v, c) ] -> (* last block in an ite nest *)
+	  let blk = Bc_manip.lookup_block fu v in
+	    bprintf b "%s" (mem_ref_idx blk.bmem)
+      | (v0, c0) :: tl ->
+	  let blk = Bc_manip.lookup_block fu v0 in
+	    bprintf b "(ite %s %s " (smt_precondition fu state (v0, c0)) (mem_ref_idx blk.bmem);
+	    phi_mem_to_smt tl;
+	    bprintf b ")"
+      | _ -> failwith "Block entry memory failed: empty predecessor list"
+  in
+    if back_pred_list <> [] then
+      let new_mem = state.mem_idx + 1 in 
+	bprintf b "(define-fun memory%d () Mem " new_mem;
+	phi_mem_to_smt back_pred_list;
+	bprintf b ")\n";
+	state.mem_idx <- new_mem
 
 (*
  * Add a definition for the returned value (if any)
@@ -1274,12 +1307,16 @@ let block_to_smt b fu state binfo =
 	state.preds <- Some(cfg_pred_list);
 	smt_block_entry_comment b fu state binfo;
 	smt_block_entry_condition b fu state binfo;
+	smt_block_entry_memory b fu state binfo;
 	List.iter (fun instr -> (instr_to_smt b state instr)) binfo.binstrs;
 	let backward_successor_list = get_backward_successor_list fu state binfo in 
 	  smt_block_exit_comment b fu state binfo backward_successor_list; 
 	  smt_block_exit_condition b fu state binfo backward_successor_list;
 	  bprintf b "\n";
 	  binfo.bseen <- true;
+	  binfo.bmem <- state.mem_idx;
+	  eprintf "exit of block %d %s of %s: bmem = %d\n" binfo.bindex 
+	    (Llvm_pp.string_of_var binfo.bname) (Llvm_pp.string_of_var fu.fname) binfo.bmem
     end
 
 

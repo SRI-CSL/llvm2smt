@@ -663,8 +663,8 @@ basicblock_list:
 | basicblock basicblock_list { $1::$2 }
 ;
 basicblock:
-| LabelStr instruction_list { {Bc.bname=Llvm.Name(false, $1); Bc.binstrs=$2; Bc.bseen=false; Bc.bindex = 0; Bc.brank = 0;} }
-| instruction_list          { {Bc.bname=Llvm.Id(false, -1); Bc.binstrs=$1; Bc.bseen=false; Bc.bindex = 0; Bc.brank = 0;} }
+| LabelStr instruction_list { {Bc.bname=Llvm.Name(false, $1); Bc.binstrs=$2; Bc.bseen=false; Bc.bindex = 0; Bc.brank = 0; Bc.bmem=0; } }
+| instruction_list          { {Bc.bname=Llvm.Id(false, -1); Bc.binstrs=$1; Bc.bseen=false; Bc.bindex = 0; Bc.brank = 0; Bc.bmem=0; } }
 ;
 instruction_list:
 | terminator_instruction { [$1] }

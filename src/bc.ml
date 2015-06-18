@@ -51,7 +51,11 @@ type binfo = {
    * in function (see fcounter).
    *)
   mutable bindex: int;
-  mutable brank: int
+  mutable brank: int;
+  (*
+   * Index of the memory state when this block was exited
+   *)
+  mutable bmem: int
 }
 
 (*

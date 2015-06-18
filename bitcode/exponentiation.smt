@@ -162,8 +162,9 @@
 (define-fun @exp0_block_1_entry_condition () Bool
     (and @exp0_block_0_entry_condition |%5_@exp0|)
 )
+(define-fun memory5 () Mem memory4)
 ;; store i32 0, i32* %1
-(define-fun memory5 () Mem (write32 memory4 |%1_@exp0| (_ bv0 32)))
+(define-fun memory6 () Mem (write32 memory5 |%1_@exp0| (_ bv0 32)))
 ;; br label %19
 ;; No backward arrows
 
@@ -173,6 +174,7 @@
 (define-fun @exp0_block_2_entry_condition () Bool
     (and @exp0_block_0_entry_condition (not |%5_@exp0|))
 )
+(define-fun memory7 () Mem memory4)
 ;; br label %8
 ;; No backward arrows
 
@@ -183,8 +185,9 @@
 (define-fun @exp0_block_3_entry_condition () Bool
     @exp0_block_2_entry_condition
 )
+(define-fun memory8 () Mem memory7)
 ;; %9 = load i32* %3, align 4
-(define-fun |%9_@exp0| () (_ BitVec 32) (read32 memory5 |%3_@exp0|))
+(define-fun |%9_@exp0| () (_ BitVec 32) (read32 memory8 |%3_@exp0|))
 ;; %10 = icmp sgt i32 %9, 0
 (define-fun |%10_@exp0| () Bool (bvsgt |%9_@exp0| (_ bv0 32)))
 ;; br i1 %10, label %11, label %17
@@ -196,20 +199,21 @@
 (define-fun @exp0_block_4_entry_condition () Bool
     (and @exp0_block_3_entry_condition |%10_@exp0|)
 )
+(define-fun memory9 () Mem memory8)
 ;; %12 = load i32* %2, align 4
-(define-fun |%12_@exp0| () (_ BitVec 32) (read32 memory5 |%2_@exp0|))
+(define-fun |%12_@exp0| () (_ BitVec 32) (read32 memory9 |%2_@exp0|))
 ;; %13 = load i32* %retval, align 4
-(define-fun |%13_@exp0| () (_ BitVec 32) (read32 memory5 |%retval_@exp0|))
+(define-fun |%13_@exp0| () (_ BitVec 32) (read32 memory9 |%retval_@exp0|))
 ;; %14 = mul nsw i32 %13, %12
 (define-fun |%14_@exp0| () (_ BitVec 32) (bvmul |%13_@exp0| |%12_@exp0|))
 ;; store i32 %14, i32* %retval, align 4
-(define-fun memory6 () Mem (write32 memory5 |%retval_@exp0| |%14_@exp0|))
+(define-fun memory10 () Mem (write32 memory9 |%retval_@exp0| |%14_@exp0|))
 ;; %15 = load i32* %3, align 4
-(define-fun |%15_@exp0| () (_ BitVec 32) (read32 memory6 |%3_@exp0|))
+(define-fun |%15_@exp0| () (_ BitVec 32) (read32 memory10 |%3_@exp0|))
 ;; %16 = sub nsw i32 %15, 1
 (define-fun |%16_@exp0| () (_ BitVec 32) (bvsub |%15_@exp0| (_ bv1 32)))
 ;; store i32 %16, i32* %3, align 4
-(define-fun memory7 () Mem (write32 memory6 |%3_@exp0| |%16_@exp0|))
+(define-fun memory11 () Mem (write32 memory10 |%3_@exp0| |%16_@exp0|))
 ;; br label %8
 ;; BACKWARD ARROWS:  %8
 (assert 
@@ -222,10 +226,11 @@
 (define-fun @exp0_block_5_entry_condition () Bool
     (and @exp0_block_3_entry_condition (not |%10_@exp0|))
 )
+(define-fun memory12 () Mem memory8)
 ;; %18 = load i32* %retval, align 4
-(define-fun |%18_@exp0| () (_ BitVec 32) (read32 memory7 |%retval_@exp0|))
+(define-fun |%18_@exp0| () (_ BitVec 32) (read32 memory12 |%retval_@exp0|))
 ;; store i32 %18, i32* %1
-(define-fun memory8 () Mem (write32 memory7 |%1_@exp0| |%18_@exp0|))
+(define-fun memory13 () Mem (write32 memory12 |%1_@exp0| |%18_@exp0|))
 ;; br label %19
 ;; No backward arrows
 
@@ -238,8 +243,9 @@
         @exp0_block_1_entry_condition
     )
 )
+(define-fun memory14 () Mem (ite @exp0_block_5_entry_condition memory13 memory6))
 ;; %20 = load i32* %1
-(define-fun |%20_@exp0| () (_ BitVec 32) (read32 memory8 |%1_@exp0|))
+(define-fun |%20_@exp0| () (_ BitVec 32) (read32 memory14 |%1_@exp0|))
 ;; ret i32 %20
 ;; No backward arrows
 
@@ -248,7 +254,7 @@
 
 ;; Function: |@exp1|
 ;; (i32 %a, i32 %b)
-(declare-fun memory9 () Mem)
+(declare-fun memory15 () Mem)
 (define-fun rsp6 () (_ BitVec 64) (_ bv0 64))
 (declare-fun |%a_@exp1| () (_ BitVec 32))
 (declare-fun |%b_@exp1| () (_ BitVec 32))
@@ -270,13 +276,13 @@
 (define-fun rsp10 () Address (bvsub rsp9 (_ bv4 64)))
 (define-fun |%retval_@exp1| () (_ BitVec 64) rsp10)
 ;; store i32 %a, i32* %2, align 4
-(define-fun memory10 () Mem (write32 memory9 |%2_@exp1| |%a_@exp1|))
+(define-fun memory16 () Mem (write32 memory15 |%2_@exp1| |%a_@exp1|))
 ;; store i32 %b, i32* %3, align 4
-(define-fun memory11 () Mem (write32 memory10 |%3_@exp1| |%b_@exp1|))
+(define-fun memory17 () Mem (write32 memory16 |%3_@exp1| |%b_@exp1|))
 ;; store i32 1, i32* %retval, align 4
-(define-fun memory12 () Mem (write32 memory11 |%retval_@exp1| (_ bv1 32)))
+(define-fun memory18 () Mem (write32 memory17 |%retval_@exp1| (_ bv1 32)))
 ;; %4 = load i32* %3, align 4
-(define-fun |%4_@exp1| () (_ BitVec 32) (read32 memory12 |%3_@exp1|))
+(define-fun |%4_@exp1| () (_ BitVec 32) (read32 memory18 |%3_@exp1|))
 ;; %5 = icmp slt i32 %4, 0
 (define-fun |%5_@exp1| () Bool (bvslt |%4_@exp1| (_ bv0 32)))
 ;; br i1 %5, label %6, label %7
@@ -288,8 +294,9 @@
 (define-fun @exp1_block_1_entry_condition () Bool
     (and @exp1_block_0_entry_condition |%5_@exp1|)
 )
+(define-fun memory19 () Mem memory18)
 ;; store i32 0, i32* %1
-(define-fun memory13 () Mem (write32 memory12 |%1_@exp1| (_ bv0 32)))
+(define-fun memory20 () Mem (write32 memory19 |%1_@exp1| (_ bv0 32)))
 ;; br label %27
 ;; No backward arrows
 
@@ -299,6 +306,7 @@
 (define-fun @exp1_block_2_entry_condition () Bool
     (and @exp1_block_0_entry_condition (not |%5_@exp1|))
 )
+(define-fun memory21 () Mem memory18)
 ;; br label %8
 ;; No backward arrows
 
@@ -309,8 +317,9 @@
 (define-fun @exp1_block_3_entry_condition () Bool
     @exp1_block_2_entry_condition
 )
+(define-fun memory22 () Mem memory21)
 ;; %9 = load i32* %3, align 4
-(define-fun |%9_@exp1| () (_ BitVec 32) (read32 memory13 |%3_@exp1|))
+(define-fun |%9_@exp1| () (_ BitVec 32) (read32 memory22 |%3_@exp1|))
 ;; %10 = icmp ne i32 %9, 0
 (define-fun |%10_@exp1| () Bool (distinct |%9_@exp1| (_ bv0 32)))
 ;; br i1 %10, label %11, label %25
@@ -322,8 +331,9 @@
 (define-fun @exp1_block_4_entry_condition () Bool
     (and @exp1_block_3_entry_condition |%10_@exp1|)
 )
+(define-fun memory23 () Mem memory22)
 ;; %12 = load i32* %3, align 4
-(define-fun |%12_@exp1| () (_ BitVec 32) (read32 memory13 |%3_@exp1|))
+(define-fun |%12_@exp1| () (_ BitVec 32) (read32 memory23 |%3_@exp1|))
 ;; %13 = and i32 %12, 1
 (define-fun |%13_@exp1| () (_ BitVec 32) (bvand |%12_@exp1| (_ bv1 32)))
 ;; %14 = icmp ne i32 %13, 0
@@ -337,10 +347,11 @@
 (define-fun @exp1_block_7_entry_condition () Bool
     (and @exp1_block_3_entry_condition (not |%10_@exp1|))
 )
+(define-fun memory24 () Mem memory22)
 ;; %26 = load i32* %retval, align 4
-(define-fun |%26_@exp1| () (_ BitVec 32) (read32 memory13 |%retval_@exp1|))
+(define-fun |%26_@exp1| () (_ BitVec 32) (read32 memory24 |%retval_@exp1|))
 ;; store i32 %26, i32* %1
-(define-fun memory14 () Mem (write32 memory13 |%1_@exp1| |%26_@exp1|))
+(define-fun memory25 () Mem (write32 memory24 |%1_@exp1| |%26_@exp1|))
 ;; br label %27
 ;; No backward arrows
 
@@ -350,14 +361,15 @@
 (define-fun @exp1_block_5_entry_condition () Bool
     (and @exp1_block_4_entry_condition |%14_@exp1|)
 )
+(define-fun memory26 () Mem memory23)
 ;; %16 = load i32* %2, align 4
-(define-fun |%16_@exp1| () (_ BitVec 32) (read32 memory14 |%2_@exp1|))
+(define-fun |%16_@exp1| () (_ BitVec 32) (read32 memory26 |%2_@exp1|))
 ;; %17 = load i32* %retval, align 4
-(define-fun |%17_@exp1| () (_ BitVec 32) (read32 memory14 |%retval_@exp1|))
+(define-fun |%17_@exp1| () (_ BitVec 32) (read32 memory26 |%retval_@exp1|))
 ;; %18 = mul nsw i32 %17, %16
 (define-fun |%18_@exp1| () (_ BitVec 32) (bvmul |%17_@exp1| |%16_@exp1|))
 ;; store i32 %18, i32* %retval, align 4
-(define-fun memory15 () Mem (write32 memory14 |%retval_@exp1| |%18_@exp1|))
+(define-fun memory27 () Mem (write32 memory26 |%retval_@exp1| |%18_@exp1|))
 ;; br label %19
 ;; No backward arrows
 
@@ -370,8 +382,9 @@
         @exp1_block_1_entry_condition
     )
 )
+(define-fun memory28 () Mem (ite @exp1_block_7_entry_condition memory25 memory20))
 ;; %28 = load i32* %1
-(define-fun |%28_@exp1| () (_ BitVec 32) (read32 memory15 |%1_@exp1|))
+(define-fun |%28_@exp1| () (_ BitVec 32) (read32 memory28 |%1_@exp1|))
 ;; ret i32 %28
 ;; No backward arrows
 
@@ -384,20 +397,21 @@
         (and @exp1_block_4_entry_condition (not |%14_@exp1|))
     )
 )
+(define-fun memory29 () Mem (ite @exp1_block_5_entry_condition memory27 memory23))
 ;; %20 = load i32* %3, align 4
-(define-fun |%20_@exp1| () (_ BitVec 32) (read32 memory15 |%3_@exp1|))
+(define-fun |%20_@exp1| () (_ BitVec 32) (read32 memory29 |%3_@exp1|))
 ;; %21 = ashr i32 %20, 1
 (define-fun |%21_@exp1| () (_ BitVec 32) (bvashr |%20_@exp1| (_ bv1 32)))
 ;; store i32 %21, i32* %3, align 4
-(define-fun memory16 () Mem (write32 memory15 |%3_@exp1| |%21_@exp1|))
+(define-fun memory30 () Mem (write32 memory29 |%3_@exp1| |%21_@exp1|))
 ;; %22 = load i32* %2, align 4
-(define-fun |%22_@exp1| () (_ BitVec 32) (read32 memory16 |%2_@exp1|))
+(define-fun |%22_@exp1| () (_ BitVec 32) (read32 memory30 |%2_@exp1|))
 ;; %23 = load i32* %2, align 4
-(define-fun |%23_@exp1| () (_ BitVec 32) (read32 memory16 |%2_@exp1|))
+(define-fun |%23_@exp1| () (_ BitVec 32) (read32 memory30 |%2_@exp1|))
 ;; %24 = mul nsw i32 %23, %22
 (define-fun |%24_@exp1| () (_ BitVec 32) (bvmul |%23_@exp1| |%22_@exp1|))
 ;; store i32 %24, i32* %2, align 4
-(define-fun memory17 () Mem (write32 memory16 |%2_@exp1| |%24_@exp1|))
+(define-fun memory31 () Mem (write32 memory30 |%2_@exp1| |%24_@exp1|))
 ;; br label %8
 ;; BACKWARD ARROWS:  %8
 (assert 
@@ -409,7 +423,7 @@
 
 ;; Function: |@main|
 ;; (i32 %argc, i8** %argv)
-(declare-fun memory18 () Mem)
+(declare-fun memory32 () Mem)
 (define-fun rsp11 () (_ BitVec 64) (_ bv0 64))
 (declare-fun |%argc_@main| () (_ BitVec 32))
 (declare-fun |%argv_@main| () (_ BitVec 64))
@@ -428,11 +442,11 @@
 (define-fun rsp14 () Address (bvsub rsp13 (_ bv8 64)))
 (define-fun |%3_@main| () (_ BitVec 64) rsp14)
 ;; store i32 0, i32* %1
-(define-fun memory19 () Mem (write32 memory18 |%1_@main| (_ bv0 32)))
+(define-fun memory33 () Mem (write32 memory32 |%1_@main| (_ bv0 32)))
 ;; store i32 %argc, i32* %2, align 4
-(define-fun memory20 () Mem (write32 memory19 |%2_@main| |%argc_@main|))
+(define-fun memory34 () Mem (write32 memory33 |%2_@main| |%argc_@main|))
 ;; store i8** %argv, i8*** %3, align 8
-(define-fun memory21 () Mem (write64 memory20 |%3_@main| |%argv_@main|))
+(define-fun memory35 () Mem (write64 memory34 |%3_@main| |%argv_@main|))
 ;; ret i32 0
 ;; No backward arrows
 
