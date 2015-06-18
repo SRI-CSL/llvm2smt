@@ -913,12 +913,25 @@ let rhs_to_smt b st i =
 
       (*
 
-	Feasible
+	** Feasible
+
 	| Addrspacecast(x, y, md)  ->
+	
+	--- Vector operations
+	
+	| Insertelement(x, md) ->
+	| Extractelement(x, md) ->
+	| Shufflevector(x, md) ->
+
+	--- Aggregate operations
+
+	(N.B extractvalue seems to be used right after a landingpad)
+	(N.B insertvalue seems to be used just prior to a resume)
+	
 	| Extractvalue(x, y, md) ->
 	| Insertvalue(x, y, z, md) ->
 
-	Maybe, but probably not easy
+	** Maybe, but probably not easy
 
 	NOTES: the vector instructions Insertelement, Extractelement show
 	up a lot. They are probably easier than Extractvalue and Insertvalue.
@@ -937,9 +950,6 @@ let rhs_to_smt b st i =
 	| Cmpxchg(x, y, z, w, v, u, t, md) ->
 	| Atomicrmw(x, y, z, w, v, u, md) ->
 	| Fence(x, y, md) ->
-	| Shufflevector(x, md) ->
-	| Insertelement(x, md) ->
-	| Extractelement(x, md) ->
 
 	Can't support
 	| Va_arg(x, y, md)         ->
