@@ -408,7 +408,7 @@ let canonicalize offset =
 let make_offset st ty ti vi =
   let sz = bytewidth st ty in
     (match vi with
-       | Int(n)  -> (sz * (Big_int.int_of_big_int n), None)   (* should we worry about trucation? *)
+       | Int(n)  -> ((Big_int.int_of_big_int (Big_int.mult_big_int (Big_int.big_int_of_int sz)  n)), None) 
        | _ -> (sz, Some((ti, vi))))
 
 let offset_in_packed_struct st typ_list i =
