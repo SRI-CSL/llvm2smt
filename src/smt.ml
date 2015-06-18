@@ -11,7 +11,8 @@ open Llvm
 open Dl
 open Bc   
 open Util
-
+open Big_int
+   
 (*
  * Size of the address space in bits
  *)
@@ -274,11 +275,11 @@ let default_value st ty =
  *
  *)
 let bbig_int_to_bv b n w =
-  if (Big_int.sign_big_int n) < 0
+  if (sign_big_int n) < 0
   then
-    bprintf b "(bvneg (_ bv%s %d))" (Big_int.string_of_big_int (Big_int.minus_big_int n)) w
+    bprintf b "(bvneg (_ bv%s %d))" (string_of_big_int (minus_big_int n)) w
   else
-    bprintf b "(_ bv%s %d)" (Big_int.string_of_big_int n) w
+    bprintf b "(_ bv%s %d)" (string_of_big_int n) w
 
 let big_int_to_bv n w =
   let b = Buffer.create 64 in
@@ -308,7 +309,7 @@ let int_to_bv n w =
  *)
 let val_to_int v = 
   match v with
-    | Int x -> Big_int.int_of_big_int x
+    | Int x -> int_of_big_int x
     | _ -> failwith ("Value is not an integer: " ^ (Llvm_pp.string_of_value v))
 
 
@@ -408,7 +409,7 @@ let canonicalize offset =
 let make_offset st ty ti vi =
   let sz = bytewidth st ty in
     (match vi with
-       | Int(n)  -> ((Big_int.int_of_big_int (Big_int.mult_big_int (Big_int.big_int_of_int sz)  n)), None) 
+       | Int(n)  -> ((int_of_big_int (mult_big_int (big_int_of_int sz)  n)), None) 
        | _ -> (sz, Some((ti, vi))))
 
 let offset_in_packed_struct st typ_list i =
@@ -734,7 +735,7 @@ let gen_alloca_to_smt b st ty n =
 let alloca_to_smt b st ty n =
   match n with
     | None -> const_alloca_to_smt b st ty 1
-    | Some(_, Int x) -> const_alloca_to_smt b st ty (Big_int.int_of_big_int x)
+    | Some(_, Int x) -> const_alloca_to_smt b st ty (int_of_big_int x)
     | Some x -> gen_alloca_to_smt b st ty x
 
 (*
