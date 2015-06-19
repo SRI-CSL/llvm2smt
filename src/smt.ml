@@ -716,19 +716,19 @@ and val_to_smt b st (typ, v) =
      | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z
      | Select([c;t;e]) -> ite_to_smt b st c t e
      | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
-     | Add(_, _, x, y) -> binop_to_smt b st ty "bvadd" x y
-     | Sub(_, _, x, y) -> binop_to_smt b st ty "bvsub" x y
-     | Mul(_, _, x, y) -> binop_to_smt b st ty "bvmul" x y
-     | Shl(_, _, x, y) -> binop_to_smt b st ty "bvshl" x y
-     | Sdiv(_, x, y)   -> binop_to_smt b st ty "bvsdiv" x y
-     | Udiv(_, x, y)   -> binop_to_smt b st ty "bvudiv" x y
-     | Lshr(_, x, y)   -> binop_to_smt b st ty "bvlshr" x y
-     | Ashr(_, x, y)   -> binop_to_smt b st ty "bvashr" x y
-     | Urem(x, y)      -> binop_to_smt b st ty "bvurem" x y
-     | Srem(x, y)      -> binop_to_smt b st ty "bvsrem" x y
-     | And (x, y)      -> binop_to_smt b st ty "bvand" x y
-     | Or  (x, y)      -> binop_to_smt b st ty "bvor" x y
-     | Xor (x, y)      -> binop_to_smt b st ty "bvxor" x y
+     | Add(_, _, x, y) -> binop_to_smt b st typ "bvadd" x y
+     | Sub(_, _, x, y) -> binop_to_smt b st typ "bvsub" x y
+     | Mul(_, _, x, y) -> binop_to_smt b st typ "bvmul" x y
+     | Shl(_, _, x, y) -> binop_to_smt b st typ "bvshl" x y
+     | Sdiv(_, x, y)   -> binop_to_smt b st typ "bvsdiv" x y
+     | Udiv(_, x, y)   -> binop_to_smt b st typ "bvudiv" x y
+     | Lshr(_, x, y)   -> binop_to_smt b st typ "bvlshr" x y
+     | Ashr(_, x, y)   -> binop_to_smt b st typ "bvashr" x y
+     | Urem(x, y)      -> binop_to_smt b st typ "bvurem" x y
+     | Srem(x, y)      -> binop_to_smt b st typ "bvsrem" x y
+     | And (x, y)      -> binop_to_smt b st typ "bvand" x y
+     | Or  (x, y)      -> binop_to_smt b st typ "bvor" x y
+     | Xor (x, y)      -> binop_to_smt b st typ "bvxor" x y
      | Shufflevector(x) -> shufflevector_to_smt b st x
 	 (*
 	   | Shufflevector([x0; x1; xM]) -> ()
@@ -737,11 +737,13 @@ and val_to_smt b st (typ, v) =
      | _ -> Util.nfailwith ("value not supported: " ^  (Llvm_pp.string_of_value v)))
   
 and binop_to_smt b st ty op left right =
+  let cu = st.cu in
+  let fu = (state_fu st) in 
   let op_name = 
-    if Bc_manip.is_vector_typ ty then
-      let k = vector_index_width st.cu (state_fu st) ty in
-      let n = bitwidth (vector_typ_range st.cu (state_fu st) ty in
-	v ^ op ^ (string_of_int k) ^ "_" ^ (string_of_int n) 
+    if (Bc_manip.is_vector_typ cu fu ty) then
+      let k = Bc_manip.vector_index_width cu fu ty in
+      let n = bitwidth st (Bc_manip.vector_typ_range cu fu ty) in
+	"v" ^ op ^ (string_of_int k) ^ "_" ^ (string_of_int n) 
     else 
       op
   in
@@ -961,22 +963,22 @@ let phi_to_smt b st ty incoming =
 (*
  * Right-hand side of an instruction
  *)
-let rhs_to_smt b st i =
-  let is_bool_type = is_bool st in 
+let rhs_to_smt b st ti i =
+  let is_bool_type = (is_bool st) in 
     match i with
-      | Add(_, _, (ty, x), y, _) -> binop_to_smt b st "bvadd" (ty, x) (ty, y)
-      | Sub(_, _, (ty, x), y, _) -> binop_to_smt b st "bvsub" (ty, x) (ty, y)
-      | Mul(_, _, (ty, x), y, _) -> binop_to_smt b st "bvmul" (ty, x) (ty, y)
-      | Shl(_, _, (ty, x), y, _) -> binop_to_smt b st "bvshl" (ty, x) (ty, y)
-      | Sdiv(_, (ty, x), y, _)   -> binop_to_smt b st "bvsdiv" (ty, x) (ty, y)
-      | Udiv(_, (ty, x), y, _)   -> binop_to_smt b st "bvudiv" (ty, x) (ty, y)
-      | Lshr(_, (ty, x), y, _)   -> binop_to_smt b st "bvlshr" (ty, x) (ty, y)
-      | Ashr(_, (ty, x), y, _)   -> binop_to_smt b st "bvashr" (ty, x) (ty, y)
-      | Urem((ty, x), y, _)      -> binop_to_smt b st "bvurem" (ty, x) (ty, y)
-      | Srem((ty, x), y, _)      -> binop_to_smt b st "bvsrem" (ty, x) (ty, y)
-      | And ((ty, x), y, _)      -> binop_to_smt b st (if is_bool_type ty then "and" else "bvand") (ty, x) (ty, y) 
-      | Or  ((ty, x), y, _)      -> binop_to_smt b st (if is_bool_type ty then "or" else "bvor") (ty, x) (ty, y)	   
-      | Xor ((ty, x), y, _)      -> binop_to_smt b st (if is_bool_type ty then "or" else "bvor") (ty, x) (ty, y)	   	   
+      | Add(_, _, (ty, x), y, _) -> binop_to_smt b st ti "bvadd" (ty, x) (ty, y)
+      | Sub(_, _, (ty, x), y, _) -> binop_to_smt b st ti "bvsub" (ty, x) (ty, y)
+      | Mul(_, _, (ty, x), y, _) -> binop_to_smt b st ti "bvmul" (ty, x) (ty, y)
+      | Shl(_, _, (ty, x), y, _) -> binop_to_smt b st ti "bvshl" (ty, x) (ty, y)
+      | Sdiv(_, (ty, x), y, _)   -> binop_to_smt b st ti "bvsdiv" (ty, x) (ty, y)
+      | Udiv(_, (ty, x), y, _)   -> binop_to_smt b st ti "bvudiv" (ty, x) (ty, y)
+      | Lshr(_, (ty, x), y, _)   -> binop_to_smt b st ti "bvlshr" (ty, x) (ty, y)
+      | Ashr(_, (ty, x), y, _)   -> binop_to_smt b st ti "bvashr" (ty, x) (ty, y)
+      | Urem((ty, x), y, _)      -> binop_to_smt b st ti "bvurem" (ty, x) (ty, y)
+      | Srem((ty, x), y, _)      -> binop_to_smt b st ti "bvsrem" (ty, x) (ty, y)
+      | And ((ty, x), y, _)      -> binop_to_smt b st ti (if (is_bool_type ty) then "and" else "bvand") (ty, x) (ty, y) 
+      | Or  ((ty, x), y, _)      -> binop_to_smt b st ti (if is_bool_type ty then "or" else "bvor") (ty, x) (ty, y)	   
+      | Xor ((ty, x), y, _)      -> binop_to_smt b st ti (if is_bool_type ty then "or" else "bvor") (ty, x) (ty, y)	   	   
       | Icmp(cmp, (ty, x), y, _) -> icmp_to_smt b st cmp (ty, x) (ty, y)
       | Select([c;t;e], _)       -> ite_to_smt b st c t e
       | Select(_)                -> Util.nfailwith ("malformed Select instruction: " ^ (Llvm_pp.string_of_rhs i))
@@ -1055,12 +1057,6 @@ let rhs_to_smt b st i =
 	    eprintf "WARNING: %s" msg;
 	    raise (InstructionNotSupported msg)
 
-let rhs_to_string st i = 
-  let b = Buffer.create 100 in
-    rhs_to_smt b st i;
-    Buffer.contents b
-
-
 (*
  * Instructions that have side effect on the memory or stack pointer
  * - for now, we just handle store and alloca
@@ -1092,15 +1088,14 @@ let instr_effect_to_string st rhs =
  * - st = state
  *)
 let instr_assign b st n rhs =
-  begin
+  let typ = (Bc_manip.typ_of_var st.cu (state_fu st) n) in
     bprintf b "(define-fun ";
     name_to_smt b st n;
     bprintf b " () ";
-    typ_to_smt b st (Bc_manip.typ_of_var st.cu (state_fu st) n);
+    typ_to_smt b st typ;
     bprintf b " ";
-    rhs_to_smt b st rhs;
+    rhs_to_smt b st typ rhs;
     bprintf b ")"
-  end
 
 let instr_assign_to_string st n rhs =
   let b = Buffer.create 100 in

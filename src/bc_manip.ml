@@ -532,18 +532,25 @@ let rec vector_index_width cu fu typ =
   match typ with
     | Vartyp(vt) -> vector_index_width cu fu (typ_of_var cu fu vt)
     | Vectortyp(n, _) -> Util.log2ceil n
-    | _ -> failwith "Vector_index_width: not a vector type"
+    | _ -> failwith "vector_index_width: not a vector type"
 
 (*
  * Type of the elements in a vector type
  *)
 let rec vector_typ_range cu fu typ =
   match typ with
-    | Vartyp(vt) -> vector_index_width cu fu (typ_of_var cu fu vt)
+    | Vartyp(vt) -> vector_typ_range cu fu (typ_of_var cu fu vt)
     | Vectortyp(_, ty) -> ty
-    | _ -> failwith "Vector_typ_range: not a vector type"
+    | _ -> failwith "vector_typ_range: not a vector type"
 
 
 (*
  * Get both at once
  *)
+let rec deconstruct_vector_typ cu fu typ =
+  match typ with
+    | Vartyp(vt) -> deconstruct_vector_typ cu fu (typ_of_var cu fu vt)
+    | Vectortyp(n, ty) -> ((Util.log2ceil n), ty)
+    | _ -> failwith "deconstruct_vector_typ: not a vector type"
+
+  
