@@ -640,6 +640,17 @@ and polyoffset_to_smt st poly =
  * x1 = Vector(n, typ)  value1 
  * xM = Vector(m, i32)  mask
  *
+ * It will return a Vector(m, typ) as described by the indexes in the mask.
+ *
+ * indexes from 0, ... n - 1 refer to the obvious elements of value0
+ * indexes from n, ... 2n - 1 refer to the obvious elements of value1
+ *
+ * value1 can be undef
+ * mask can be zeroinitializer
+ *
+ * happy happy joy joy
+ *
+ *
  *)
 and shufflevector_to_smt b st x =
   if  (List.length x) <> 3
