@@ -1305,13 +1305,14 @@ let smt_block_entry_memory b fu state binfo =
 	    bprintf b "%s" (mem_ref_idx blk.bmem)
       | (v0, c0) :: tl ->
 	  let blk = Bc_manip.lookup_block fu v0 in
-	    bprintf b "(ite %s %s " (smt_precondition fu state (v0, c0)) (mem_ref_idx blk.bmem);
+	    bprintf b "\n    (ite %s %s " (smt_precondition fu state (v0, c0)) (mem_ref_idx blk.bmem);
 	    phi_mem_to_smt tl;
-	    bprintf b ")"
+	    bprintf b "\n    )"
       | _ -> failwith "Block entry memory failed: empty predecessor list"
   in
     if back_pred_list <> [] then
-      let new_mem = state.mem_idx + 1 in 
+      let new_mem = state.mem_idx + 1 in
+	bprintf b ";;Memory PHI\n";
 	bprintf b "(define-fun memory%d () Mem " new_mem;
 	phi_mem_to_smt back_pred_list;
 	bprintf b ")\n";

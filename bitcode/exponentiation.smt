@@ -162,6 +162,7 @@
 (define-fun @exp0_block_1_entry_condition () Bool
     (and @exp0_block_0_entry_condition |%5_@exp0|)
 )
+;;Memory PHI
 (define-fun memory5 () Mem memory4)
 ;; store i32 0, i32* %1
 (define-fun memory6 () Mem (write32 memory5 |%1_@exp0| (_ bv0 32)))
@@ -174,6 +175,7 @@
 (define-fun @exp0_block_2_entry_condition () Bool
     (and @exp0_block_0_entry_condition (not |%5_@exp0|))
 )
+;;Memory PHI
 (define-fun memory7 () Mem memory4)
 ;; br label %8
 ;; No backward arrows
@@ -185,6 +187,7 @@
 (define-fun @exp0_block_3_entry_condition () Bool
     @exp0_block_2_entry_condition
 )
+;;Memory PHI
 (define-fun memory8 () Mem memory7)
 ;; %9 = load i32* %3, align 4
 (define-fun |%9_@exp0| () (_ BitVec 32) (read32 memory8 |%3_@exp0|))
@@ -199,6 +202,7 @@
 (define-fun @exp0_block_4_entry_condition () Bool
     (and @exp0_block_3_entry_condition |%10_@exp0|)
 )
+;;Memory PHI
 (define-fun memory9 () Mem memory8)
 ;; %12 = load i32* %2, align 4
 (define-fun |%12_@exp0| () (_ BitVec 32) (read32 memory9 |%2_@exp0|))
@@ -226,6 +230,7 @@
 (define-fun @exp0_block_5_entry_condition () Bool
     (and @exp0_block_3_entry_condition (not |%10_@exp0|))
 )
+;;Memory PHI
 (define-fun memory12 () Mem memory8)
 ;; %18 = load i32* %retval, align 4
 (define-fun |%18_@exp0| () (_ BitVec 32) (read32 memory12 |%retval_@exp0|))
@@ -243,7 +248,10 @@
         @exp0_block_1_entry_condition
     )
 )
-(define-fun memory14 () Mem (ite @exp0_block_5_entry_condition memory13 memory6))
+;;Memory PHI
+(define-fun memory14 () Mem 
+    (ite @exp0_block_5_entry_condition memory13 memory6
+    ))
 ;; %20 = load i32* %1
 (define-fun |%20_@exp0| () (_ BitVec 32) (read32 memory14 |%1_@exp0|))
 ;; ret i32 %20
@@ -294,6 +302,7 @@
 (define-fun @exp1_block_1_entry_condition () Bool
     (and @exp1_block_0_entry_condition |%5_@exp1|)
 )
+;;Memory PHI
 (define-fun memory19 () Mem memory18)
 ;; store i32 0, i32* %1
 (define-fun memory20 () Mem (write32 memory19 |%1_@exp1| (_ bv0 32)))
@@ -306,6 +315,7 @@
 (define-fun @exp1_block_2_entry_condition () Bool
     (and @exp1_block_0_entry_condition (not |%5_@exp1|))
 )
+;;Memory PHI
 (define-fun memory21 () Mem memory18)
 ;; br label %8
 ;; No backward arrows
@@ -317,6 +327,7 @@
 (define-fun @exp1_block_3_entry_condition () Bool
     @exp1_block_2_entry_condition
 )
+;;Memory PHI
 (define-fun memory22 () Mem memory21)
 ;; %9 = load i32* %3, align 4
 (define-fun |%9_@exp1| () (_ BitVec 32) (read32 memory22 |%3_@exp1|))
@@ -331,6 +342,7 @@
 (define-fun @exp1_block_4_entry_condition () Bool
     (and @exp1_block_3_entry_condition |%10_@exp1|)
 )
+;;Memory PHI
 (define-fun memory23 () Mem memory22)
 ;; %12 = load i32* %3, align 4
 (define-fun |%12_@exp1| () (_ BitVec 32) (read32 memory23 |%3_@exp1|))
@@ -347,6 +359,7 @@
 (define-fun @exp1_block_7_entry_condition () Bool
     (and @exp1_block_3_entry_condition (not |%10_@exp1|))
 )
+;;Memory PHI
 (define-fun memory24 () Mem memory22)
 ;; %26 = load i32* %retval, align 4
 (define-fun |%26_@exp1| () (_ BitVec 32) (read32 memory24 |%retval_@exp1|))
@@ -361,6 +374,7 @@
 (define-fun @exp1_block_5_entry_condition () Bool
     (and @exp1_block_4_entry_condition |%14_@exp1|)
 )
+;;Memory PHI
 (define-fun memory26 () Mem memory23)
 ;; %16 = load i32* %2, align 4
 (define-fun |%16_@exp1| () (_ BitVec 32) (read32 memory26 |%2_@exp1|))
@@ -382,7 +396,10 @@
         @exp1_block_1_entry_condition
     )
 )
-(define-fun memory28 () Mem (ite @exp1_block_7_entry_condition memory25 memory20))
+;;Memory PHI
+(define-fun memory28 () Mem 
+    (ite @exp1_block_7_entry_condition memory25 memory20
+    ))
 ;; %28 = load i32* %1
 (define-fun |%28_@exp1| () (_ BitVec 32) (read32 memory28 |%1_@exp1|))
 ;; ret i32 %28
@@ -397,7 +414,10 @@
         (and @exp1_block_4_entry_condition (not |%14_@exp1|))
     )
 )
-(define-fun memory29 () Mem (ite @exp1_block_5_entry_condition memory27 memory23))
+;;Memory PHI
+(define-fun memory29 () Mem 
+    (ite @exp1_block_5_entry_condition memory27 memory23
+    ))
 ;; %20 = load i32* %3, align 4
 (define-fun |%20_@exp1| () (_ BitVec 32) (read32 memory29 |%3_@exp1|))
 ;; %21 = ashr i32 %20, 1

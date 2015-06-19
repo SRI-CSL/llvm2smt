@@ -162,6 +162,7 @@
 (define-fun @exp0_block_1_entry_condition () Bool
     (and @exp0_block_0_entry_condition |%5_@exp0|)
 )
+;;Memory PHI
 (define-fun memory5 () Mem memory4)
 ;; store i32 0, i32* %1
 (define-fun memory6 () Mem (write32 memory5 |%1_@exp0| (_ bv0 32)))
@@ -174,6 +175,7 @@
 (define-fun @exp0_block_2_entry_condition () Bool
     (and @exp0_block_0_entry_condition (not |%5_@exp0|))
 )
+;;Memory PHI
 (define-fun memory7 () Mem memory4)
 ;; %8 = load i32* %3, align 4
 (define-fun |%8_@exp0| () (_ BitVec 32) (read32 memory7 |%3_@exp0|))
@@ -188,6 +190,7 @@
 (define-fun @exp0_block_3_entry_condition () Bool
     (and @exp0_block_2_entry_condition |%9_@exp0|)
 )
+;;Memory PHI
 (define-fun memory8 () Mem memory7)
 ;; br label %10
 ;; No backward arrows
@@ -199,6 +202,7 @@
 (define-fun @exp0_block_4_entry_condition () Bool
     @exp0_block_3_entry_condition
 )
+;;Memory PHI
 (define-fun memory9 () Mem memory8)
 ;; %11 = load i32* %2, align 4
 (define-fun |%11_@exp0| () (_ BitVec 32) (read32 memory9 |%2_@exp0|))
@@ -227,6 +231,7 @@
 (define-fun @exp0_block_8_entry_condition () Bool
     (and @exp0_block_4_entry_condition |%17_@exp0|)
 )
+;;Memory PHI
 (define-fun memory12 () Mem memory11)
 ;; %23 = load i32* %2, align 4
 (define-fun |%23_@exp0| () (_ BitVec 32) (read32 memory12 |%2_@exp0|))
@@ -255,6 +260,7 @@
 (define-fun @exp0_block_9_entry_condition () Bool
     (and @exp0_block_8_entry_condition |%29_@exp0|)
 )
+;;Memory PHI
 (define-fun memory15 () Mem memory14)
 ;; %31 = load i32* %2, align 4
 (define-fun |%31_@exp0| () (_ BitVec 32) (read32 memory15 |%2_@exp0|))
@@ -290,7 +296,12 @@
         (and @exp0_block_4_entry_condition (not |%17_@exp0|))
     )
 )
-(define-fun memory18 () Mem (ite (and @exp0_block_9_entry_condition (not |%37_@exp0|)) memory17 (ite (and @exp0_block_8_entry_condition (not |%29_@exp0|)) memory14 memory11)))
+;;Memory PHI
+(define-fun memory18 () Mem 
+    (ite (and @exp0_block_9_entry_condition (not |%37_@exp0|)) memory17 
+    (ite (and @exp0_block_8_entry_condition (not |%29_@exp0|)) memory14 memory11
+    )
+    ))
 ;; br label %18
 ;; No backward arrows
 
@@ -303,7 +314,10 @@
         (and @exp0_block_2_entry_condition (not |%9_@exp0|))
     )
 )
-(define-fun memory19 () Mem (ite @exp0_block_5_entry_condition memory18 memory7))
+;;Memory PHI
+(define-fun memory19 () Mem 
+    (ite @exp0_block_5_entry_condition memory18 memory7
+    ))
 ;; %19 = load i32* %retval, align 4
 (define-fun |%19_@exp0| () (_ BitVec 32) (read32 memory19 |%retval_@exp0|))
 ;; store i32 %19, i32* %1
@@ -320,7 +334,10 @@
         @exp0_block_1_entry_condition
     )
 )
-(define-fun memory21 () Mem (ite @exp0_block_6_entry_condition memory20 memory6))
+;;Memory PHI
+(define-fun memory21 () Mem 
+    (ite @exp0_block_6_entry_condition memory20 memory6
+    ))
 ;; %21 = load i32* %1
 (define-fun |%21_@exp0| () (_ BitVec 32) (read32 memory21 |%1_@exp0|))
 ;; ret i32 %21
@@ -371,6 +388,7 @@
 (define-fun @exp1_block_1_entry_condition () Bool
     (and @exp1_block_0_entry_condition |%5_@exp1|)
 )
+;;Memory PHI
 (define-fun memory26 () Mem memory25)
 ;; store i32 0, i32* %1
 (define-fun memory27 () Mem (write32 memory26 |%1_@exp1| (_ bv0 32)))
@@ -383,6 +401,7 @@
 (define-fun @exp1_block_2_entry_condition () Bool
     (and @exp1_block_0_entry_condition (not |%5_@exp1|))
 )
+;;Memory PHI
 (define-fun memory28 () Mem memory25)
 ;; %8 = load i32* %3, align 4
 (define-fun |%8_@exp1| () (_ BitVec 32) (read32 memory28 |%3_@exp1|))
@@ -397,6 +416,7 @@
 (define-fun @exp1_block_3_entry_condition () Bool
     (and @exp1_block_2_entry_condition |%9_@exp1|)
 )
+;;Memory PHI
 (define-fun memory29 () Mem memory28)
 ;; br label %10
 ;; No backward arrows
@@ -408,6 +428,7 @@
 (define-fun @exp1_block_4_entry_condition () Bool
     @exp1_block_3_entry_condition
 )
+;;Memory PHI
 (define-fun memory30 () Mem memory29)
 ;; %11 = load i32* %3, align 4
 (define-fun |%11_@exp1| () (_ BitVec 32) (read32 memory30 |%3_@exp1|))
@@ -424,6 +445,7 @@
 (define-fun @exp1_block_5_entry_condition () Bool
     (and @exp1_block_4_entry_condition |%13_@exp1|)
 )
+;;Memory PHI
 (define-fun memory31 () Mem memory30)
 ;; %15 = load i32* %2, align 4
 (define-fun |%15_@exp1| () (_ BitVec 32) (read32 memory31 |%2_@exp1|))
@@ -445,7 +467,10 @@
         (and @exp1_block_4_entry_condition (not |%13_@exp1|))
     )
 )
-(define-fun memory33 () Mem (ite @exp1_block_5_entry_condition memory32 memory30))
+;;Memory PHI
+(define-fun memory33 () Mem 
+    (ite @exp1_block_5_entry_condition memory32 memory30
+    ))
 ;; %19 = load i32* %3, align 4
 (define-fun |%19_@exp1| () (_ BitVec 32) (read32 memory33 |%3_@exp1|))
 ;; %20 = ashr i32 %19, 1
@@ -473,6 +498,7 @@
 (define-fun @exp1_block_10_entry_condition () Bool
     (and @exp1_block_6_entry_condition |%25_@exp1|)
 )
+;;Memory PHI
 (define-fun memory36 () Mem memory35)
 ;; %31 = load i32* %3, align 4
 (define-fun |%31_@exp1| () (_ BitVec 32) (read32 memory36 |%3_@exp1|))
@@ -489,6 +515,7 @@
 (define-fun @exp1_block_11_entry_condition () Bool
     (and @exp1_block_10_entry_condition |%33_@exp1|)
 )
+;;Memory PHI
 (define-fun memory37 () Mem memory36)
 ;; %35 = load i32* %2, align 4
 (define-fun |%35_@exp1| () (_ BitVec 32) (read32 memory37 |%2_@exp1|))
@@ -510,7 +537,10 @@
         (and @exp1_block_10_entry_condition (not |%33_@exp1|))
     )
 )
-(define-fun memory39 () Mem (ite @exp1_block_11_entry_condition memory38 memory36))
+;;Memory PHI
+(define-fun memory39 () Mem 
+    (ite @exp1_block_11_entry_condition memory38 memory36
+    ))
 ;; %39 = load i32* %3, align 4
 (define-fun |%39_@exp1| () (_ BitVec 32) (read32 memory39 |%3_@exp1|))
 ;; %40 = ashr i32 %39, 1
@@ -538,6 +568,7 @@
 (define-fun @exp1_block_13_entry_condition () Bool
     (and @exp1_block_12_entry_condition |%45_@exp1|)
 )
+;;Memory PHI
 (define-fun memory42 () Mem memory41)
 ;; %47 = load i32* %3, align 4
 (define-fun |%47_@exp1| () (_ BitVec 32) (read32 memory42 |%3_@exp1|))
@@ -554,6 +585,7 @@
 (define-fun @exp1_block_14_entry_condition () Bool
     (and @exp1_block_13_entry_condition |%49_@exp1|)
 )
+;;Memory PHI
 (define-fun memory43 () Mem memory42)
 ;; %51 = load i32* %2, align 4
 (define-fun |%51_@exp1| () (_ BitVec 32) (read32 memory43 |%2_@exp1|))
@@ -575,7 +607,10 @@
         (and @exp1_block_13_entry_condition (not |%49_@exp1|))
     )
 )
-(define-fun memory45 () Mem (ite @exp1_block_14_entry_condition memory44 memory42))
+;;Memory PHI
+(define-fun memory45 () Mem 
+    (ite @exp1_block_14_entry_condition memory44 memory42
+    ))
 ;; %55 = load i32* %3, align 4
 (define-fun |%55_@exp1| () (_ BitVec 32) (read32 memory45 |%3_@exp1|))
 ;; %56 = ashr i32 %55, 1
@@ -610,7 +645,12 @@
         (and @exp1_block_6_entry_condition (not |%25_@exp1|))
     )
 )
-(define-fun memory48 () Mem (ite (and @exp1_block_15_entry_condition (not |%61_@exp1|)) memory47 (ite (and @exp1_block_12_entry_condition (not |%45_@exp1|)) memory41 memory35)))
+;;Memory PHI
+(define-fun memory48 () Mem 
+    (ite (and @exp1_block_15_entry_condition (not |%61_@exp1|)) memory47 
+    (ite (and @exp1_block_12_entry_condition (not |%45_@exp1|)) memory41 memory35
+    )
+    ))
 ;; br label %26
 ;; No backward arrows
 
@@ -623,7 +663,10 @@
         (and @exp1_block_2_entry_condition (not |%9_@exp1|))
     )
 )
-(define-fun memory49 () Mem (ite @exp1_block_7_entry_condition memory48 memory28))
+;;Memory PHI
+(define-fun memory49 () Mem 
+    (ite @exp1_block_7_entry_condition memory48 memory28
+    ))
 ;; %27 = load i32* %retval, align 4
 (define-fun |%27_@exp1| () (_ BitVec 32) (read32 memory49 |%retval_@exp1|))
 ;; store i32 %27, i32* %1
@@ -640,7 +683,10 @@
         @exp1_block_1_entry_condition
     )
 )
-(define-fun memory51 () Mem (ite @exp1_block_8_entry_condition memory50 memory27))
+;;Memory PHI
+(define-fun memory51 () Mem 
+    (ite @exp1_block_8_entry_condition memory50 memory27
+    ))
 ;; %29 = load i32* %1
 (define-fun |%29_@exp1| () (_ BitVec 32) (read32 memory51 |%1_@exp1|))
 ;; ret i32 %29
