@@ -27,6 +27,8 @@ let is_global = function
 
 let is_local v = not (is_global v)
 
+
+
 (*
  * Add type of var in table
  *)
@@ -509,3 +511,39 @@ let get_predecessor_block_list fu block =
     let candidates = List.map (fun n -> (lookup_block fu n)) pred_list in
       List.filter (fun b -> not b.bseen) candidates
 	
+
+(*
+ * Check whether typ is a vector type
+ * - cu, fu: compilation/function
+ *)
+let rec is_vector_typ cu fu typ =
+  match typ with
+    | Vartyp(vt) -> is_vector_typ cu fu (typ_of_var cu fu vt)
+    | Vectortyp(_) -> true
+    | _ -> false
+
+
+(*
+ * Size of vector type in bits
+ * (e.g., if typ is <4 x int32> this returns 2
+ *        if typ is <8 x int64> this returns 3)
+ *)
+let rec vector_index_width cu fu typ =
+  match typ with
+    | Vartyp(vt) -> vector_index_width cu fu (typ_of_var cu fu vt)
+    | Vectortyp(n, _) -> Util.log2ceil n
+    | _ -> failwith "Vector_index_width: not a vector type"
+
+(*
+ * Type of the elements in a vector type
+ *)
+let rec vector_typ_range cu fu typ =
+  match typ with
+    | Vartyp(vt) -> vector_index_width cu fu (typ_of_var cu fu vt)
+    | Vectortyp(_, ty) -> ty
+    | _ -> failwith "Vector_typ_range: not a vector type"
+
+
+(*
+ * Get both at once
+ *)

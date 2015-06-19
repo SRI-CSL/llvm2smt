@@ -26,3 +26,9 @@ val spr: (Buffer.t -> 'a -> unit) -> 'a -> string
  * Prints a message if Util.debug is true/fails with an exception otherwise.
  *)
 val nfailwith: string -> unit
+
+(*
+ * Compute the smallest k such that 2^k >= n
+ * - n must be positive
+ *)
+val log2ceil: int -> int

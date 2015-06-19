@@ -3,7 +3,7 @@
  *
  * Values of type Integer 1  are converted to Boolean expressions in SMT
  * Values of type (Integer n) where n>1 are converted to SMT expressions of type (_ BitVec n)
- *
+ * Values of vector type <n x tau> are converted to arrays.
  *)
 
 open Printf
@@ -94,7 +94,7 @@ let state_store_return st x =
  *)
 let bit_padding bit_align offset =
   let tail = offset mod bit_align in
-    if tail == 0 then 0 else (bit_align - tail)
+    if tail = 0 then 0 else (bit_align - tail)
 
 	
 (*
@@ -133,8 +133,8 @@ let rec byte_align32 st t =
       | _ -> 4) (* just a guess *)
 
 let byte_align st t  =
-  assert((st.addr_width  == 64) || (st.addr_width == 32));
-  if st.addr_width == 64
+  assert((st.addr_width  = 64) || (st.addr_width = 32));
+  if st.addr_width = 64
   then byte_align64 st t
   else byte_align32 st t
 
@@ -228,15 +228,26 @@ let name_to_smt b st var =
 let name_to_smt_string st v =
   Util.spr (fun b -> name_to_smt b st) v
 
+
 (*
  * SMT type for tau
  *)
-let typ_to_smt b st tau =
-  let n = (bitwidth st tau) in
-    if n == 1 then
-      bprintf b "Bool"
-    else
-      bprintf b "(_ BitVec %d)" n
+let rec typ_to_smt b st tau =
+  match tau with
+    | Vartyp(x) -> typ_to_smt b st (Bc_manip.typ_of_var st.cu (state_fu st) x)
+    | Vectortyp(n, ty) ->
+	let k = Util.log2ceil n in
+	let n = bitwidth st ty in
+	  if n = 1 then
+	    bprintf b "(Array (_ BitVec %d) Bool)" k
+	  else
+	    bprintf b "(Array (_ BitVec %d) (_ BitVec %d))" k n
+    | _ -> 
+	let n = bitwidth st tau in
+	  if n = 1 then
+	    bprintf b "Bool"
+	  else
+	    bprintf b "(_ BitVec %d)" n
 
 
 (*
@@ -263,7 +274,7 @@ let zero_vector n =
  *)
 let bdefault_value b st ty =
   let k = bitwidth st ty in
-    if k == 1 then bprintf b "false" else bzero_vector b k
+    if k = 1 then bprintf b "false" else bzero_vector b k
 
 let default_value st ty =
   let b = Buffer.create 64 in
@@ -416,7 +427,7 @@ let make_offset st ty ti vi =
 
 let offset_in_packed_struct st typ_list i =
   let rec offset_in_struct_aux typ_list i sum =
-    if i == 0
+    if i = 0
     then
       sum
     else
@@ -432,7 +443,7 @@ let offset_in_unpacked_struct st typ_list i =
     (match typ_list with
        | [] -> offset/8
        | ty::tl ->
-	   if i == 0
+	   if i = 0
 	   then
 	     (offset + (bit_padding (bit_align st ty) offset))/8
 	   else
@@ -543,9 +554,9 @@ and bool_val_to_smt b st v =
      | Var x -> name_to_smt b st x
      | True -> bprintf b "true"
      | False -> bprintf b "false"
-     | And (x, y) -> binop_to_smt b st "and" x y
-     | Or  (x, y) -> binop_to_smt b st "or" x y
-     | Xor (x, y) -> binop_to_smt b st "xor" x y
+     | And (x, y) -> binop_to_smt b st booltyp "and" x y
+     | Or  (x, y) -> binop_to_smt b st booltyp "or" x y
+     | Xor (x, y) -> binop_to_smt b st booltyp "xor" x y
      | Icmp(cmp, x, y) -> icmp_to_smt b st cmp x y
      | _ -> Util.nfailwith ("bool value not supported: " ^  (Llvm_pp.string_of_value v)))
 
@@ -634,8 +645,11 @@ and polyoffset_to_smt st poly =
   )
 
 
-and shufflevector_to_smt_aux b ty v0 v1 tyM vM =
+and shufflevector_to_smt_aux b st ty v0 v1 tyM vM =
   begin
+    bprintf b ";; Shufflevector: type = %s " (Llvm_pp.string_of_typ ty);
+    typ_to_smt b st ty;
+    bprintf b "\n";
     eprintf "Shufflevector (ty0, v0) = %s %s\n" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v0);
     eprintf "Shufflevector (ty1, v1) = %s %s\n" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v1);
     eprintf "Shufflevector (tyM, vM) = %s %s\n" (Llvm_pp.string_of_typ tyM) (Llvm_pp.string_of_value vM);
@@ -679,7 +693,7 @@ and shufflevector_to_smt b st x =
 	     then
 	       failwith("Bad arguments to Shufflevector.")
 	     else
-	       shufflevector_to_smt_aux b ty0 v0 v1 tyM vM
+	       shufflevector_to_smt_aux b st ty0 v0 v1 tyM vM
 	 | _ -> failwith("Bad arguments to Shufflevector.")
       )
       
@@ -702,19 +716,19 @@ and val_to_smt b st (typ, v) =
      | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z
      | Select([c;t;e]) -> ite_to_smt b st c t e
      | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
-     | Add(_, _, x, y) -> binop_to_smt b st "bvadd" x y
-     | Sub(_, _, x, y) -> binop_to_smt b st "bvsub" x y
-     | Mul(_, _, x, y) -> binop_to_smt b st "bvmul" x y
-     | Shl(_, _, x, y) -> binop_to_smt b st "bvshl" x y
-     | Sdiv(_, x, y)   -> binop_to_smt b st "bvsdiv" x y
-     | Udiv(_, x, y)   -> binop_to_smt b st "bvudiv" x y
-     | Lshr(_, x, y)   -> binop_to_smt b st "bvlshr" x y
-     | Ashr(_, x, y)   -> binop_to_smt b st "bvashr" x y
-     | Urem(x, y)      -> binop_to_smt b st "bvurem" x y
-     | Srem(x, y)      -> binop_to_smt b st "bvsrem" x y
-     | And (x, y)      -> binop_to_smt b st "bvand" x y
-     | Or  (x, y)      -> binop_to_smt b st "bvor" x y
-     | Xor (x, y)      -> binop_to_smt b st "bvxor" x y
+     | Add(_, _, x, y) -> binop_to_smt b st ty "bvadd" x y
+     | Sub(_, _, x, y) -> binop_to_smt b st ty "bvsub" x y
+     | Mul(_, _, x, y) -> binop_to_smt b st ty "bvmul" x y
+     | Shl(_, _, x, y) -> binop_to_smt b st ty "bvshl" x y
+     | Sdiv(_, x, y)   -> binop_to_smt b st ty "bvsdiv" x y
+     | Udiv(_, x, y)   -> binop_to_smt b st ty "bvudiv" x y
+     | Lshr(_, x, y)   -> binop_to_smt b st ty "bvlshr" x y
+     | Ashr(_, x, y)   -> binop_to_smt b st ty "bvashr" x y
+     | Urem(x, y)      -> binop_to_smt b st ty "bvurem" x y
+     | Srem(x, y)      -> binop_to_smt b st ty "bvsrem" x y
+     | And (x, y)      -> binop_to_smt b st ty "bvand" x y
+     | Or  (x, y)      -> binop_to_smt b st ty "bvor" x y
+     | Xor (x, y)      -> binop_to_smt b st ty "bvxor" x y
      | Shufflevector(x) -> shufflevector_to_smt b st x
 	 (*
 	   | Shufflevector([x0; x1; xM]) -> ()
@@ -722,12 +736,20 @@ and val_to_smt b st (typ, v) =
 	 *) 
      | _ -> Util.nfailwith ("value not supported: " ^  (Llvm_pp.string_of_value v)))
   
-and binop_to_smt b st op left right =
-  bprintf b "(%s " op;
-  typ_val_to_smt b st left;
-  bprintf b " ";
-  typ_val_to_smt b st right;
-  bprintf b ")"
+and binop_to_smt b st ty op left right =
+  let op_name = 
+    if Bc_manip.is_vector_typ ty then
+      let k = vector_index_width st.cu (state_fu st) ty in
+      let n = bitwidth (vector_typ_range st.cu (state_fu st) ty in
+	v ^ op ^ (string_of_int k) ^ "_" ^ (string_of_int n) 
+    else 
+      op
+  in
+    bprintf b "(%s " op_name;
+    typ_val_to_smt b st left;
+    bprintf b " ";
+    typ_val_to_smt b st right;
+    bprintf b ")"
 
 and ite_to_smt b st cond left right = (* if cond then left else right *)
   bprintf b "(if ";

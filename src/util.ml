@@ -66,3 +66,11 @@ let nfailwith msg =
     (Printf.eprintf "%s\n" msg)
   else
     (failwith msg)
+
+
+let log2ceil n =
+  (* accu is 2 ^ k *)
+  let rec loop k accu =
+    if accu >= n then k else loop (k + 1) (2 * accu)
+  in
+    loop 0 1

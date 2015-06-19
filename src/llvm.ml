@@ -83,6 +83,9 @@ type typ =
   | Pointer of typ * int option                                            (* element type, address space *)
   | Vectortyp  of int * typ                                                (* array length, element type *)
 
+
+let booltyp = Integer 1
+
 module I = struct
   type t =
     | Eq
