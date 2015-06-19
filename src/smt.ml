@@ -143,7 +143,7 @@ let bit_align st t =
 
 let rec bitwidth st t =
   let list_bitwidth typs = List.map (bitwidth st) typs in
-    (match t with
+    match t with
       | Vartyp v -> (bitwidth st (Bc_manip.typ_of_var st.cu (state_fu st) v))
       | Void -> 0
       | Half -> 16
@@ -156,17 +156,14 @@ let rec bitwidth st t =
       | Fp128 -> 128
       | Ppc_fp128 -> 128
       | Arraytyp(len,element_ty) -> len*(bitwidth st element_ty)
-      | Structtyp(true, tys) -> (* packed struct *)
+      | Structtyp(true, tys) -> (* packed *)
 	  List.fold_left (fun x y -> x+y) 0 (list_bitwidth tys)
-      | Structtyp(false, tys) -> (* not packed *)
-	  (* Printf.eprintf "Warning: inaccurate size computation for struct type: %s\n" (Llvm_pp.string_of_typ t); *)
+      | Structtyp(false, tys) -> (* unpacked  *)
 	  bitwidth_of_struct st (bit_align st t) tys
       | Vectortyp(len,element_ty) -> len*(bitwidth st element_ty)
       | _ -> 
-	  begin
-	    Util.nfailwith ("can't convert type: " ^ (Llvm_pp.string_of_typ t));
-	    0
-	  end)
+	  Util.nfailwith ("can't convert type: " ^ (Llvm_pp.string_of_typ t));
+	  0
 
 and bitwidth_of_struct st struct_align typs =
   let rec bitwidth_of_struct_aux offset typs =
@@ -253,11 +250,18 @@ let rec typ_to_smt b st tau =
 (*
  * Zero bitvector of n bits
  *)
-let bzero_vector b n =
+let bzero_vector_n b n =
   bprintf b "(_ bv0 %d)" n
 
 let zero_vector n =
-  Util.spr bzero_vector n
+  Util.spr bzero_vector_n n
+
+let bzero_vector b st typ v =
+  match v with 
+    | Null -> bzero_vector_n b st.addr_width           (* VECTOR FIXME *)
+    | Zero -> bzero_vector_n b (bitwidth st typ)      (* VECTOR FIXME *)
+    | _ -> failwith("bzero_vector: not a vector")
+	
 
 
 (*
@@ -265,7 +269,7 @@ let zero_vector n =
  * (e.g., that's how we deal with undef). For now, we just generate
  * a zero bitvector of the right size (or false).
  *
- * This is also used for phi instructions:
+ * This is also used for phi instructions:`
  * It's possible for all pairs (value, label) to be forward edges.
  * This means that the current block can't be executed (its
  * entry condition is false).
@@ -274,7 +278,7 @@ let zero_vector n =
  *)
 let bdefault_value b st ty =
   let k = bitwidth st ty in
-    if k = 1 then bprintf b "false" else bzero_vector b k
+    if k = 1 then bprintf b "false" else bzero_vector_n b k
 
 let default_value st ty =
   let b = Buffer.create 64 in
@@ -678,15 +682,10 @@ and shufflevector_to_smt_aux b st ty v0 v1 tyM vM =
  *
  *
  *)
-
-and shufflevector_to_smt b st x =
-  if  (List.length x) <> 3
-  then
-    failwith("Bad arguments to Shufflevector.")
-  else
-    let (ty0, v0) = List.nth x 0 in
-    let (ty1, v1) = List.nth x 1 in
-    let (tyM, vM) = List.nth x 2 in
+and shufflevector_to_smt b st x0 x1 xM =
+  let (ty0, v0) = x0 in
+  let (ty1, v1) = x1 in
+  let (tyM, vM) = xM in
       (match (ty0, ty1, tyM) with
 	 | (Vectortyp(len0, etype0), Vectortyp(len1, etype1), Vectortyp(lenM, Integer(32))) ->
 	     if (len0 <> len1) || (etype0 <> etype1)
@@ -696,25 +695,24 @@ and shufflevector_to_smt b st x =
 	       shufflevector_to_smt_aux b st ty0 v0 v1 tyM vM
 	 | _ -> failwith("Bad arguments to Shufflevector.")
       )
-      
 
 	
 and val_to_smt b st (typ, v) =
   (match v with
      | Var x             -> name_to_smt b st x
-     | Null              -> bzero_vector b st.addr_width
-     | Zero              -> bzero_vector b (bitwidth st typ)
+     | Null              -> bzero_vector b st typ v
+     | Zero              -> bzero_vector b st typ v
      | Undef             -> bdefault_value b st typ               (* This is enough for now, but not quite what right *)
      | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
-     | Vector(l)         -> bvector_to_smt b st l
-     | Trunc(x, ty)      -> trunc_to_smt b st x ty
-     | Zext((tx, x), ty) -> zext_to_smt b st tx x ty
-     | Sext((tx, x), ty) -> sext_to_smt b st tx x ty
-     | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)
-     | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty
-     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty
-     | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z
-     | Select([c;t;e]) -> ite_to_smt b st c t e
+     | Vector(l)         -> bvector_to_smt b st l                 (* VECTOR FIXME *)
+     | Trunc(x, ty)      -> trunc_to_smt b st x ty                (* VECTOR FIXME *)
+     | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              (* VECTOR FIXME *)
+     | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              (* VECTOR FIXME *)
+     | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)    (* VECTOR FIXME !!!!!???? %Z = bitcast <2 x int> %V to i64;   ; yields i64: %V *)
+     | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty       (* VECTOR FIXME *)
+     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty       (* VECTOR FIXME *)
+     | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z  (* VECTOR FIXME ??? *)
+     | Select([c;t;e]) -> ite_to_smt b st c t e                  (* VECTOR FIXME *)  
      | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
      | Add(_, _, x, y) -> binop_to_smt b st typ "bvadd" x y
      | Sub(_, _, x, y) -> binop_to_smt b st typ "bvsub" x y
@@ -729,21 +727,16 @@ and val_to_smt b st (typ, v) =
      | And (x, y)      -> binop_to_smt b st typ "bvand" x y
      | Or  (x, y)      -> binop_to_smt b st typ "bvor" x y
      | Xor (x, y)      -> binop_to_smt b st typ "bvxor" x y
-     | Shufflevector(x) -> shufflevector_to_smt b st x
-	 (*
-	   | Shufflevector([x0; x1; xM]) -> ()
-	   | Shufflevector(_) -> () 
-	 *) 
-     | _ -> Util.nfailwith ("value not supported: " ^  (Llvm_pp.string_of_value v)))
+     | Shufflevector([x0; x1; xM]) -> shufflevector_to_smt b st x0 x1 xM
+     | _ -> Util.nfailwith ("value not supported or wrong: " ^  (Llvm_pp.string_of_value v)))
   
 and binop_to_smt b st ty op left right =
   let cu = st.cu in
-  let fu = (state_fu st) in 
+  let fu = (state_fu st) in
   let op_name = 
     if (Bc_manip.is_vector_typ cu fu ty) then
-      let k = Bc_manip.vector_index_width cu fu ty in
-      let n = bitwidth st (Bc_manip.vector_typ_range cu fu ty) in
-	"v" ^ op ^ (string_of_int k) ^ "_" ^ (string_of_int n) 
+      let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
+	"v" ^ op ^ (string_of_int vi) ^ "_" ^ (string_of_int (bitwidth st vt)) 
     else 
       op
   in
@@ -964,7 +957,7 @@ let phi_to_smt b st ty incoming =
  * Right-hand side of an instruction
  *)
 let rhs_to_smt b st ti i =
-  let is_bool_type = (is_bool st) in 
+  let ti_is_bool = (is_bool st ti) in 
     match i with
       | Add(_, _, (ty, x), y, _) -> binop_to_smt b st ti "bvadd" (ty, x) (ty, y)
       | Sub(_, _, (ty, x), y, _) -> binop_to_smt b st ti "bvsub" (ty, x) (ty, y)
@@ -976,9 +969,9 @@ let rhs_to_smt b st ti i =
       | Ashr(_, (ty, x), y, _)   -> binop_to_smt b st ti "bvashr" (ty, x) (ty, y)
       | Urem((ty, x), y, _)      -> binop_to_smt b st ti "bvurem" (ty, x) (ty, y)
       | Srem((ty, x), y, _)      -> binop_to_smt b st ti "bvsrem" (ty, x) (ty, y)
-      | And ((ty, x), y, _)      -> binop_to_smt b st ti (if (is_bool_type ty) then "and" else "bvand") (ty, x) (ty, y) 
-      | Or  ((ty, x), y, _)      -> binop_to_smt b st ti (if is_bool_type ty then "or" else "bvor") (ty, x) (ty, y)	   
-      | Xor ((ty, x), y, _)      -> binop_to_smt b st ti (if is_bool_type ty then "or" else "bvor") (ty, x) (ty, y)	   	   
+      | And ((ty, x), y, _)      -> binop_to_smt b st ti (if ti_is_bool then "and" else "bvand") (ty, x) (ty, y)
+      | Or  ((ty, x), y, _)      -> binop_to_smt b st ti (if ti_is_bool then "or" else "bvor") (ty, x) (ty, y)
+      | Xor ((ty, x), y, _)      -> binop_to_smt b st ti (if ti_is_bool then "or" else "bvor") (ty, x) (ty, y)
       | Icmp(cmp, (ty, x), y, _) -> icmp_to_smt b st cmp (ty, x) (ty, y)
       | Select([c;t;e], _)       -> ite_to_smt b st c t e
       | Select(_)                -> Util.nfailwith ("malformed Select instruction: " ^ (Llvm_pp.string_of_rhs i))
@@ -992,8 +985,7 @@ let rhs_to_smt b st ti i =
       | Ptrtoint((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Getelementptr(inbounds, (tx, x) :: z, _) -> gep_to_smt b st (tx, x) z
       | Phi(ty, incoming, _) -> phi_to_smt b st ty incoming
-      | Shufflevector(x, _) -> shufflevector_to_smt b st x
-
+      | Shufflevector([x0; x1; xM], _) -> shufflevector_to_smt b st x0 x1 xM
 
       (*
 
