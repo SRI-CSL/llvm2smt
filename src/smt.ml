@@ -704,7 +704,7 @@ and val_to_smt b st (typ, v) =
      | Zero              -> bzero_vector b st typ v
      | Undef             -> bdefault_value b st typ               (* This is enough for now, but not quite what right *)
      | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
-     | Vector(l)         -> bvector_to_smt b st l                 (* VECTOR FIXME *)
+     | Vector(l)         -> bvector_to_smt b st typ l
      | Trunc(x, ty)      -> trunc_to_smt b st x ty                (* VECTOR FIXME *)
      | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              (* VECTOR FIXME *)
      | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              (* VECTOR FIXME *)
@@ -733,10 +733,10 @@ and val_to_smt b st (typ, v) =
 and binop_to_smt b st ty op left right =
   let cu = st.cu in
   let fu = (state_fu st) in
-  let op_name = 
+  let op_name =
     if (Bc_manip.is_vector_typ cu fu ty) then
       let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
-	"v" ^ op ^ (string_of_int vi) ^ "_" ^ (string_of_int (bitwidth st vt)) 
+	"v" ^ op ^ "_" ^ (string_of_int vi) ^ "_" ^ (string_of_int (bitwidth st vt)) 
     else 
       op
   in
@@ -762,17 +762,11 @@ and icmp_to_smt b st cmp left right = (* Comparison: cmp = operation, left/right
   typ_val_to_smt b st right;
   bprintf b ")"
 
-and bvector_to_smt b st l =
-  let vector_to_smt_string = 
-    (match l with
-       | hd :: tl -> 
-	   List.fold_left 
-	     (fun str -> (fun a -> "(concat " ^ str ^ " " ^ (typ_val_to_smt_string st a) ^ ")"))
-	     (typ_val_to_smt_string st hd)
-	     tl
-       | _ -> failwith "Empty vector are not allowed")
-  in
-    bprintf b "%s" vector_to_smt_string
+and bvector_to_smt b st typ l =
+  let (k, tau) = Bc_manip.deconstruct_vector_typ st.cu (state_fu st) typ in
+    bprintf b "(vmake_%d_%d " k (bitwidth st tau);
+    List.iter (fun x -> typ_val_to_smt b st x; bprintf b " ") l;
+    bprintf b ")"
 
 and typ_val_to_smt_string st (typ, v) =
   Util.spr (fun b -> typ_val_to_smt b st) (typ, v)
@@ -971,7 +965,7 @@ let rhs_to_smt b st ti i =
       | Srem((ty, x), y, _)      -> binop_to_smt b st ti "bvsrem" (ty, x) (ty, y)
       | And ((ty, x), y, _)      -> binop_to_smt b st ti (if ti_is_bool then "and" else "bvand") (ty, x) (ty, y)
       | Or  ((ty, x), y, _)      -> binop_to_smt b st ti (if ti_is_bool then "or" else "bvor") (ty, x) (ty, y)
-      | Xor ((ty, x), y, _)      -> binop_to_smt b st ti (if ti_is_bool then "or" else "bvor") (ty, x) (ty, y)
+      | Xor ((ty, x), y, _)      -> binop_to_smt b st ti (if ti_is_bool then "xor" else "bvxor") (ty, x) (ty, y)
       | Icmp(cmp, (ty, x), y, _) -> icmp_to_smt b st cmp (ty, x) (ty, y)
       | Select([c;t;e], _)       -> ite_to_smt b st c t e
       | Select(_)                -> Util.nfailwith ("malformed Select instruction: " ^ (Llvm_pp.string_of_rhs i))

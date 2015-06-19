@@ -145,6 +145,80 @@ let reads = "
         (b1 (read64 mem (bvadd x eight))))
     (concat b1 b0)))
 "
+
+
+(*
+ * For each base function: bvadd, bvmul, etc.
+ * we have a variant that operates element-wise on vectors.
+ * In SMT2, we must define a special version for each
+ * vector size and element type.
+ *)
+let vector_functions = "
+
+;;
+;; Vectors of two int32 elements
+;;
+(define-sort vector_1_32 () (Array (_ BitVec 1) (_ BitVec 32)))
+
+(declare-fun vundef_1_32 () vector_1_32)
+
+(define-fun vmake_1_32 ((x0 (_ BitVec 32)) (x1 (_ BitVec 32))) vector_1_32
+   (store (store vundef_1_32 #b0 x0) #b1 x1))
+
+(define-fun vbvadd_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
+   (let ((z0 (bvadd (select x #b0) (select y #b0)))
+         (z1 (bvadd (select x #b1) (select y #b1))))
+      (vmake_1_32 z0 z1)))
+
+(define-fun vbmul_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
+   (let ((z0 (bvadd (select x #b0) (select y #b0)))
+         (z1 (bvadd (select x #b1) (select y #b1))))
+      (vmake_1_32 z0 z1)))
+
+(define-fun vbvsub_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
+   (let ((z0 (bvadd (select x #b0) (select y #b0)))
+         (z1 (bvadd (select x #b1) (select y #b1))))
+      (vmake_1_32 z0 z1)))
+
+(define-fun vbvshl_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
+   (let ((z0 (bvadd (select x #b0) (select y #b0)))
+         (z1 (bvadd (select x #b1) (select y #b1))))
+      (vmake_1_32 z0 z1)))
+
+;; conversion to and from (Bitvector 64)
+;; this assumes little endian representation
+(define-fun cast_vector_1_32_to_bits ((x vector_1_32)) (_ BitVec 64)
+   (concat (select x #b1) (select x #b0)))
+
+(define-fun cast_bits_to_vector_1_32 ((w (_ BitVec 64))) vector_1_32
+   (let ((z0 ((_ extract 31 0) w))
+         (z1 ((_ extract 63 32) w)))
+      (vmake_1_32 z0 z1)))
+
+;; etc.
+
+;;
+;; Vectors of four int32 elements
+;;
+(define-sort vector_2_32 () (Array (_ BitVec 2) (_ BitVec 32)))
+
+(declare-fun vundef_2_32 () vector_2_32)
+
+(define-fun vmake_2_32 
+  ((x0 (_ BitVec 32)) (x1 (_ BitVec 32)) (x2 (_ BitVec 32)) (x3 (_ BitVec 32))) vector_2_32
+   (store (store (store (store vundef_2_32 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
+
+(define-fun vbvadd_2_32 ((x vector_2_32) (y vector_2_32)) vector_2_32
+   (let ((z0 (bvadd (select x #b00) (select y #b00)))
+         (z1 (bvadd (select x #b01) (select y #b01)))
+         (z2 (bvadd (select x #b10) (select y #b10)))
+         (z3 (bvadd (select x #b11) (select y #b11))))
+      (vmake_2_32 z0 z1 z2 z3)))
+
+;; etc.
+
+"
+
 	       
 (*
  * Prelude: a bunch of definitions to abbreviate the conversion.
@@ -157,5 +231,6 @@ let print_prelude b aw =
   bprintf b "%s\n" types;
   bprintf b "%s\n" (constants aw);
   bprintf b "%s\n" writes;
-  bprintf b "%s\n" reads
+  bprintf b "%s\n" reads;
+  bprintf b "%s\n" vector_functions
     

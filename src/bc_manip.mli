@@ -111,8 +111,4 @@ val is_vector_typ: Bc.cunit -> Bc.finfo -> Llvm.typ -> bool
  * - index_width = smallest k such that 2^k >= number of elements in the vector
  * - range = type of the vector elements
  *) 
-val vector_index_width: Bc.cunit -> Bc.finfo -> Llvm.typ -> int
-
-val vector_typ_range: Bc.cunit -> Bc.finfo -> Llvm.typ -> Llvm.typ
-
 val deconstruct_vector_typ: Bc.cunit -> Bc.finfo -> Llvm.typ -> (int * Llvm.typ)

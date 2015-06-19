@@ -523,29 +523,15 @@ let rec is_vector_typ cu fu typ =
     | _ -> false
 
 
-(*
- * Size of vector type in bits
- * (e.g., if typ is <4 x int32> this returns 2
- *        if typ is <8 x int64> this returns 3)
- *)
-let rec vector_index_width cu fu typ =
-  match typ with
-    | Vartyp(vt) -> vector_index_width cu fu (typ_of_var cu fu vt)
-    | Vectortyp(n, _) -> Util.log2ceil n
-    | _ -> failwith "vector_index_width: not a vector type"
 
 (*
- * Type of the elements in a vector type
- *)
-let rec vector_typ_range cu fu typ =
-  match typ with
-    | Vartyp(vt) -> vector_typ_range cu fu (typ_of_var cu fu vt)
-    | Vectortyp(_, ty) -> ty
-    | _ -> failwith "vector_typ_range: not a vector type"
-
-
-(*
- * Get both at once
+ * Extract the main components of a vector type:
+ * - this returns a pair (k, ty)
+ * - ty is the element type
+ * - k is the smallest integer such that 2^k >= the vector size
+ *
+ * Example: for typ = <6 x int32>, this returns (3, int32).
+ * (OK, in most cases the size is a power of two anyway).
  *)
 let rec deconstruct_vector_typ cu fu typ =
   match typ with
