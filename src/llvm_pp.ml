@@ -189,7 +189,7 @@ let rec bpr_typ b typ =
         | Some 0 -> ()
         | Some x -> bprintf b " addrspace(%d)" x);
         bprintf b "*"
-    | Vector(len, element_ty) ->
+    | Vectortyp(len, element_ty) ->
         bprintf b "<%d x " len;
         pr element_ty;
         bprintf b ">"

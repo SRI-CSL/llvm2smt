@@ -181,9 +181,9 @@ let assign_vartyps_instr locals ctyps (nopt, i) =
                       failwith "getelementptr: pointer does not point into an array or struct") in
             Pointer(loop ety tl,aspace)
         | _ -> failwith "getelementptr: must be applied to a pointer")
-    | Shufflevector([(Vector(_,typ),_);_;(Vector(m,_),_)], md) -> Vector(m,typ)
+    | Shufflevector([(Vectortyp(_,typ),_);_;(Vectortyp(m,_),_)], md) -> Vectortyp(m,typ)
     | Insertelement([(typ,_);_;_], md) -> typ
-    | Extractelement([(Vector(_,typ),_);_], md ) -> typ
+    | Extractelement([(Vectortyp(_,typ),_);_], md ) -> typ
     | Select([_;(typ,_);_], md) -> typ
     | Phi(typ, incoming, md) -> typ
     | Landingpad(x, y, z, w, md) -> x

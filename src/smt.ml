@@ -113,7 +113,7 @@ let rec byte_align64 st t =
       | Arraytyp(len,element_ty) -> byte_align64 st element_ty
       | Structtyp(true, tys) -> 1
       | Structtyp(false, tys) -> List.fold_left max 0 (list_align tys)
-      | Vector(len,element_ty) -> byte_align64 st element_ty
+      | Vectortyp(len,element_ty) -> byte_align64 st element_ty
       | _ -> 4) (* just a guess *)
 
 let rec byte_align32 st t =
@@ -129,7 +129,7 @@ let rec byte_align32 st t =
       | Arraytyp(len,element_ty) -> byte_align32 st element_ty
       | Structtyp(true, tys) -> 1
       | Structtyp(false, tys) -> List.fold_left max 0 (list_align tys)
-      | Vector(len,element_ty) -> byte_align32 st element_ty
+      | Vectortyp(len,element_ty) -> byte_align32 st element_ty
       | _ -> 4) (* just a guess *)
 
 let byte_align st t  =
@@ -161,7 +161,7 @@ let rec bitwidth st t =
       | Structtyp(false, tys) -> (* not packed *)
 	  (* Printf.eprintf "Warning: inaccurate size computation for struct type: %s\n" (Llvm_pp.string_of_typ t); *)
 	  bitwidth_of_struct st (bit_align st t) tys
-      | Vector(len,element_ty) -> len*(bitwidth st element_ty)
+      | Vectortyp(len,element_ty) -> len*(bitwidth st element_ty)
       | _ -> 
 	  begin
 	    Util.nfailwith ("can't convert type: " ^ (Llvm_pp.string_of_typ t));
@@ -477,7 +477,7 @@ let rec gep_step st typ ti vi =
      | Arraytyp(length, etyp0) ->
 	 let offset0 = (make_offset st etyp0 ti vi) in 
 	   (etyp0, offset0)
-     | Vector(length, etyp0) ->
+     | Vectortyp(length, etyp0) ->
 	 let offset0 = (make_offset st etyp0 ti vi) in 
 	   (etyp0, offset0)
      | Pointer(etyp0, _) ->
@@ -633,42 +633,57 @@ and polyoffset_to_smt st poly =
 	     raw
   )
 
+
+and shufflevector_to_smt_aux b ty v0 v1 tyM vM =
+  begin
+    eprintf "Shufflevector (ty0, v0) = %s %s\n" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v0);
+    eprintf "Shufflevector (ty1, v1) = %s %s\n" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v1);
+    eprintf "Shufflevector (tyM, vM) = %s %s\n" (Llvm_pp.string_of_typ tyM) (Llvm_pp.string_of_value vM);
+  end
+  
+  
 (*
  * x should be a list of three Vector-type Vector-value pairs:
  *
- * x0 = Vector(n, typ)  value0
- * x1 = Vector(n, typ)  value1 
- * xM = Vector(m, i32)  mask
+ * x0 = Vectortyp(n, typ)  value0
+ * x1 = Vectortyp(n, typ)  value1 
+ * xM = Vectortyp(m, i32)  mask
  *
- * It will return a Vector(m, typ) as described by the indexes in the mask.
+ * The mask integer values are either constant or undef. If undef the semantics is
+ * "don't care"
+ *
+ * It will return a Vectortyp(m, typ) as described by the indexes in the mask.
  *
  * indexes from 0, ... n - 1 refer to the obvious elements of value0
  * indexes from n, ... 2n - 1 refer to the obvious elements of value1
  *
- * value1 can be undef
- * mask can be zeroinitializer
+ * value1 can be undef, if we are really only shuffling the first vector.
+ * mask can be "zeroinitializer"
  *
  * happy happy joy joy
  *
  *
  *)
+
 and shufflevector_to_smt b st x =
   if  (List.length x) <> 3
   then
     failwith("Bad arguments to Shufflevector.")
   else
-(*
     let (ty0, v0) = List.nth x 0 in
     let (ty1, v1) = List.nth x 1 in
     let (tyM, vM) = List.nth x 2 in
-      eprintf "Shufflevector ty0 = %s\n" (Llvm_pp.string_of_typ ty0);
-      eprintf "Shufflevector v0 = %s\n" (Llvm_pp.string_of_value v0);
-      eprintf "Shufflevector ty1 = %s\n" (Llvm_pp.string_of_typ ty1);
-      eprintf "Shufflevector v1 = %s\n" (Llvm_pp.string_of_value v1);
-      eprintf "Shufflevector tyM = %s\n" (Llvm_pp.string_of_typ tyM);
-      eprintf "Shufflevector vM = %s\n" (Llvm_pp.string_of_value vM);
-*)
-    ()
+      (match (ty0, ty1, tyM) with
+	 | (Vectortyp(len0, etype0), Vectortyp(len1, etype1), Vectortyp(lenM, Integer(32))) ->
+	     if (len0 <> len1) || (etype0 <> etype1)
+	     then
+	       failwith("Bad arguments to Shufflevector.")
+	     else
+	       shufflevector_to_smt_aux b ty0 v0 v1 tyM vM
+	 | _ -> failwith("Bad arguments to Shufflevector.")
+      )
+      
+
 	
 and val_to_smt b st (typ, v) =
   (match v with
@@ -701,6 +716,10 @@ and val_to_smt b st (typ, v) =
      | Or  (x, y)      -> binop_to_smt b st "bvor" x y
      | Xor (x, y)      -> binop_to_smt b st "bvxor" x y
      | Shufflevector(x) -> shufflevector_to_smt b st x
+	 (*
+	   | Shufflevector([x0; x1; xM]) -> ()
+	   | Shufflevector(_) -> () 
+	 *) 
      | _ -> Util.nfailwith ("value not supported: " ^  (Llvm_pp.string_of_value v)))
   
 and binop_to_smt b st op left right =

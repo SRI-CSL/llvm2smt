@@ -470,7 +470,7 @@ non_void_type:
 | Lbrace type_list Rbrace              { Llvm.Structtyp(false, $2) }
 | Less Lbrace type_list Rbrace Greater { Llvm.Structtyp(true, $3) }
 | Lsquare APInt Kw_x typ Rsquare       { Llvm.Arraytyp(int_of_string $2, $4) }
-| Less APInt Kw_x typ Greater          { Llvm.Vector(int_of_string $2, $4) }
+| Less APInt Kw_x typ Greater          { Llvm.Vectortyp(int_of_string $2, $4) }
 | typ opt_addrspace Star               { Llvm.Pointer($1, $2) }
 | typ argument_list                    { Llvm.Funtyp($1, fst $2, snd $2) }
 ;

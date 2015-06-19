@@ -81,7 +81,7 @@ type typ =
   | Structtyp of bool * typ list                                           (* packed?, fields *)
   | Arraytyp of int * typ                                                  (* array length, element type *)
   | Pointer of typ * int option                                            (* element type, address space *)
-  | Vector  of int * typ                                                   (* array length, element type *)
+  | Vectortyp  of int * typ                                                (* array length, element type *)
 
 module I = struct
   type t =
