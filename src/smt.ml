@@ -631,7 +631,33 @@ and polyoffset_to_smt st poly =
 	     "((_ sign_extend " ^ (string_of_int (st.addr_width - w)) ^ ") " ^ raw ^")"
 	   else
 	     raw
-  ) 
+  )
+
+(*
+ * x should be a list of three Vector-type Vector-value pairs:
+ *
+ * x0 = Vector(n, typ)  value0
+ * x1 = Vector(n, typ)  value1 
+ * xM = Vector(m, i32)  mask
+ *
+ *)
+and shufflevector_to_smt b st x =
+  if  (List.length x) <> 3
+  then
+    failwith("Bad arguments to Shufflevector.")
+  else
+(*
+    let (ty0, v0) = List.nth x 0 in
+    let (ty1, v1) = List.nth x 1 in
+    let (tyM, vM) = List.nth x 2 in
+      eprintf "Shufflevector ty0 = %s\n" (Llvm_pp.string_of_typ ty0);
+      eprintf "Shufflevector v0 = %s\n" (Llvm_pp.string_of_value v0);
+      eprintf "Shufflevector ty1 = %s\n" (Llvm_pp.string_of_typ ty1);
+      eprintf "Shufflevector v1 = %s\n" (Llvm_pp.string_of_value v1);
+      eprintf "Shufflevector tyM = %s\n" (Llvm_pp.string_of_typ tyM);
+      eprintf "Shufflevector vM = %s\n" (Llvm_pp.string_of_value vM);
+*)
+    ()
 	
 and val_to_smt b st (typ, v) =
   (match v with
@@ -663,6 +689,7 @@ and val_to_smt b st (typ, v) =
      | And (x, y)      -> binop_to_smt b st "bvand" x y
      | Or  (x, y)      -> binop_to_smt b st "bvor" x y
      | Xor (x, y)      -> binop_to_smt b st "bvxor" x y
+     | Shufflevector(x) -> shufflevector_to_smt b st x
      | _ -> Util.nfailwith ("value not supported: " ^  (Llvm_pp.string_of_value v)))
   
 and binop_to_smt b st op left right =
@@ -878,8 +905,7 @@ let phi_to_smt b st ty incoming =
   in
     phi_to_smt_aux (get_backward_phi_nodes st incoming)
 
-  
- 
+	
 (*
  * Right-hand side of an instruction
  *)
@@ -912,6 +938,8 @@ let rhs_to_smt b st i =
       | Ptrtoint((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Getelementptr(inbounds, (tx, x) :: z, _) -> gep_to_smt b st (tx, x) z
       | Phi(ty, incoming, _) -> phi_to_smt b st ty incoming
+      | Shufflevector(x, _) -> shufflevector_to_smt b st x
+
 
       (*
 
@@ -1315,8 +1343,10 @@ let block_to_smt b fu state binfo =
 	  bprintf b "\n";
 	  binfo.bseen <- true;
 	  binfo.bmem <- state.mem_idx;
+	  (*
 	  eprintf "exit of block %d %s of %s: bmem = %d\n" binfo.bindex 
 	    (Llvm_pp.string_of_var binfo.bname) (Llvm_pp.string_of_var fu.fname) binfo.bmem
+	    *)
     end
 
 
