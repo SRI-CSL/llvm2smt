@@ -154,7 +154,7 @@ let reads = "
  * vector size and element type.
  *)
 
-let vector_type b log_len elem_bitsz =
+let vector_type b len width =
   bprintf b
     "
 ;;
@@ -165,18 +165,36 @@ let vector_type b log_len elem_bitsz =
 (declare-fun vundef_%d_%d () vector_%d_%d)
 
 "
-    log_len elem_bitsz log_len elem_bitsz log_len elem_bitsz
-    log_len elem_bitsz log_len elem_bitsz 
+    len width len width len width len width len width 
    
-  
-	      
-let vector_preamble = "
+
+let vutils b w =
+  bprintf b
+    "
+;;
+;; Vectors of (2^1) i.e. two int%d elements
+;;
+(define-fun vmake_1_%d ((x0 (_ BitVec %d)) (x1 (_ BitVec %d))) vector_1_%d
+   (store (store vundef_1_%d #b0 x0) #b1 x1))
 
 ;;
-;; Vectors of (2^1) i.e. two int32 elements
+;; Vectors of (2^2) i.e. four int%d elements
 ;;
-(define-fun vmake_1_32 ((x0 (_ BitVec 32)) (x1 (_ BitVec 32))) vector_1_32
-   (store (store vundef_1_32 #b0 x0) #b1 x1))
+(define-fun vmake_2_%d 
+  ((x0 (_ BitVec %d)) (x1 (_ BitVec %d)) (x2 (_ BitVec %d)) (x3 (_ BitVec %d))) vector_2_%d
+   (store (store (store (store vundef_2_%d #b00 x0) #b01 x1) #b10 x2) #b11 x3))
+
+;; zero vectors with int%d elements
+
+ (define-fun vzero_1_%d () vector_1_%d (vmake_1_%d (_ bv0 %d) (_ bv0 %d)))
+
+ (define-fun vzero_2_%d () vector_2_%d (vmake_2_%d (_ bv0 %d) (_ bv0 %d)(_ bv0 %d) (_ bv0 %d)))
+ 
+"
+    w w w w w w w w w w w w w w w w w w w   w w w w   w w w w 
+    
+let vector_casts = "
+
 
 ;; conversion to and from (Bitvector 64)
 ;; this assumes little endian representation
@@ -188,12 +206,6 @@ let vector_preamble = "
          (z1 ((_ extract 63 32) w)))
       (vmake_1_32 z0 z1)))
 
-;;
-;; Vectors of (2^2) i.e. four int32 elements
-;;
-(define-fun vmake_2_32 
-  ((x0 (_ BitVec 32)) (x1 (_ BitVec 32)) (x2 (_ BitVec 32)) (x3 (_ BitVec 32))) vector_2_32
-   (store (store (store (store vundef_2_32 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
 \n"
 
 let binops = [
@@ -251,9 +263,11 @@ let print_prelude b aw =
   bprintf b "%s\n" reads;
   List.iter (fun width ->  (vector_type b 1 width)) vector_widths;
   List.iter (fun width ->  (vector_type b 2 width)) vector_widths;
-  bprintf b "%s\n" vector_preamble;
+  List.iter (fun w ->  (vutils b w)) vector_widths;
   List.iter (fun binop ->  (bpr_op_1_32 b binop)) binops;
   List.iter (fun binop ->  (bpr_op_2_32 b binop)) binops;
+  bprintf b "%s\n" vector_casts;
+
   bprintf b "\n;; end of prelude\n\n\n";
   ()
 

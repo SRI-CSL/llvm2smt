@@ -257,11 +257,18 @@ let zero_vector n =
   Util.spr bzero_vector_n n
 
 let bzero_vector b st typ v =
-  match v with 
-    | Null -> bzero_vector_n b st.addr_width           (* VECTOR FIXME *)
-    | Zero -> bzero_vector_n b (bitwidth st typ)      (* VECTOR FIXME *)
-    | _ -> failwith("bzero_vector: not a vector")
-	
+  let cu = st.cu in
+  let fu = (state_fu st) in 
+  if (Bc_manip.is_vector_typ cu fu typ)
+  then
+    let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu typ in
+      bprintf b "(vzero_%d_%d)"  vi (bitwidth st vt)
+  else 
+    match v with 
+      | Null -> bzero_vector_n b st.addr_width     
+      | Zero -> bzero_vector_n b (bitwidth st typ) 
+      | _ -> failwith("bzero_vector: not a vector")
+	  
 
 
 (*
