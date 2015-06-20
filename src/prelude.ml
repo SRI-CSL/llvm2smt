@@ -187,7 +187,20 @@ let vector_preamble = "
    (store (store (store (store vundef_2_32 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
 \n"
 
-let binops = ["bvadd"; "bvsub"; "bvmul"; "bvshl"; "bvsdiv"; "bvudiv"; "bvlshr"; "bvashr"; "bvurem"; "bvsrem"; "bvand"; "bvor"; "bvxor"]
+let binops = [
+  "bvadd";
+  "bvsub";
+  "bvmul";
+  "bvshl";
+  "bvsdiv";
+  "bvudiv";
+  "bvlshr";
+  "bvashr";
+  "bvurem";
+  "bvsrem";
+  "bvand";
+  "bvor";
+  "bvxor"]
 
 
 let bpr_op_1_32 b binop = 
