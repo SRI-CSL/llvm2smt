@@ -153,10 +153,10 @@ let reads = "
  * In SMT2, we must define a special version for each
  * vector size and element type.
  *)
-let vector_functions = "
+let vector_preamble = "
 
 ;;
-;; Vectors of two int32 elements
+;; Vectors of (2^1) i.e. two int32 elements
 ;;
 (define-sort vector_1_32 () (Array (_ BitVec 1) (_ BitVec 32)))
 
@@ -164,26 +164,6 @@ let vector_functions = "
 
 (define-fun vmake_1_32 ((x0 (_ BitVec 32)) (x1 (_ BitVec 32))) vector_1_32
    (store (store vundef_1_32 #b0 x0) #b1 x1))
-
-(define-fun vbvadd_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
-   (let ((z0 (bvadd (select x #b0) (select y #b0)))
-         (z1 (bvadd (select x #b1) (select y #b1))))
-      (vmake_1_32 z0 z1)))
-
-(define-fun vbmul_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
-   (let ((z0 (bvadd (select x #b0) (select y #b0)))
-         (z1 (bvadd (select x #b1) (select y #b1))))
-      (vmake_1_32 z0 z1)))
-
-(define-fun vbvsub_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
-   (let ((z0 (bvadd (select x #b0) (select y #b0)))
-         (z1 (bvadd (select x #b1) (select y #b1))))
-      (vmake_1_32 z0 z1)))
-
-(define-fun vbvshl_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
-   (let ((z0 (bvadd (select x #b0) (select y #b0)))
-         (z1 (bvadd (select x #b1) (select y #b1))))
-      (vmake_1_32 z0 z1)))
 
 ;; conversion to and from (Bitvector 64)
 ;; this assumes little endian representation
@@ -195,10 +175,8 @@ let vector_functions = "
          (z1 ((_ extract 63 32) w)))
       (vmake_1_32 z0 z1)))
 
-;; etc.
-
 ;;
-;; Vectors of four int32 elements
+;; Vectors of (2^2) i.e. four int32 elements
 ;;
 (define-sort vector_2_32 () (Array (_ BitVec 2) (_ BitVec 32)))
 
@@ -207,19 +185,35 @@ let vector_functions = "
 (define-fun vmake_2_32 
   ((x0 (_ BitVec 32)) (x1 (_ BitVec 32)) (x2 (_ BitVec 32)) (x3 (_ BitVec 32))) vector_2_32
    (store (store (store (store vundef_2_32 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
+\n"
 
-(define-fun vbvadd_2_32 ((x vector_2_32) (y vector_2_32)) vector_2_32
-   (let ((z0 (bvadd (select x #b00) (select y #b00)))
-         (z1 (bvadd (select x #b01) (select y #b01)))
-         (z2 (bvadd (select x #b10) (select y #b10)))
-         (z3 (bvadd (select x #b11) (select y #b11))))
-      (vmake_2_32 z0 z1 z2 z3)))
+let binops = ["bvadd"; "bvsub"; "bvmul"; "bvshl"; "bvsdiv"; "bvudiv"; "bvlshr"; "bvashr"; "bvurem"; "bvsrem"; "bvand"; "bvor"; "bvxor"]
 
-;; etc.
 
+let bpr_op_1_32 b binop = 
+  bprintf b 
+    "
+(define-fun v%s_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
+   (let ((z0 (%s (select x #b0) (select y #b0)))
+         (z1 (%s (select x #b1) (select y #b1))))
+      (vmake_1_32 z0 z1)))
 "
+    binop binop binop
 
-	       
+let bpr_op_2_32 b binop = 
+  bprintf b 
+    "
+ (define-fun v%s_2_32 ((x vector_2_32) (y vector_2_32)) vector_2_32
+   (let ((z0 (%s (select x #b00) (select y #b00)))
+         (z1 (%s (select x #b01) (select y #b01)))
+         (z2 (%s (select x #b10) (select y #b10)))
+         (z3 (%s (select x #b11) (select y #b11))))
+      (vmake_2_32 z0 z1 z2 z3)))
+\n"
+     binop binop binop binop binop
+   
+   
+   
 (*
  * Prelude: a bunch of definitions to abbreviate the conversion.
  *)
@@ -232,5 +226,10 @@ let print_prelude b aw =
   bprintf b "%s\n" (constants aw);
   bprintf b "%s\n" writes;
   bprintf b "%s\n" reads;
-  bprintf b "%s\n" vector_functions
+  bprintf b "%s\n" vector_preamble;
+  List.iter (fun binop ->  (bpr_op_1_32 b binop)) binops;
+  List.iter (fun binop ->  (bpr_op_2_32 b binop)) binops;
+  bprintf b "\n;; end of prelude\n\n\n";
+  ()
+
     
