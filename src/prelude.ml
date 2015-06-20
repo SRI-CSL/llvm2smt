@@ -153,15 +153,28 @@ let reads = "
  * In SMT2, we must define a special version for each
  * vector size and element type.
  *)
+
+let vector_type b log_len elem_bitsz =
+  bprintf b
+    "
+;;
+;; Vectors of (2^%d) int%d elements
+;;
+(define-sort vector_%d_%d () (Array (_ BitVec %d) (_ BitVec %d)))
+
+(declare-fun vundef_%d_%d () vector_%d_%d)
+
+"
+    log_len elem_bitsz log_len elem_bitsz log_len elem_bitsz
+    log_len elem_bitsz log_len elem_bitsz 
+   
+  
+	      
 let vector_preamble = "
 
 ;;
 ;; Vectors of (2^1) i.e. two int32 elements
 ;;
-(define-sort vector_1_32 () (Array (_ BitVec 1) (_ BitVec 32)))
-
-(declare-fun vundef_1_32 () vector_1_32)
-
 (define-fun vmake_1_32 ((x0 (_ BitVec 32)) (x1 (_ BitVec 32))) vector_1_32
    (store (store vundef_1_32 #b0 x0) #b1 x1))
 
@@ -178,10 +191,6 @@ let vector_preamble = "
 ;;
 ;; Vectors of (2^2) i.e. four int32 elements
 ;;
-(define-sort vector_2_32 () (Array (_ BitVec 2) (_ BitVec 32)))
-
-(declare-fun vundef_2_32 () vector_2_32)
-
 (define-fun vmake_2_32 
   ((x0 (_ BitVec 32)) (x1 (_ BitVec 32)) (x2 (_ BitVec 32)) (x3 (_ BitVec 32))) vector_2_32
    (store (store (store (store vundef_2_32 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
@@ -202,6 +211,7 @@ let binops = [
   "bvor";
   "bvxor"]
 
+let vector_widths =  [1; 4; 8; 32; 64]
 
 let bpr_op_1_32 b binop = 
   bprintf b 
@@ -239,6 +249,8 @@ let print_prelude b aw =
   bprintf b "%s\n" (constants aw);
   bprintf b "%s\n" writes;
   bprintf b "%s\n" reads;
+  List.iter (fun width ->  (vector_type b 1 width)) vector_widths;
+  List.iter (fun width ->  (vector_type b 2 width)) vector_widths;
   bprintf b "%s\n" vector_preamble;
   List.iter (fun binop ->  (bpr_op_1_32 b binop)) binops;
   List.iter (fun binop ->  (bpr_op_2_32 b binop)) binops;
