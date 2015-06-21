@@ -972,6 +972,40 @@ let phi_to_smt b st ty incoming =
   in
     phi_to_smt_aux (get_backward_phi_nodes st incoming)
 
+
+(*
+ * inserts xe into the xi-th position of the vector xv.
+ *
+ * xv  is a typ val pair of the form  (Vectortyp(n, ty), vv)
+ * xe  is a typ val pair of the form  (ty, ve)
+ * xi  is a typ val pair of the form  (Integer(m), vi)  vi may be a variable.
+ *
+ * if i >= n the result is undefined.
+ *
+ *)
+let insertelement_to_smt b st xv xe xi =
+  match (xv, xe, xi) with
+    | ((Vectortyp(n, tyv), vv), (tye, ve), (Integer(m), vi)) ->
+	typ_val_to_smt b st xv  (* placeholders till the real thing comes along *)
+    | _ -> failwith("Bad args to insertelement")
+    
+(*
+ * extracts the *scalar* at the  xi-th position of the vector xv.
+ *
+ * xv  is a typ val pair of the form  (Vectortyp(n, ty), vv)
+ * xi  is a typ val pair of the form  (Integer(m), vi)  vi may be a variable.
+ *
+ * if i >= n the result is undefined.
+ *
+ *
+ *)
+let extractelement_to_smt b st xv xi =
+  match (xv, xi) with
+    | ((Vectortyp(n, tyv), vv), (Integer(m), vi)) ->
+	typ_val_to_smt b st xv  (* placeholders till the real thing comes along *)
+    | _ -> failwith("Bad args to extractelement")
+    
+
 	
 (*
  * Right-hand side of an instruction
@@ -1005,6 +1039,8 @@ let rhs_to_smt b st ti i =
       | Ptrtoint((tx, x), ty, _) -> int_ptr_to_smt b st tx x ty
       | Getelementptr(inbounds, (tx, x) :: z, _) -> gep_to_smt b st (tx, x) z
       | Phi(ty, incoming, _) -> phi_to_smt b st ty incoming
+      | Insertelement([xv; xe; xi], _) ->  insertelement_to_smt b st xv xe xi
+      | Extractelement([xv; xi], _) -> extractelement_to_smt b st xv xi
       | Shufflevector([x0; x1; xM], _) -> shufflevector_to_smt b st x0 x1 xM
 
       (*
