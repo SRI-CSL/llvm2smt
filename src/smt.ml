@@ -656,16 +656,35 @@ and polyoffset_to_smt st poly =
   )
 
 
-and shufflevector_to_smt_aux b st ty v0 v1 tyM vM =
+and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
+  let cu = st.cu in
+  let fu = (state_fu st) in
+  let (ln, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
+  let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
   begin
-    bprintf b ";; Shufflevector: type = %s " (Llvm_pp.string_of_typ ty);
-    typ_to_smt b st ty;
+    bprintf b "\n;; Shufflevector: type = %s" (Llvm_pp.string_of_typ ty);
+    bprintf b "\n;;  (ty0, v0) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v0);
+    bprintf b "\n;;  (ty1, v1) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v1);
+    bprintf b "\n;;  (tyM, vM) = %s %s" (Llvm_pp.string_of_typ tyM) (Llvm_pp.string_of_value vM);
     bprintf b "\n";
-    eprintf "Shufflevector (ty0, v0) = %s %s\n" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v0);
-    eprintf "Shufflevector (ty1, v1) = %s %s\n" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v1);
-    eprintf "Shufflevector (tyM, vM) = %s %s\n" (Llvm_pp.string_of_typ tyM) (Llvm_pp.string_of_value vM);
+    (* slow and careful here
+    match (v1, vM) with
+      | (Undef, Zero) -> bprintf b "(let ((retvz (vmake_%d_%d)))  retvz)" lm (bitwidth st vt)
+      | (Undef, _) ->  bprintf b "(let ((retvu (vmake_%d_%d)))  retvu)" lm (bitwidth st vt)
+       | _ ->
+       *)
+    bprintf b "\n
+(let ((shfflv0 %s)
+      (shfflv1 %s)
+      (shfflMask %s)
+      (retv (vmake_%d_%d)))
+  retv)"
+	    (typ_val_to_smt_string st (ty, v0))
+	    (typ_val_to_smt_string st (ty, v1))
+	    (typ_val_to_smt_string st (tyM, vM))
+	    lm (bitwidth st vt)
   end
-  
+
   
 (*
  * x should be a list of three Vector-type Vector-value pairs:
@@ -699,7 +718,7 @@ and shufflevector_to_smt b st x0 x1 xM =
 	     then
 	       failwith("Bad arguments to Shufflevector.")
 	     else
-	       shufflevector_to_smt_aux b st ty0 v0 v1 tyM vM
+	       shufflevector_to_smt_aux b st ty0 v0 v1 len0 tyM vM lenM
 	 | _ -> failwith("Bad arguments to Shufflevector.")
       )
 
@@ -717,9 +736,9 @@ and val_to_smt b st (typ, v) =
      | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              (* VECTOR FIXME *)
      | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)    (* VECTOR FIXME !!!!!???? %Z = bitcast <2 x int> %V to i64;   ; yields i64: %V *)
      | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty       (* VECTOR FIXME *)
-     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty       (* VECTOR FIXME *)
+     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty                (* VECTOR FIXME *)
      | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z  (* VECTOR FIXME ??? *)
-     | Select([c;t;e]) -> ite_to_smt b st c t e                  (* VECTOR FIXME *)  
+     | Select([c;t;e]) -> ite_to_smt b st c t e                            (* VECTOR FIXME *)  
      | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
      | Add(_, _, x, y) -> binop_to_smt b st typ "bvadd" x y
      | Sub(_, _, x, y) -> binop_to_smt b st typ "bvsub" x y

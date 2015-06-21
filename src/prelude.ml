@@ -188,10 +188,10 @@ let vutils b w =
 
  (define-fun vzero_1_%d () vector_1_%d (vmake_1_%d (_ bv0 %d) (_ bv0 %d)))
 
- (define-fun vzero_2_%d () vector_2_%d (vmake_2_%d (_ bv0 %d) (_ bv0 %d)(_ bv0 %d) (_ bv0 %d)))
+ (define-fun vzero_2_%d () vector_2_%d (vmake_2_%d (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d)))
  
 "
-    w w w w w w w w w w w w w w w w w w w   w w w w   w w w w 
+    w w w w  w w w w  w w w w  w w w w  w w w w   w w w w  w w w   
     
 let vector_casts = "
 
