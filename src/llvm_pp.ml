@@ -460,13 +460,16 @@ let bpr_instr b (nopt, i) =
 	  bpr_typ_value y
 	  (yes "\n          cleanup") z bpr w 
 	  bpr_instr_metadata md
-  | Call(is_tail_call, callconv, retattrs, callee_ty, callee_name, operands, callattrs, md) ->
+  | Call(is_tail_call, callconv, retattrs, callee_ty, callee_ftyp, callee_name, operands, callattrs, md) ->
       if is_tail_call then bprintf b "tail ";
       bprintf b "call";
       (opt_before " " bpr_callingconv) b callconv;
-      bprintf b "%a %a %a(%a)%a%a"
+      bprintf b "%a %a"
 	bpr_attributes retattrs
-        bpr_typ callee_ty bpr_value callee_name bpr_arguments operands (before " " bpr_attribute) callattrs
+        bpr_typ callee_ty;
+      (opt_before " " bpr_typ) b callee_ftyp;
+      bprintf b "%a(%a)%a%a"
+	bpr_value callee_name bpr_arguments operands (before " " bpr_attribute) callattrs
         bpr_instr_metadata md
   | Alloca(x, y, z, w, md) ->
       bprintf b "alloca ";

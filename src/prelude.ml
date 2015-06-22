@@ -152,6 +152,9 @@ let reads = "
  * we have a variant that operates element-wise on vectors.
  * In SMT2, we must define a special version for each
  * vector size and element type.
+ *
+ * NOTE: we need to treat bitvectors of size 1 differently.
+ * (i.e., Bool instead of (_ BitVec 1))
  *)
 
 let vector_type b len width =

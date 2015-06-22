@@ -259,16 +259,16 @@ let zero_vector n =
 let bzero_vector b st typ v =
   let cu = st.cu in
   let fu = (state_fu st) in 
-  if (Bc_manip.is_vector_typ cu fu typ)
-  then
-    let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu typ in
-      bprintf b "(vzero_%d_%d)"  vi (bitwidth st vt)
-  else 
-    match v with 
-      | Null -> bzero_vector_n b st.addr_width     
-      | Zero -> bzero_vector_n b (bitwidth st typ) 
-      | _ -> failwith("bzero_vector: not a vector")
-	  
+    if (Bc_manip.is_vector_typ cu fu typ)
+    then
+      let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu typ in
+	bprintf b "(vzero_%d_%d)"  vi (bitwidth st vt)
+    else 
+      match v with 
+	| Null -> bzero_vector_n b st.addr_width     
+	| Zero -> bzero_vector_n b (bitwidth st typ) 
+	| _ -> failwith("bzero_vector: not a vector")
+
 
 
 (*
@@ -284,8 +284,15 @@ let bzero_vector b st typ v =
  * value for the assigments.
  *)
 let bdefault_value b st ty =
-  let k = bitwidth st ty in
-    if k = 1 then bprintf b "false" else bzero_vector_n b k
+  let cu = st.cu in
+  let fu = (state_fu st) in 
+    if (Bc_manip.is_vector_typ cu fu ty)
+    then
+      let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in
+	bprintf b "(vzero_%d_%d)"  vi (bitwidth st vt)
+    else
+      let k = bitwidth st ty in
+	if k = 1 then bprintf b "false" else bzero_vector_n b k
 
 let default_value st ty =
   let b = Buffer.create 64 in
@@ -655,12 +662,34 @@ and polyoffset_to_smt st poly =
 	     raw
   )
 
+(*
+ * convert index vi of typ tyi to a bitvector of size n
+ * n is the log of the number of elements in a vector type 
+ *)
+and vector_index_to_smt b st tyi vi n =
+  let m = bitwidth st tyi in
+    if m < n then
+      begin
+	bprintf b "((_ zero_extend %d) " (n - m);
+	typ_val_to_smt b st (tyi, vi);
+	bprintf b ")"
+      end
+    else 
+      if n = m then
+	typ_val_to_smt b st (tyi, vi)
+      else
+	begin
+	  bprintf b "((_ extract %d 0) " (n - 1);
+	  typ_val_to_smt b st (tyi, vi);
+	  bprintf b ")"
+	end
+
 
 and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
   let cu = st.cu in
   let fu = (state_fu st) in
   let (ln, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
-  let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
+  let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu tyM in 
   begin
     bprintf b "\n;; Shufflevector: type = %s" (Llvm_pp.string_of_typ ty);
     bprintf b "\n;;  (ty0, v0) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v0);
@@ -724,37 +753,39 @@ and shufflevector_to_smt b st x0 x1 xM =
 
 	
 and val_to_smt b st (typ, v) =
-  (match v with
-     | Var x             -> name_to_smt b st x
-     | Null              -> bzero_vector b st typ v
-     | Zero              -> bzero_vector b st typ v
-     | Undef             -> bdefault_value b st typ               (* This is enough for now, but not quite what right *)
-     | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
-     | Vector(l)         -> bvector_to_smt b st typ l
-     | Trunc(x, ty)      -> trunc_to_smt b st x ty                (* VECTOR FIXME *)
-     | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              (* VECTOR FIXME *)
-     | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              (* VECTOR FIXME *)
-     | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)    (* VECTOR FIXME !!!!!???? %Z = bitcast <2 x int> %V to i64;   ; yields i64: %V *)
-     | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty       (* VECTOR FIXME *)
-     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty                (* VECTOR FIXME *)
-     | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z  (* VECTOR FIXME ??? *)
-     | Select([c;t;e]) -> ite_to_smt b st c t e                            (* VECTOR FIXME *)  
-     | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
-     | Add(_, _, x, y) -> binop_to_smt b st typ "bvadd" x y
-     | Sub(_, _, x, y) -> binop_to_smt b st typ "bvsub" x y
-     | Mul(_, _, x, y) -> binop_to_smt b st typ "bvmul" x y
-     | Shl(_, _, x, y) -> binop_to_smt b st typ "bvshl" x y
-     | Sdiv(_, x, y)   -> binop_to_smt b st typ "bvsdiv" x y
-     | Udiv(_, x, y)   -> binop_to_smt b st typ "bvudiv" x y
-     | Lshr(_, x, y)   -> binop_to_smt b st typ "bvlshr" x y
-     | Ashr(_, x, y)   -> binop_to_smt b st typ "bvashr" x y
-     | Urem(x, y)      -> binop_to_smt b st typ "bvurem" x y
-     | Srem(x, y)      -> binop_to_smt b st typ "bvsrem" x y
-     | And (x, y)      -> binop_to_smt b st typ "bvand" x y
-     | Or  (x, y)      -> binop_to_smt b st typ "bvor" x y
-     | Xor (x, y)      -> binop_to_smt b st typ "bvxor" x y
-     | Shufflevector([x0; x1; xM]) -> shufflevector_to_smt b st x0 x1 xM
-     | _ -> Util.nfailwith ("value not supported or wrong: " ^  (Llvm_pp.string_of_value v)))
+  match v with
+    | Var x             -> name_to_smt b st x
+    | Null              -> bzero_vector b st typ v
+    | Zero              -> bzero_vector b st typ v
+    | Undef             -> bdefault_value b st typ               (* This is enough for now, but not quite what right *)
+    | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
+    | Vector(l)         -> bvector_to_smt b st typ l
+    | Trunc(x, ty)      -> trunc_to_smt b st x ty                (* VECTOR FIXME *)
+    | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              (* VECTOR FIXME *)
+    | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              (* VECTOR FIXME *)
+    | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)    (* VECTOR FIXME !!!!!???? %Z = bitcast <2 x int> %V to i64;   ; yields i64: %V *)
+    | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty       (* VECTOR FIXME *)
+    | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty                (* VECTOR FIXME *)
+    | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z  (* VECTOR FIXME ??? *)
+    | Select([c;t;e]) -> ite_to_smt b st c t e                            (* VECTOR FIXME *)  
+    | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
+    | Add(_, _, x, y) -> binop_to_smt b st typ "bvadd" x y
+    | Sub(_, _, x, y) -> binop_to_smt b st typ "bvsub" x y
+    | Mul(_, _, x, y) -> binop_to_smt b st typ "bvmul" x y
+    | Shl(_, _, x, y) -> binop_to_smt b st typ "bvshl" x y
+    | Sdiv(_, x, y)   -> binop_to_smt b st typ "bvsdiv" x y
+    | Udiv(_, x, y)   -> binop_to_smt b st typ "bvudiv" x y
+    | Lshr(_, x, y)   -> binop_to_smt b st typ "bvlshr" x y
+    | Ashr(_, x, y)   -> binop_to_smt b st typ "bvashr" x y
+    | Urem(x, y)      -> binop_to_smt b st typ "bvurem" x y
+    | Srem(x, y)      -> binop_to_smt b st typ "bvsrem" x y
+    | And (x, y)      -> binop_to_smt b st typ "bvand" x y
+    | Or  (x, y)      -> binop_to_smt b st typ "bvor" x y
+    | Xor (x, y)      -> binop_to_smt b st typ "bvxor" x y
+    | Shufflevector([x0; x1; xM]) -> shufflevector_to_smt b st x0 x1 xM
+    | _ -> 
+	Util.nfailwith ("value not supported or wrong: " ^  (Llvm_pp.string_of_value v));
+	bdefault_value b st typ
   
 and binop_to_smt b st ty op left right =
   let cu = st.cu in
@@ -773,7 +804,7 @@ and binop_to_smt b st ty op left right =
     bprintf b ")"
 
 and ite_to_smt b st cond left right = (* if cond then left else right *)
-  bprintf b "(if ";
+  bprintf b "(ite ";
   typ_val_to_smt b st cond;
   bprintf b " ";
   typ_val_to_smt b st left;
@@ -982,12 +1013,19 @@ let phi_to_smt b st ty incoming =
  *
  * if i >= n the result is undefined.
  *
+ * (store xv xi xe) except that we need to turn xi into a bitvector.
  *)
 let insertelement_to_smt b st xv xe xi =
-  match (xv, xe, xi) with
-    | ((Vectortyp(n, tyv), vv), (tye, ve), (Integer(m), vi)) ->
-	typ_val_to_smt b st xv  (* placeholders till the real thing comes along *)
-    | _ -> failwith("Bad args to insertelement")
+  match xv, xe, xi with
+    | (tyv, _), (tye, ve), (tyi, vi) ->
+	let (xvi, xvt) = Bc_manip.deconstruct_vector_typ st.cu (state_fu st) tyv in
+	  bprintf b "(store ";
+	  typ_val_to_smt b st xv;  (* placeholders till the real thing comes along *)
+	  bprintf b " ";
+	  vector_index_to_smt b st tyi vi xvi;
+	  bprintf b " ";
+	  typ_val_to_smt b st xe;
+	  bprintf b ")"
     
 (*
  * extracts the *scalar* at the  xi-th position of the vector xv.
@@ -997,13 +1035,17 @@ let insertelement_to_smt b st xv xe xi =
  *
  * if i >= n the result is undefined.
  *
- *
+ * Result: (select xv xi) with conversion of xi to a bitvector
  *)
 let extractelement_to_smt b st xv xi =
-  match (xv, xi) with
-    | ((Vectortyp(n, tyv), vv), (Integer(m), vi)) ->
-	typ_val_to_smt b st xv  (* placeholders till the real thing comes along *)
-    | _ -> failwith("Bad args to extractelement")
+  match xv, xi with
+    | (tyv, _), (tyi, vi) ->
+	let (xvi, xvt) = Bc_manip.deconstruct_vector_typ st.cu (state_fu st) tyv in
+	  bprintf b "(select ";
+	  typ_val_to_smt b st xv;
+	  bprintf b " ";
+	  vector_index_to_smt b st tyi vi xvi;
+	  bprintf b ")"
     
 
 	
@@ -1086,7 +1128,7 @@ let rhs_to_smt b st ti i =
 	Can't support
 	| Va_arg(x, y, md)         ->
 	| Landingpad(x, y, z, w, md) ->
-	| Call(is_tail_call, callconv, retattrs, callee_ty, callee_name, operands, callattrs, md) ->
+	| Call(is_tail_call, callconv, retattrs, callee_ty, callee_ftyp, callee_name, operands, callattrs, md) ->
 
 	Terminators
 	| Unreachable md ->
@@ -1113,7 +1155,7 @@ let instr_effect b st rhs =
   match rhs with
     | Alloca(_, y, z, w, _) ->  alloca_to_smt b st y z
     | Store(_, _, (ty, z), w, _, _, _) -> store_to_smt b st ty z w
-    | Call(_, _, _, _, _, _, _, _) ->
+    | Call(_, _, _, _, _, _, _, _, _) ->
 	let msg = (Llvm_pp.string_of_rhs rhs) in
 	  eprintf "WARNING: %s" msg;
 	  raise (InstructionNotSupported msg)
