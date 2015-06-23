@@ -153,7 +153,7 @@ let reads = "
  * In SMT2, we must define a special version for each
  * vector size and element type.
  *
- * NOTE: we need to treat bitvectors of size 1 differently.
+ * NOTE: We treat bitvectors of size 1 differently.
  * (i.e., Bool instead of (_ BitVec 1))
  *)
 
