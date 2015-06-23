@@ -474,9 +474,9 @@ non_void_type:
 | typ opt_addrspace Star               { Llvm.Pointer($1, $2) }
 | typ argument_list                    { Llvm.Funtyp($1, fst $2, snd $2) }
 ;
-opt_ptr_typ:
-| /* empty */                          { None }
-| non_void_type                        { Some($1) }
+opt_fn_ptr_typ:
+| /* empty */                             { None }
+| Lparen typ opt_addrspace Rparen Star    { Some(Llvm.Pointer($2, $3)) }
 ;
 
 type_list:
@@ -733,8 +733,8 @@ instruction:
                                                           instruction_metadata { Some $1, Llvm.Landingpad($3, $5, true, $7, $8) }
 | local_eq Kw_landingpad typ Kw_personality type_value nonempty_landingpad_list
                                                           instruction_metadata { Some $1, Llvm.Landingpad($3, $5, false, $6, $7) }
-| opt_local opt_tail Kw_call opt_callingconv return_attributes typ value Lparen param_list Rparen call_attributes
-                                                          instruction_metadata { $1, Llvm.Call($2, $4, $5, $6, None, $7, $9, $11, $12) }
+| opt_local opt_tail Kw_call opt_callingconv return_attributes typ opt_fn_ptr_typ value Lparen param_list Rparen call_attributes
+                                                          instruction_metadata { $1, Llvm.Call($2, $4, $5, $6, $7, $8, $10, $12, $13) }
 | local_eq Kw_alloca alloc_metadata                                            { Some $1, $3 }
 | local_eq Kw_load opt_atomic opt_volatile type_value scopeandordering
                                                                 align_metadata { Some $1, Llvm.Load($3, $4, $5, $6, fst $7, snd $7) }
