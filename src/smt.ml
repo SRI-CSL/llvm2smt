@@ -1128,7 +1128,7 @@ let rhs_to_smt b st ti i =
 	Can't support
 	| Va_arg(x, y, md)         ->
 	| Landingpad(x, y, z, w, md) ->
-	| Call(is_tail_call, callconv, retattrs, callee_ty, callee_ftyp, callee_name, operands, callattrs, md) ->
+	| Call(is_tail_call, callconv, retattrs, callee_ty, callee_name, operands, callattrs, md) ->
 
 	Terminators
 	| Unreachable md ->
@@ -1155,7 +1155,7 @@ let instr_effect b st rhs =
   match rhs with
     | Alloca(_, y, z, w, _) ->  alloca_to_smt b st y z
     | Store(_, _, (ty, z), w, _, _, _) -> store_to_smt b st ty z w
-    | Call(_, _, _, _, _, _, _, _, _) ->
+    | Call(_, _, _, _, _, _, _, _) ->
 	let msg = (Llvm_pp.string_of_rhs rhs) in
 	  eprintf "WARNING: %s" msg;
 	  raise (InstructionNotSupported msg)

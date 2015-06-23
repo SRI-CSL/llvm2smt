@@ -189,7 +189,10 @@ let assign_vartyps_instr locals ctyps (nopt, i) =
     | Select([_;(typ,_);_], md) -> typ
     | Phi(typ, incoming, md) -> typ
     | Landingpad(x, y, z, w, md) -> x
-    | Call(is_tail_call, callconv, retattrs, callee_ty, callee_ftyp, callee_name, operands, callattrs, md) -> callee_ty
+    | Call(is_tail_call, callconv, retattrs, callee_ty, callee_name, operands, callattrs, md) ->
+	(match callee_ty with
+	   | Pointer(Funtyp(rettyp, _, _), _) -> rettyp
+	   |  _ -> callee_ty) 
     | Alloca(x, y, z, w, md) -> Pointer(y, None)
     | Load(x, y, (Pointer(typ,_), z), w, v, md) -> typ
     | Store(x, y, z, w, v, u, md) -> typ_of z
@@ -316,8 +319,8 @@ let value_map g f =
         Landingpad(a,(t,g v),b,
                    List.map (function Catch(t,v) -> Catch(t,g v) | Filter(t,v) -> Filter(t,g v)) lps,
                    md)
-    | Call(a,b,c,d,f,v,params,e,md) ->
-        Call(a,b,c,d,f,g v,
+    | Call(a,b,c,d,v,params,e,md) ->
+        Call(a,b,c,d,g v,
              List.map (fun (a,b,v) -> (a,b,g v)) params,
              e,md)
     | Invoke(a,b,c,v,params,d,(t1,v1),(t2,v2),md) ->

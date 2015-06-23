@@ -280,7 +280,7 @@ type instr =
   | Select         of (typ * value) list * instr_metadata
   | Phi            of typ * (value * value) list * instr_metadata
   | Landingpad     of typ * (typ * value) * bool * landingpad list * instr_metadata
-  | Call           of bool * callingconv option * return_attribute list * typ * typ option * value * (typ * param_attribute list * value) list * call_attribute list * instr_metadata
+  | Call           of bool * callingconv option * return_attribute list * typ * value * (typ * param_attribute list * value) list * call_attribute list * instr_metadata
   | Alloca         of bool * typ * (typ * value) option * int option * instr_metadata
   | Load           of bool * bool * (typ * value) * (bool * ordering) option * int option * instr_metadata
   | Store          of bool * bool * (typ * value) * (typ * value) * (bool * ordering) option * int option * instr_metadata
