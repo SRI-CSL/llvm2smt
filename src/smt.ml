@@ -699,16 +699,25 @@ k = 0
 bprintf b "(let ((x_0 vundef_%d_%d)" lm (bitwidth st vt)
 
 for(i = 0; i < lenM; i++)
-   k += 1
    j = i-th element of VM
    if j != undef
    then if j < len
         then
-           bprintf b " (x_{k+1} (store x_{k} #i# (select #v0# #j#))) 
+            bprintf b " (x_{k+1} (store x_{k}"
+            vector_index_to_smt b st mt i lm 
+            bprintf b  "(select "
+            typ_val_to_smt b st  (ty, v0)
+            vector_index_to_smt b st mt j ln 
+            bprintf b "))) "
         else 
-           bprintf b " (x_{k+1} (store x_{k} #i# (select #v1# #j - len#)))
+            bprintf b " (x_{k+1} (store x_{k}"
+            vector_index_to_smt b st mt i lm 
+            bprintf b  (select "
+            typ_val_to_smt b st  (ty, v1)
+            #j - len#)))
+   k += 1
 	   
-bprintf b ")  x_lenM)"
+bprintf b ")  x_k)"
 
 *)
 
