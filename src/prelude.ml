@@ -278,9 +278,9 @@ let binops = [
   "bvor";
   "bvxor"]
 
-let vector_widths =  [4; 8; 32; 64]
+let vector_widths =  [4; 8; 16; 32; 64]
 
-let binop_widths =  [32; 64]
+let binop_widths =  [8; 16; 32; 64]
 
 let bpr_op_1_w b binop w = 
   bprintf b 

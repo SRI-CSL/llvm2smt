@@ -684,6 +684,33 @@ and vector_index_to_smt b st tyi vi n =
 	  bprintf b ")"
 	end
 
+(*
+ *	
+ *
+and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
+  let cu = st.cu in
+  let fu = (state_fu st) in
+  let (ln, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
+  let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu tyM in 
+
+
+k = 0
+
+bprintf b "(let ((x_0 vundef_%d_%d)" lm (bitwidth st vt)
+
+for(i = 0; i < lenM; i++)
+   k += 1
+   j = i-th element of VM
+   if j != undef
+   then if j < len
+        then
+           bprintf b " (x_{k+1} (store x_{k} #i# (select #v0# #j#))) 
+        else 
+           bprintf b " (x_{k+1} (store x_{k} #i# (select #v1# #j - len#)))
+	   
+bprintf b ")  x_lenM)"
+
+*)
 
 and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
   let cu = st.cu in
