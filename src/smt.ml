@@ -704,18 +704,25 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
   let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu tyM in
 
   let single_update i k vk jk =
-    let kp =  k + 1 in 
-      bprintf b " (x%d (store x%d " kp k;
+    let kp =  k + 1 in
+      bprintf b "(let ((x%d (store x%d " kp k;
       vector_index_to_smt b st mt (Int(big_int_of_int i)) lm;
-      bprintf b  "(select ";
+      bprintf b  " (select ";
       typ_val_to_smt b st (ty, vk);
+      bprintf b " ";
       vector_index_to_smt b st mt (Int(big_int_of_int jk)) ln;
-      bprintf b "))) "
+      bprintf b "))))\n "
+  in
+  let rec close_paren k =
+    if k > 0 then 
+      begin
+	bprintf b ")";
+	close_paren (k - 1)
+      end
   in
   let rec shufflevector_to_smt_loop k i =
-    if lenM <= i
-    then
-      ()
+    if lenM <= i then
+      k
     else
       let mi = vector_mask_select st tyM vM i in
 	if mi < 0
@@ -725,9 +732,9 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
 	  begin 
 	    if mi < len
 	    then
-	      ()
+	      single_update i k v0 mi
 	    else
-	      ();
+	      single_update i k v1 (mi - len);
 	    shufflevector_to_smt_loop (k + 1) (i + 1)
 	  end
   in
@@ -739,27 +746,10 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
       bprintf b "\n;;  (tyM, vM) = %s %s" (Llvm_pp.string_of_typ tyM) (Llvm_pp.string_of_value vM);
       bprintf b "\n";
       
-      bprintf b "(let ( 
-                 (x_0 vundef_%d_%d)" lm (bitwidth st vt);
-	
-	
-	
-	(* slow and careful here
-	   match (v1, vM) with
-	   | (Undef, Zero) -> bprintf b "(let ((retvz (vmake_%d_%d)))  retvz)" lm (bitwidth st vt)
-	   | (Undef, _) ->  bprintf b "(let ((retvu (vmake_%d_%d)))  retvu)" lm (bitwidth st vt)
-	   | _ ->
-	*)
-	bprintf b "\n
-(let ((shfflv0 %s)
-      (shfflv1 %s)
-      (shfflMask %s)
-      (retv vmake_%d_%d))
-  retv)"
-	(typ_val_to_smt_string st (ty, v0))
-	(typ_val_to_smt_string st (ty, v1))
-	(typ_val_to_smt_string st (tyM, vM))
-	lm (bitwidth st vt)
+      bprintf b "\n(let ((x0 vundef_%d_%d))\n" lm (bitwidth st vt);
+      let k = shufflevector_to_smt_loop 0 0 in
+	bprintf b " x%d)" k;
+	close_paren k
     end
     
 
@@ -1390,7 +1380,16 @@ let declare_globals b st =
   in
     List.iter declare_global st.cu.cglobals    
 
-
+(*
+ * Functions may be used as pointers so we must declare them first
+ *)
+let declare_functions b st =
+  let declare_function fu =
+    bprintf b "(declare-fun ";
+    name_to_smt b st fu.fname;
+    bprintf b " () (_ BitVec %d))\n" (get_addr_width st.cu)
+  in
+    List.iter declare_function st.cu.cfuns
 
 
 let smt_postcondition fu st cblk (v0, cond) =
@@ -1625,5 +1624,6 @@ let cu_to_smt b cu =
   let state = { mem_idx = 0; sp_idx = 0; fu = None; blk = None; preds = None; cu = cu; addr_width = aw; retval = None; } in 
     Prelude.print_prelude b aw;
     declare_globals b state;
+    declare_functions b state;
     bprintf b "\n";
     List.iter (fun f -> (fun_to_smt b f state)) cu.cfuns

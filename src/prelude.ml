@@ -261,6 +261,15 @@ let vector_casts = "
          (z3 ((_ extract 127 96) w)))
       (vmake_2_32 z0 z1 z2 z3)))
 
+;; conversion to and from (Bitvector 128) to vectors 2 x i64
+(define-fun cast_vector_1_64_to_bits ((x vector_1_64)) (_ BitVec 128)
+   (concat (select x #b1) (select x #b0)))
+
+(define-fun cast_bits_to_vector_1_64 ((w (_ BitVec 128))) vector_1_64
+   (let ((z0 ((_ extract 63 0) w))
+         (z1 ((_ extract 127 64) w)))
+      (vmake_1_64 z0 z1)))
+
 \n"
 
 let binops = [
