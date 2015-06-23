@@ -189,6 +189,14 @@ let vector_bool b =
   ((x0 Bool) (x1 Bool) (x2 Bool) (x3 Bool)) vector_2_1
    (store (store (store (store vundef_2_1 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
 
+(define-sort vector_3_1 () (Array (_ BitVec 3) Bool))
+
+(declare-fun vundef_3_1 () vector_3_1)
+
+(define-fun vmake_3_1 
+  ((x0 Bool) (x1 Bool) (x2 Bool) (x3 Bool) (x4 Bool) (x5 Bool) (x6 Bool) (x7 Bool)) vector_3_1
+   (store (store (store (store (store (store (store (store vundef_3_1 #b000 x0) #b001 x1) #b010 x2) #b011 x3) #b100 x4) #b101 x5) #b110 x6) #b111 x7))
+
 "
   
 
@@ -208,14 +216,25 @@ let vutils b w =
   ((x0 (_ BitVec %d)) (x1 (_ BitVec %d)) (x2 (_ BitVec %d)) (x3 (_ BitVec %d))) vector_2_%d
    (store (store (store (store vundef_2_%d #b00 x0) #b01 x1) #b10 x2) #b11 x3))
 
+;;
+;; Vectors of (2^3) i.e. eight int%d elements
+;;
+(define-fun vmake_3_%d 
+  ((x0 (_ BitVec %d)) (x1 (_ BitVec %d)) (x2 (_ BitVec %d)) (x3 (_ BitVec %d))(x4 (_ BitVec %d)) (x5 (_ BitVec %d)) (x6 (_ BitVec %d)) (x7 (_ BitVec %d))) vector_3_%d
+   (store (store (store (store (store (store (store (store vundef_3_%d #b000 x0) #b001 x1) #b010 x2) #b011 x3) #b100 x4) #b101 x5) #b110 x6) #b111 x7))
+
+
 ;; zero vectors with int%d elements
 
  (define-fun vzero_1_%d () vector_1_%d (vmake_1_%d (_ bv0 %d) (_ bv0 %d)))
 
  (define-fun vzero_2_%d () vector_2_%d (vmake_2_%d (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d)))
  
+ (define-fun vzero_3_%d () vector_3_%d (vmake_3_%d (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d)))
+ 
 "
-    w w w w  w w w w  w w w w  w w w w  w w w w   w w w w  w w w   
+    w w w w  w w w w  w w w w  w w w w  w w w w   w w w w
+    w w w w  w w w w  w w w w  w w w w  w w w w   w w w w  w w
     
 let vector_casts = "
 
@@ -249,51 +268,92 @@ let binops = [
 
 let vector_widths =  [4; 8; 32; 64]
 
-let bpr_op_1_32 b binop = 
+let binop_widths =  [32; 64]
+
+let bpr_op_1_w b binop w = 
   bprintf b 
     "
-(define-fun v%s_1_32 ((x vector_1_32) (y vector_1_32)) vector_1_32
+(define-fun v%s_1_%d ((x vector_1_%d) (y vector_1_%d)) vector_1_%d
    (let ((z0 (%s (select x #b0) (select y #b0)))
          (z1 (%s (select x #b1) (select y #b1))))
-      (vmake_1_32 z0 z1)))
+      (vmake_1_%d z0 z1)))
 "
-    binop binop binop
+    binop w w w w binop binop w
 
-let bpr_op_2_32 b binop = 
+    
+let bpr_op_2_w b binop w = 
   bprintf b 
     "
- (define-fun v%s_2_32 ((x vector_2_32) (y vector_2_32)) vector_2_32
+ (define-fun v%s_2_%d ((x vector_2_%d) (y vector_2_%d)) vector_2_%d
    (let ((z0 (%s (select x #b00) (select y #b00)))
          (z1 (%s (select x #b01) (select y #b01)))
          (z2 (%s (select x #b10) (select y #b10)))
          (z3 (%s (select x #b11) (select y #b11))))
-      (vmake_2_32 z0 z1 z2 z3)))
+      (vmake_2_%d z0 z1 z2 z3)))
 \n"
-     binop binop binop binop binop
-   
+     binop w w w w binop binop binop binop w
+
+let bpr_op_3_w b binop w = 
+  bprintf b 
+    "
+ (define-fun v%s_3_%d ((x vector_3_%d) (y vector_3_%d)) vector_3_%d
+   (let (
+         (z0 (%s (select x #b000) (select y #b000)))
+         (z1 (%s (select x #b001) (select y #b001)))
+         (z2 (%s (select x #b010) (select y #b010)))
+         (z3 (%s (select x #b011) (select y #b011)))
+         (z4 (%s (select x #b100) (select y #b100)))
+         (z5 (%s (select x #b101) (select y #b101)))
+         (z6 (%s (select x #b110) (select y #b110)))
+         (z7 (%s (select x #b111) (select y #b111)))
+         )
+      (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
+\n"
+     binop w w w w binop binop binop binop binop binop binop binop w
+
    
    
 (*
  * Prelude: a bunch of definitions to abbreviate the conversion.
  *)
 let print_prelude b aw = 
+
   bprintf b "(set-logic QF_ABV)\n";
+
   bprintf b "(define-sort Address () %s)\n" (addr_type aw);
+
   bprintf b "(define-sort Byte () %s)\n" byte_type;
+
   bprintf b "(define-sort Mem () (Array Address Byte))\n";
+
   bprintf b "%s\n" types;
+
   bprintf b "%s\n" (constants aw);
+
   bprintf b "%s\n" writes;
+
   bprintf b "%s\n" reads;
+
   List.iter (fun width ->  (vector_type b 1 width)) vector_widths;
+
   List.iter (fun width ->  (vector_type b 2 width)) vector_widths;
+
+  List.iter (fun width ->  (vector_type b 3 width)) vector_widths;
+
   vector_bool b;
+
   List.iter (fun w ->  (vutils b w)) vector_widths;
-  List.iter (fun binop ->  (bpr_op_1_32 b binop)) binops;
-  List.iter (fun binop ->  (bpr_op_2_32 b binop)) binops;
+
+  List.iter (fun binop ->  ( List.iter (fun w -> (bpr_op_1_w b binop w))  binop_widths )) binops;
+  
+  List.iter (fun binop ->  ( List.iter (fun w -> (bpr_op_2_w b binop w))  binop_widths )) binops;
+  
+  List.iter (fun binop ->  ( List.iter (fun w -> (bpr_op_3_w b binop w))  binop_widths )) binops;
+  
   bprintf b "%s\n" vector_casts;
 
   bprintf b "\n;; end of prelude\n\n\n";
+
   ()
 
     
