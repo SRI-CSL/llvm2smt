@@ -738,40 +738,23 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
 	    shufflevector_to_smt_loop (k + 1) (i + 1)
 	  end
   in
-    begin
-
-      bprintf b "\n;; Shufflevector: type = %s" (Llvm_pp.string_of_typ ty);
-      bprintf b "\n;;  (ty0, v0) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v0);
-      bprintf b "\n;;  (ty1, v1) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v1);
-      bprintf b "\n;;  (tyM, vM) = %s %s" (Llvm_pp.string_of_typ tyM) (Llvm_pp.string_of_value vM);
-      bprintf b "\n";
-      
-      bprintf b "\n(let ((x0 vundef_%d_%d))\n" lm (bitwidth st vt);
-      let k = shufflevector_to_smt_loop 0 0 in
-	bprintf b " x%d)" k;
-	close_paren k
-    end
+    bprintf b "\n(let ((x0 vundef_%d_%d))\n" lm (bitwidth st vt);
+    let k = shufflevector_to_smt_loop 0 0 in
+      bprintf b " x%d)" k;
+      close_paren k
     
-
 (*
- *	
+ * Explanation: this code approximately does the loop below:
  *
-and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
-  let cu = st.cu in
-  let fu = (state_fu st) in
-  let (ln, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
-  let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu tyM in 
+   k = 0
 
-
-k = 0
-
-bprintf b "(let ( 
+   bprintf b "(let ( 
                  (x_0 vundef_%d_%d)" lm (bitwidth st vt)
 
-for(i = 0; i < lenM; i++)
-   j = i-th element of vM
-   if j != undef
-   then if j < len
+   for(i = 0; i < lenM; i++)
+     j = i-th element of vM
+     if j != undef
+     then if j < len
         then
             bprintf b " (x_{k+1} (store x_{k}"
             vector_index_to_smt b st mt i lm 
@@ -785,11 +768,11 @@ for(i = 0; i < lenM; i++)
             bprintf b  "(select "
             typ_val_to_smt b st  (ty, v1)
             #j - len#)))
-   k += 1
+     k += 1
 	   
-bprintf b ")  x_k)"
 
  *)
+
 
 (*
  * x should be a list of three Vector-type Vector-value pairs:
@@ -1188,12 +1171,6 @@ let rhs_to_smt b st ti i =
 
 	| Addrspacecast(x, y, md)  ->
 	
-	--- Vector operations
-	
-	| Insertelement(x, md) ->
-	| Extractelement(x, md) ->
-	| Shufflevector(x, md) ->
-
 	--- Aggregate operations
 
 	(N.B extractvalue seems to be used right after a landingpad)
@@ -1202,21 +1179,7 @@ let rhs_to_smt b st ti i =
 	| Extractvalue(x, y, md) ->
 	| Insertvalue(x, y, z, md) ->
 
-	** Maybe, but probably not easy
-
-	NOTES: the vector instructions Insertelement, Extractelement show
-	up a lot. They are probably easier than Extractvalue and Insertvalue.
-
-	Idea for Extractelement: we consider a vector of type <n x i32> as
-	the concatenation of m 32bit elements. Extractelement just extracts
-	a slice out of this concatenation. For example
-
-           Extractelement v, 0   --> ((_ extract 0 31) v)   assuming v is a vector of i32
-
-           Extractelement v, i   --> may need nested if-then-else if i is not a constant
-
-        For Insertelement: that's similar but the SMT conversion will require juggling of 
-        extract and concat.
+	--- These are probably no-ops in SMT
 
 	| Cmpxchg(x, y, z, w, v, u, t, md) ->
 	| Atomicrmw(x, y, z, w, v, u, md) ->
@@ -1227,7 +1190,7 @@ let rhs_to_smt b st ti i =
 	| Landingpad(x, y, z, w, md) ->
 	| Call(is_tail_call, callconv, retattrs, callee_ty, callee_name, operands, callattrs, md) ->
 
-	Terminators
+	Terminators (we don't deal with Resume/Invoke/Indirectbr/Unreachable)
 	| Unreachable md ->
 	| Return(None, md) ->
 	| Return(Some(x, y), md) ->
