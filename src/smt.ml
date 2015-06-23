@@ -262,7 +262,7 @@ let bzero_vector b st typ v =
     if (Bc_manip.is_vector_typ cu fu typ)
     then
       let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu typ in
-	bprintf b "(vzero_%d_%d)"  vi (bitwidth st vt)
+	bprintf b "vzero_%d_%d"  vi (bitwidth st vt)
     else 
       match v with 
 	| Null -> bzero_vector_n b st.addr_width     
@@ -289,7 +289,7 @@ let bdefault_value b st ty =
     if (Bc_manip.is_vector_typ cu fu ty)
     then
       let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in
-	bprintf b "(vzero_%d_%d)"  vi (bitwidth st vt)
+	bprintf b "vzero_%d_%d"  vi (bitwidth st vt)
     else
       let k = bitwidth st ty in
 	if k = 1 then bprintf b "false" else bzero_vector_n b k
@@ -706,7 +706,7 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
 (let ((shfflv0 %s)
       (shfflv1 %s)
       (shfflMask %s)
-      (retv (vmake_%d_%d)))
+      (retv vmake_%d_%d))
   retv)"
 	    (typ_val_to_smt_string st (ty, v0))
 	    (typ_val_to_smt_string st (ty, v1))
@@ -876,11 +876,19 @@ let load_to_smt b st i ty v =
   (match ty with
      | Pointer(t,_) ->
 	 let n = bitwidth st t in
-	   begin
-	     bprintf b "(read%d %s " n (mem_ref st);
-	     typ_val_to_smt b st (ty, v);
-	     bprintf b ")" 
-	   end
+	 let cu = st.cu in
+	 let fu = state_fu st in
+	   if Bc_manip.is_vector_typ cu fu t then
+	     let (logn, ety) = Bc_manip.deconstruct_vector_typ cu fu t in
+	       bprintf b "(cast_bits_to_vector_%d_%d (read%d %s " logn (bitwidth st ety) n (mem_ref st);
+	       typ_val_to_smt b st (ty, v);
+	       bprintf b "))" 
+	   else
+	     begin
+	       bprintf b "(read%d %s " n (mem_ref st);
+	       typ_val_to_smt b st (ty, v);
+	       bprintf b ")" 
+	     end
      | _ -> Util.nfailwith ("malformed Load instruction: " ^ (Llvm_pp.string_of_rhs i)))
 
 
@@ -896,11 +904,24 @@ let store_to_smt b st ty v p =
   let n = bitwidth st ty in
   let old_mem = st.mem_idx in
   let new_mem = old_mem + 1 in
-    bprintf b "(define-fun memory%d () Mem (write%d memory%d " new_mem n old_mem;
-    typ_val_to_smt b st p;
-    bprintf b " ";
-    typ_val_to_smt b st (ty, v);
-    bprintf b "))";
+  let cu = st.cu in
+  let fu = state_fu st in
+    if Bc_manip.is_vector_typ cu fu ty then
+      let (logn, ety) = Bc_manip.deconstruct_vector_typ cu fu ty in
+	bprintf b "(define-fun memory%d () Mem (write%d memory%d " new_mem n old_mem;
+	typ_val_to_smt b st p;
+	bprintf b " ";
+	bprintf b "(cast_vector_%d_%d_to_bits " logn (bitwidth st ety);
+	typ_val_to_smt b st (ty, v);
+	bprintf b ")))"
+    else
+      begin
+	bprintf b "(define-fun memory%d () Mem (write%d memory%d " new_mem n old_mem;
+	typ_val_to_smt b st p;
+	bprintf b " ";
+	typ_val_to_smt b st (ty, v);
+	bprintf b "))"
+      end;
     st.mem_idx <- new_mem
 
 

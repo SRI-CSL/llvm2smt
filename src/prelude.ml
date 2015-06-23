@@ -249,6 +249,18 @@ let vector_casts = "
          (z1 ((_ extract 63 32) w)))
       (vmake_1_32 z0 z1)))
 
+;; conversion to and from (Bitvector 128)
+;; this assumes little endian representation
+(define-fun cast_vector_2_32_to_bits ((x vector_2_32)) (_ BitVec 128)
+   (concat (concat (concat (select x #b11) (select x #b10)) (select x #b01)) (select x #b00)))
+
+(define-fun cast_bits_to_vector_2_32 ((w (_ BitVec 128))) vector_2_32
+   (let ((z0 ((_ extract 31 0) w))
+         (z1 ((_ extract 63 32) w))
+         (z2 ((_ extract 95 64) w))
+         (z3 ((_ extract 127 96) w)))
+      (vmake_2_32 z0 z1 z2 z3)))
+
 \n"
 
 let binops = [
