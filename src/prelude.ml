@@ -169,7 +169,28 @@ let vector_type b len width =
 
 "
     len width len width len width len width len width 
-   
+
+let vector_bool b =
+  bprintf b
+    ";; Special case where we use Bool rather than bitvectors of size 1 
+
+(define-sort vector_1_1 () (Array (_ BitVec 1) Bool))
+
+(declare-fun vundef_1_1 () vector_1_1)
+
+(define-fun vmake_1_1 ((x0 Bool) (x1 Bool)) vector_1_1
+   (store (store vundef_1_1 #b0 x0) #b1 x1))
+
+(define-sort vector_2_1 () (Array (_ BitVec 2) Bool))
+
+(declare-fun vundef_2_1 () vector_2_1)
+
+(define-fun vmake_2_1 
+  ((x0 Bool) (x1 Bool) (x2 Bool) (x3 Bool)) vector_2_1
+   (store (store (store (store vundef_2_1 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
+
+"
+  
 
 let vutils b w =
   bprintf b
@@ -226,7 +247,7 @@ let binops = [
   "bvor";
   "bvxor"]
 
-let vector_widths =  [1; 4; 8; 32; 64]
+let vector_widths =  [4; 8; 32; 64]
 
 let bpr_op_1_32 b binop = 
   bprintf b 
@@ -266,6 +287,7 @@ let print_prelude b aw =
   bprintf b "%s\n" reads;
   List.iter (fun width ->  (vector_type b 1 width)) vector_widths;
   List.iter (fun width ->  (vector_type b 2 width)) vector_widths;
+  vector_bool b;
   List.iter (fun w ->  (vutils b w)) vector_widths;
   List.iter (fun binop ->  (bpr_op_1_32 b binop)) binops;
   List.iter (fun binop ->  (bpr_op_2_32 b binop)) binops;
