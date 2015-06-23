@@ -684,6 +684,85 @@ and vector_index_to_smt b st tyi vi n =
 	  bprintf b ")"
 	end
 
+
+
+and vector_mask_select st tyM vM i =
+  match vM with 
+  | Zero -> 0
+  | Vector(tvlist) -> 
+      let (ty, vy) = List.nth tvlist i in
+	(match vy with
+	   | Int(n) ->  int_of_big_int n
+	   | Undef -> -1
+	   | _ -> failwith("Didn't expect this in a mask: "^(Llvm_pp.string_of_value vy)))
+  | _ -> failwith("Didn't expect this in a mask: "^(Llvm_pp.string_of_value vM))
+
+and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
+  let cu = st.cu in
+  let fu = (state_fu st) in
+  let (ln, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
+  let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu tyM in
+
+  let single_update i k vk jk =
+    let kp =  k + 1 in 
+      bprintf b " (x%d (store x%d " kp k;
+      vector_index_to_smt b st mt (Int(big_int_of_int i)) lm;
+      bprintf b  "(select ";
+      typ_val_to_smt b st (ty, vk);
+      vector_index_to_smt b st mt (Int(big_int_of_int jk)) ln;
+      bprintf b "))) "
+  in
+  let rec shufflevector_to_smt_loop k i =
+    if lenM <= i
+    then
+      ()
+    else
+      let mi = vector_mask_select st tyM vM i in
+	if mi < 0
+	then 
+	  shufflevector_to_smt_loop k  (i + 1)
+	else
+	  begin 
+	    if mi < len
+	    then
+	      ()
+	    else
+	      ();
+	    shufflevector_to_smt_loop (k + 1) (i + 1)
+	  end
+  in
+    begin
+
+      bprintf b "\n;; Shufflevector: type = %s" (Llvm_pp.string_of_typ ty);
+      bprintf b "\n;;  (ty0, v0) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v0);
+      bprintf b "\n;;  (ty1, v1) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v1);
+      bprintf b "\n;;  (tyM, vM) = %s %s" (Llvm_pp.string_of_typ tyM) (Llvm_pp.string_of_value vM);
+      bprintf b "\n";
+      
+      bprintf b "(let ( 
+                 (x_0 vundef_%d_%d)" lm (bitwidth st vt);
+	
+	
+	
+	(* slow and careful here
+	   match (v1, vM) with
+	   | (Undef, Zero) -> bprintf b "(let ((retvz (vmake_%d_%d)))  retvz)" lm (bitwidth st vt)
+	   | (Undef, _) ->  bprintf b "(let ((retvu (vmake_%d_%d)))  retvu)" lm (bitwidth st vt)
+	   | _ ->
+	*)
+	bprintf b "\n
+(let ((shfflv0 %s)
+      (shfflv1 %s)
+      (shfflMask %s)
+      (retv vmake_%d_%d))
+  retv)"
+	(typ_val_to_smt_string st (ty, v0))
+	(typ_val_to_smt_string st (ty, v1))
+	(typ_val_to_smt_string st (tyM, vM))
+	lm (bitwidth st vt)
+    end
+    
+
 (*
  *	
  *
@@ -696,61 +775,32 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
 
 k = 0
 
-bprintf b "(let ((x_0 vundef_%d_%d)" lm (bitwidth st vt)
+bprintf b "(let ( 
+                 (x_0 vundef_%d_%d)" lm (bitwidth st vt)
 
 for(i = 0; i < lenM; i++)
-   j = i-th element of VM
+   j = i-th element of vM
    if j != undef
    then if j < len
         then
             bprintf b " (x_{k+1} (store x_{k}"
             vector_index_to_smt b st mt i lm 
             bprintf b  "(select "
-            typ_val_to_smt b st  (ty, v0)
+            typ_val_to_smt b st (ty, v0)
             vector_index_to_smt b st mt j ln 
             bprintf b "))) "
         else 
             bprintf b " (x_{k+1} (store x_{k}"
             vector_index_to_smt b st mt i lm 
-            bprintf b  (select "
+            bprintf b  "(select "
             typ_val_to_smt b st  (ty, v1)
             #j - len#)))
    k += 1
 	   
 bprintf b ")  x_k)"
 
-*)
+ *)
 
-and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
-  let cu = st.cu in
-  let fu = (state_fu st) in
-  let (ln, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
-  let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu tyM in 
-  begin
-    bprintf b "\n;; Shufflevector: type = %s" (Llvm_pp.string_of_typ ty);
-    bprintf b "\n;;  (ty0, v0) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v0);
-    bprintf b "\n;;  (ty1, v1) = %s %s" (Llvm_pp.string_of_typ ty) (Llvm_pp.string_of_value v1);
-    bprintf b "\n;;  (tyM, vM) = %s %s" (Llvm_pp.string_of_typ tyM) (Llvm_pp.string_of_value vM);
-    bprintf b "\n";
-    (* slow and careful here
-    match (v1, vM) with
-      | (Undef, Zero) -> bprintf b "(let ((retvz (vmake_%d_%d)))  retvz)" lm (bitwidth st vt)
-      | (Undef, _) ->  bprintf b "(let ((retvu (vmake_%d_%d)))  retvu)" lm (bitwidth st vt)
-       | _ ->
-       *)
-    bprintf b "\n
-(let ((shfflv0 %s)
-      (shfflv1 %s)
-      (shfflMask %s)
-      (retv vmake_%d_%d))
-  retv)"
-	    (typ_val_to_smt_string st (ty, v0))
-	    (typ_val_to_smt_string st (ty, v1))
-	    (typ_val_to_smt_string st (tyM, vM))
-	    lm (bitwidth st vt)
-  end
-
-  
 (*
  * x should be a list of three Vector-type Vector-value pairs:
  *
