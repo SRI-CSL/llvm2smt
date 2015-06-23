@@ -33,7 +33,7 @@ test: llvm2smt
 
 bug: parse
 	./parse ${BITCODE}/int_powers.ll > ${BITCODE}/int_powers.out.ll
-	diff -w ${BITCODE}/int_powers.ll  ${BITCODE}/int_powers.out.ll
+	diff -w -I ModuleID ${BITCODE}/int_powers.ll  ${BITCODE}/int_powers.out.ll
 
 translate: parse
 	./parse ${BITCODE}/https_examples.darwin.ll > ${BITCODE}/https_examples.darwin.out.ll
