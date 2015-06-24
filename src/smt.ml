@@ -702,7 +702,7 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
   let fu = (state_fu st) in
   let (ln, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
   let (lm, mt) = Bc_manip.deconstruct_vector_typ cu fu tyM in
-
+  (* routine to do the update to either v0 or v1, depending on the mask index *)
   let single_update i k vk jk =
     let kp =  k + 1 in
       bprintf b "(let ((x%d (store x%d " kp k;
@@ -720,6 +720,7 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
 	close_paren (k - 1)
       end
   in
+  (* loop through the mask *)
   let rec shufflevector_to_smt_loop k i =
     if lenM <= i then
       k
@@ -775,7 +776,7 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
 
 
 (*
- * x should be a list of three Vector-type Vector-value pairs:
+ * The arguments should be a list of three Vector-type Vector-value pairs:
  *
  * x0 = Vectortyp(n, typ)  value0
  * x1 = Vectortyp(n, typ)  value1 
