@@ -3,190 +3,210 @@ target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-apple-macosx10.9.0"
 
 ; Function Attrs: nounwind ssp uwtable
-define i32 @exp0(i32 %a, i32 %b) #0 {
-  %1 = alloca i32, align 4
-  %2 = alloca i32, align 4
-  %3 = alloca i32, align 4
-  %retval = alloca i32, align 4
-  store i32 %a, i32* %2, align 4
-  store i32 %b, i32* %3, align 4
-  store i32 1, i32* %retval, align 4
-  %4 = load i32* %3, align 4
-  %5 = icmp slt i32 %4, 0
-  br i1 %5, label %6, label %7
+define zeroext i16 @exp0(i16 zeroext %a, i16 zeroext %b) #0 {
+  %1 = alloca i16, align 2
+  %2 = alloca i16, align 2
+  %retval = alloca i16, align 2
+  store i16 %a, i16* %1, align 2
+  store i16 %b, i16* %2, align 2
+  store i16 1, i16* %retval, align 2
+  %3 = load i16* %2, align 2
+  %4 = zext i16 %3 to i32
+  %5 = icmp sgt i32 %4, 0
+  br i1 %5, label %.lr.ph, label %20
 
-; <label>:6                                       ; preds = %0
-  store i32 0, i32* %1
-  br label %20
+.lr.ph:                                           ; preds = %0
+  br label %6
 
-; <label>:7                                       ; preds = %0
-  %8 = load i32* %3, align 4
-  %9 = icmp sgt i32 %8, 0
-  br i1 %9, label %.lr.ph, label %18
-
-.lr.ph:                                           ; preds = %7
-  br label %10
-
-; <label>:10                                      ; preds = %30, %.lr.ph
-  %11 = load i32* %2, align 4
-  %12 = load i32* %retval, align 4
-  %13 = mul nsw i32 %12, %11
-  store i32 %13, i32* %retval, align 4
-  %14 = load i32* %3, align 4
+; <label>:6                                       ; preds = %36, %.lr.ph
+  %7 = load i16* %1, align 2
+  %8 = zext i16 %7 to i32
+  %9 = load i16* %retval, align 2
+  %10 = zext i16 %9 to i32
+  %11 = mul nsw i32 %10, %8
+  %12 = trunc i32 %11 to i16
+  store i16 %12, i16* %retval, align 2
+  %13 = load i16* %2, align 2
+  %14 = zext i16 %13 to i32
   %15 = sub nsw i32 %14, 1
-  store i32 %15, i32* %3, align 4
-  %16 = load i32* %3, align 4
-  %17 = icmp sgt i32 %16, 0
-  br i1 %17, label %22, label %._crit_edge
+  %16 = trunc i32 %15 to i16
+  store i16 %16, i16* %2, align 2
+  %17 = load i16* %2, align 2
+  %18 = zext i16 %17 to i32
+  %19 = icmp sgt i32 %18, 0
+  br i1 %19, label %22, label %._crit_edge
 
-._crit_edge:                                      ; preds = %30, %22, %10
-  br label %18
-
-; <label>:18                                      ; preds = %._crit_edge, %7
-  %19 = load i32* %retval, align 4
-  store i32 %19, i32* %1
+._crit_edge:                                      ; preds = %36, %22, %6
   br label %20
 
-; <label>:20                                      ; preds = %18, %6
-  %21 = load i32* %1
-  ret i32 %21
+; <label>:20                                      ; preds = %._crit_edge, %0
+  %21 = load i16* %retval, align 2
+  ret i16 %21
 
-; <label>:22                                      ; preds = %10
-  %23 = load i32* %2, align 4
-  %24 = load i32* %retval, align 4
-  %25 = mul nsw i32 %24, %23
-  store i32 %25, i32* %retval, align 4
-  %26 = load i32* %3, align 4
-  %27 = sub nsw i32 %26, 1
-  store i32 %27, i32* %3, align 4
-  %28 = load i32* %3, align 4
-  %29 = icmp sgt i32 %28, 0
-  br i1 %29, label %30, label %._crit_edge
+; <label>:22                                      ; preds = %6
+  %23 = load i16* %1, align 2
+  %24 = zext i16 %23 to i32
+  %25 = load i16* %retval, align 2
+  %26 = zext i16 %25 to i32
+  %27 = mul nsw i32 %26, %24
+  %28 = trunc i32 %27 to i16
+  store i16 %28, i16* %retval, align 2
+  %29 = load i16* %2, align 2
+  %30 = zext i16 %29 to i32
+  %31 = sub nsw i32 %30, 1
+  %32 = trunc i32 %31 to i16
+  store i16 %32, i16* %2, align 2
+  %33 = load i16* %2, align 2
+  %34 = zext i16 %33 to i32
+  %35 = icmp sgt i32 %34, 0
+  br i1 %35, label %36, label %._crit_edge
 
-; <label>:30                                      ; preds = %22
-  %31 = load i32* %2, align 4
-  %32 = load i32* %retval, align 4
-  %33 = mul nsw i32 %32, %31
-  store i32 %33, i32* %retval, align 4
-  %34 = load i32* %3, align 4
-  %35 = sub nsw i32 %34, 1
-  store i32 %35, i32* %3, align 4
-  %36 = load i32* %3, align 4
-  %37 = icmp sgt i32 %36, 0
-  br i1 %37, label %10, label %._crit_edge
+; <label>:36                                      ; preds = %22
+  %37 = load i16* %1, align 2
+  %38 = zext i16 %37 to i32
+  %39 = load i16* %retval, align 2
+  %40 = zext i16 %39 to i32
+  %41 = mul nsw i32 %40, %38
+  %42 = trunc i32 %41 to i16
+  store i16 %42, i16* %retval, align 2
+  %43 = load i16* %2, align 2
+  %44 = zext i16 %43 to i32
+  %45 = sub nsw i32 %44, 1
+  %46 = trunc i32 %45 to i16
+  store i16 %46, i16* %2, align 2
+  %47 = load i16* %2, align 2
+  %48 = zext i16 %47 to i32
+  %49 = icmp sgt i32 %48, 0
+  br i1 %49, label %6, label %._crit_edge
 }
 
 ; Function Attrs: nounwind ssp uwtable
-define i32 @exp1(i32 %a, i32 %b) #0 {
-  %1 = alloca i32, align 4
-  %2 = alloca i32, align 4
-  %3 = alloca i32, align 4
-  %retval = alloca i32, align 4
-  store i32 %a, i32* %2, align 4
-  store i32 %b, i32* %3, align 4
-  store i32 1, i32* %retval, align 4
-  %4 = load i32* %3, align 4
-  %5 = icmp slt i32 %4, 0
-  br i1 %5, label %6, label %7
+define zeroext i16 @exp1(i16 zeroext %a, i16 zeroext %b) #0 {
+  %1 = alloca i16, align 2
+  %2 = alloca i16, align 2
+  %retval = alloca i16, align 2
+  store i16 %a, i16* %1, align 2
+  store i16 %b, i16* %2, align 2
+  store i16 1, i16* %retval, align 2
+  %3 = load i16* %2, align 2
+  %4 = zext i16 %3 to i32
+  %5 = icmp ne i32 %4, 0
+  br i1 %5, label %.lr.ph, label %32
 
-; <label>:6                                       ; preds = %0
-  store i32 0, i32* %1
-  br label %28
+.lr.ph:                                           ; preds = %0
+  br label %6
 
-; <label>:7                                       ; preds = %0
-  %8 = load i32* %3, align 4
-  %9 = icmp ne i32 %8, 0
-  br i1 %9, label %.lr.ph, label %26
+; <label>:6                                       ; preds = %72, %.lr.ph
+  %7 = load i16* %2, align 2
+  %8 = zext i16 %7 to i32
+  %9 = and i32 %8, 1
+  %10 = icmp ne i32 %9, 0
+  br i1 %10, label %11, label %18
 
-.lr.ph:                                           ; preds = %7
-  br label %10
-
-; <label>:10                                      ; preds = %54, %.lr.ph
-  %11 = load i32* %3, align 4
-  %12 = and i32 %11, 1
-  %13 = icmp ne i32 %12, 0
-  br i1 %13, label %14, label %18
-
-; <label>:14                                      ; preds = %10
-  %15 = load i32* %2, align 4
-  %16 = load i32* %retval, align 4
-  %17 = mul nsw i32 %16, %15
-  store i32 %17, i32* %retval, align 4
+; <label>:11                                      ; preds = %6
+  %12 = load i16* %1, align 2
+  %13 = zext i16 %12 to i32
+  %14 = load i16* %retval, align 2
+  %15 = zext i16 %14 to i32
+  %16 = mul nsw i32 %15, %13
+  %17 = trunc i32 %16 to i16
+  store i16 %17, i16* %retval, align 2
   br label %18
 
-; <label>:18                                      ; preds = %14, %10
-  %19 = load i32* %3, align 4
-  %20 = ashr i32 %19, 1
-  store i32 %20, i32* %3, align 4
-  %21 = load i32* %2, align 4
-  %22 = load i32* %2, align 4
-  %23 = mul nsw i32 %22, %21
-  store i32 %23, i32* %2, align 4
-  %24 = load i32* %3, align 4
-  %25 = icmp ne i32 %24, 0
-  br i1 %25, label %30, label %._crit_edge
+; <label>:18                                      ; preds = %11, %6
+  %19 = load i16* %2, align 2
+  %20 = zext i16 %19 to i32
+  %21 = ashr i32 %20, 1
+  %22 = trunc i32 %21 to i16
+  store i16 %22, i16* %2, align 2
+  %23 = load i16* %1, align 2
+  %24 = zext i16 %23 to i32
+  %25 = load i16* %1, align 2
+  %26 = zext i16 %25 to i32
+  %27 = mul nsw i32 %26, %24
+  %28 = trunc i32 %27 to i16
+  store i16 %28, i16* %1, align 2
+  %29 = load i16* %2, align 2
+  %30 = zext i16 %29 to i32
+  %31 = icmp ne i32 %30, 0
+  br i1 %31, label %34, label %._crit_edge
 
-._crit_edge:                                      ; preds = %54, %38, %18
-  br label %26
+._crit_edge:                                      ; preds = %72, %46, %18
+  br label %32
 
-; <label>:26                                      ; preds = %._crit_edge, %7
-  %27 = load i32* %retval, align 4
-  store i32 %27, i32* %1
-  br label %28
+; <label>:32                                      ; preds = %._crit_edge, %0
+  %33 = load i16* %retval, align 2
+  ret i16 %33
 
-; <label>:28                                      ; preds = %26, %6
-  %29 = load i32* %1
-  ret i32 %29
+; <label>:34                                      ; preds = %18
+  %35 = load i16* %2, align 2
+  %36 = zext i16 %35 to i32
+  %37 = and i32 %36, 1
+  %38 = icmp ne i32 %37, 0
+  br i1 %38, label %39, label %46
 
-; <label>:30                                      ; preds = %18
-  %31 = load i32* %3, align 4
-  %32 = and i32 %31, 1
-  %33 = icmp ne i32 %32, 0
-  br i1 %33, label %34, label %38
+; <label>:39                                      ; preds = %34
+  %40 = load i16* %1, align 2
+  %41 = zext i16 %40 to i32
+  %42 = load i16* %retval, align 2
+  %43 = zext i16 %42 to i32
+  %44 = mul nsw i32 %43, %41
+  %45 = trunc i32 %44 to i16
+  store i16 %45, i16* %retval, align 2
+  br label %46
 
-; <label>:34                                      ; preds = %30
-  %35 = load i32* %2, align 4
-  %36 = load i32* %retval, align 4
-  %37 = mul nsw i32 %36, %35
-  store i32 %37, i32* %retval, align 4
-  br label %38
+; <label>:46                                      ; preds = %39, %34
+  %47 = load i16* %2, align 2
+  %48 = zext i16 %47 to i32
+  %49 = ashr i32 %48, 1
+  %50 = trunc i32 %49 to i16
+  store i16 %50, i16* %2, align 2
+  %51 = load i16* %1, align 2
+  %52 = zext i16 %51 to i32
+  %53 = load i16* %1, align 2
+  %54 = zext i16 %53 to i32
+  %55 = mul nsw i32 %54, %52
+  %56 = trunc i32 %55 to i16
+  store i16 %56, i16* %1, align 2
+  %57 = load i16* %2, align 2
+  %58 = zext i16 %57 to i32
+  %59 = icmp ne i32 %58, 0
+  br i1 %59, label %60, label %._crit_edge
 
-; <label>:38                                      ; preds = %34, %30
-  %39 = load i32* %3, align 4
-  %40 = ashr i32 %39, 1
-  store i32 %40, i32* %3, align 4
-  %41 = load i32* %2, align 4
-  %42 = load i32* %2, align 4
-  %43 = mul nsw i32 %42, %41
-  store i32 %43, i32* %2, align 4
-  %44 = load i32* %3, align 4
-  %45 = icmp ne i32 %44, 0
-  br i1 %45, label %46, label %._crit_edge
+; <label>:60                                      ; preds = %46
+  %61 = load i16* %2, align 2
+  %62 = zext i16 %61 to i32
+  %63 = and i32 %62, 1
+  %64 = icmp ne i32 %63, 0
+  br i1 %64, label %65, label %72
 
-; <label>:46                                      ; preds = %38
-  %47 = load i32* %3, align 4
-  %48 = and i32 %47, 1
-  %49 = icmp ne i32 %48, 0
-  br i1 %49, label %50, label %54
+; <label>:65                                      ; preds = %60
+  %66 = load i16* %1, align 2
+  %67 = zext i16 %66 to i32
+  %68 = load i16* %retval, align 2
+  %69 = zext i16 %68 to i32
+  %70 = mul nsw i32 %69, %67
+  %71 = trunc i32 %70 to i16
+  store i16 %71, i16* %retval, align 2
+  br label %72
 
-; <label>:50                                      ; preds = %46
-  %51 = load i32* %2, align 4
-  %52 = load i32* %retval, align 4
-  %53 = mul nsw i32 %52, %51
-  store i32 %53, i32* %retval, align 4
-  br label %54
-
-; <label>:54                                      ; preds = %50, %46
-  %55 = load i32* %3, align 4
-  %56 = ashr i32 %55, 1
-  store i32 %56, i32* %3, align 4
-  %57 = load i32* %2, align 4
-  %58 = load i32* %2, align 4
-  %59 = mul nsw i32 %58, %57
-  store i32 %59, i32* %2, align 4
-  %60 = load i32* %3, align 4
-  %61 = icmp ne i32 %60, 0
-  br i1 %61, label %10, label %._crit_edge
+; <label>:72                                      ; preds = %65, %60
+  %73 = load i16* %2, align 2
+  %74 = zext i16 %73 to i32
+  %75 = ashr i32 %74, 1
+  %76 = trunc i32 %75 to i16
+  store i16 %76, i16* %2, align 2
+  %77 = load i16* %1, align 2
+  %78 = zext i16 %77 to i32
+  %79 = load i16* %1, align 2
+  %80 = zext i16 %79 to i32
+  %81 = mul nsw i32 %80, %78
+  %82 = trunc i32 %81 to i16
+  store i16 %82, i16* %1, align 2
+  %83 = load i16* %2, align 2
+  %84 = zext i16 %83 to i32
+  %85 = icmp ne i32 %84, 0
+  br i1 %85, label %6, label %._crit_edge
 }
 
 ; Function Attrs: nounwind ssp uwtable

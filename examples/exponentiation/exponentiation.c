@@ -1,9 +1,10 @@
 #include <stdio.h>
 
+typedef unsigned short int_type;
 
-int exp0(int a, int b){
-  int retval = 1;
-  if(b < 0){ return 0; }
+int_type exp0(int_type a, int_type b){
+  int_type retval = 1;
+  //  if(b < 0){ return 0; }
   while(b > 0){
     retval *= a;
     b -= 1;
@@ -12,9 +13,9 @@ int exp0(int a, int b){
 }
 
 
-int exp1(int a, int b){
-  int retval = 1;
-  if(b < 0){ return 0; }
+int_type exp1(int_type a, int_type b){
+  int_type retval = 1;
+  //  if(b < 0){ return 0; }
   while (b != 0) {
     if ((b & 1) != 0) {
       retval *= a;

@@ -1,5 +1,5 @@
-LLVM = ${HOME}/LLVM/llvm-3.5-install/bin
-# LLVM = ${HOME}/LLVM-3.5.0/build/Debug+Asserts/bin
+# LLVM = ${HOME}/LLVM/llvm-3.5-install/bin
+LLVM = ${HOME}/LLVM-3.5.0/build/Debug+Asserts/bin
 
 all: exponentiation unfold3 copy
 
