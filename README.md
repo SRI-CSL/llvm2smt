@@ -103,7 +103,7 @@ at the end of the file:
 (check-sat)
 ```
 
-We can then process the entire file by an SMT solver to conclude:
+We can then give the entire file to an SMT solver, such as `yices-smt2`,  to conclude:
 
 ```
 > yices-smt2 shufflevector.smt
