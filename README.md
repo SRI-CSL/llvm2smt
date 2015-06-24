@@ -55,7 +55,7 @@ We can show that these functions are equivalent by first translating the LLVM IR
 to SMT-LIB2 via:
 
 ```
-llvm2smt shufflevector.ll > shufflevector.smt
+> llvm2smt shufflevector.ll > shufflevector.smt
 ```
 The translation of the second function is the following.
 ```
@@ -106,7 +106,7 @@ at the end of the file:
 We can then process the entire file by an SMT solver to conclude:
 
 ```
-yices-smt2 shufflevector.smt
+> yices-smt2 shufflevector.smt
 unsat
 ```
 
