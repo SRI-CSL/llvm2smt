@@ -1,5 +1,5 @@
-# LLVM = ${HOME}/LLVM/llvm-3.5-install/bin
-LLVM = ${HOME}/LLVM-3.5.0/build/Debug+Asserts/bin
+LLVM = ${HOME}/LLVM/llvm-3.5-install/bin
+#LLVM = ${HOME}/LLVM-3.5.0/build/Debug+Asserts/bin
 
 all: exponentiation unfold3 copy
 
@@ -8,6 +8,9 @@ exponentiation:
 
 copy:
 	cp *.ll ../../bitcode
+
+check:
+	${LLVM}/lli exponentiation.ll 2 8	
 
 unfold3:
 	${LLVM}/opt -debug -loop-rotate  -loop-unroll -unroll-count=3 exponentiation.ll  -o exponentiation_auto3.bc 2> exponentiation_auto3.log

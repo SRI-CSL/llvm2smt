@@ -2,6 +2,9 @@
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-apple-macosx10.9.0"
 
+@.str = private unnamed_addr constant [16 x i8] c"lhs == rhs: %d\0A\00", align 1
+@.str1 = private unnamed_addr constant [22 x i8] c"lhs = %d != rhs = %d\0A\00", align 1
+
 ; Function Attrs: nounwind ssp uwtable
 define zeroext i16 @exp0(i16 zeroext %a, i16 zeroext %b) #0 {
   %1 = alloca i16, align 2
@@ -96,13 +99,72 @@ define i32 @main(i32 %argc, i8** %argv) #0 {
   %1 = alloca i32, align 4
   %2 = alloca i32, align 4
   %3 = alloca i8**, align 8
+  %a = alloca i16, align 2
+  %b = alloca i16, align 2
+  %lhs = alloca i16, align 2
+  %rhs = alloca i16, align 2
   store i32 0, i32* %1
   store i32 %argc, i32* %2, align 4
   store i8** %argv, i8*** %3, align 8
+  %4 = load i32* %2, align 4
+  %5 = icmp eq i32 %4, 3
+  br i1 %5, label %6, label %39
+
+; <label>:6                                       ; preds = %0
+  %7 = load i8*** %3, align 8
+  %8 = getelementptr inbounds i8** %7, i64 1
+  %9 = load i8** %8, align 8
+  %10 = call i32 @atoi(i8* %9)
+  %11 = trunc i32 %10 to i16
+  store i16 %11, i16* %a, align 2
+  %12 = load i8*** %3, align 8
+  %13 = getelementptr inbounds i8** %12, i64 2
+  %14 = load i8** %13, align 8
+  %15 = call i32 @atoi(i8* %14)
+  %16 = trunc i32 %15 to i16
+  store i16 %16, i16* %b, align 2
+  %17 = load i16* %a, align 2
+  %18 = load i16* %b, align 2
+  %19 = call zeroext i16 @exp0(i16 zeroext %17, i16 zeroext %18)
+  store i16 %19, i16* %lhs, align 2
+  %20 = load i16* %a, align 2
+  %21 = load i16* %b, align 2
+  %22 = call zeroext i16 @exp1(i16 zeroext %20, i16 zeroext %21)
+  store i16 %22, i16* %rhs, align 2
+  %23 = load i16* %lhs, align 2
+  %24 = zext i16 %23 to i32
+  %25 = load i16* %rhs, align 2
+  %26 = zext i16 %25 to i32
+  %27 = icmp eq i32 %24, %26
+  br i1 %27, label %28, label %32
+
+; <label>:28                                      ; preds = %6
+  %29 = load i16* %lhs, align 2
+  %30 = zext i16 %29 to i32
+  %31 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([16 x i8]* @.str, i32 0, i32 0), i32 %30)
+  br label %38
+
+; <label>:32                                      ; preds = %6
+  %33 = load i16* %lhs, align 2
+  %34 = zext i16 %33 to i32
+  %35 = load i16* %rhs, align 2
+  %36 = zext i16 %35 to i32
+  %37 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([22 x i8]* @.str1, i32 0, i32 0), i32 %34, i32 %36)
+  br label %38
+
+; <label>:38                                      ; preds = %32, %28
+  br label %39
+
+; <label>:39                                      ; preds = %38, %0
   ret i32 0
 }
 
+declare i32 @atoi(i8*) #1
+
+declare i32 @printf(i8*, ...) #1
+
 attributes #0 = { nounwind ssp uwtable "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #1 = { "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
 
 !llvm.ident = !{!0}
 
