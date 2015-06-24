@@ -155,7 +155,7 @@ sequence of SMT-LIB declarations and definitions. We use a global
 array to represent memory. For a 64 bit address space, this array has
 type
 
-'``
+```
   (Array (_ BitVec 64) (_ BitVec 8)).
 ```
 
