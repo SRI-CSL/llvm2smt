@@ -123,7 +123,7 @@ including `ocamllex`, `ocamlyacc`, and `ocamldep`.
 Installing OCaml is reasonably easy. Check the instructions at
 https://ocaml.org/docs/install.html.
 
-Once you have OCaml, go to the './src' directory then type
+Once you have OCaml, go to the `./src` directory then type
 
 ```
 > make
@@ -139,8 +139,8 @@ This will build two main executables:
 
 
 
-Examples and tests for both are included in the './examples',
-'./test', and './bitcode' directories. Check the Makefile for details.
+Examples and tests for both are included in the `./examples`,
+`./test`, and `./bitcode` directories. Check the Makefile for details.
 
 On simple single file examples, you can generate bitvcode using `clang -S -emit-llvm`. For
 more complex builds, we typically use [wllvm](https://github.com/SRI-CSL/whole-program-llvm).
@@ -160,19 +160,19 @@ type
 ```
 
 Read operations are encoded using SMT-LIB `select` and write
-operations are encoded using 'store`. Each write operation produces a
+operations are encoded using `store`. Each write operation produces a
 new memory state, denoted by a fresh SMT-LIB constant.
 
 We also use a global variable to denote the stack pointer. It is used to
 encode the LLVM alloca operations (i.e., create local variables on the stack).
 
-We use a bitprecise representation: 'i1' variables are represented as
+We use a bitprecise representation: `i1` variables are represented as
 Boolean, all other integer types are converted to bitvectors of the
-appropriate size. For example, 'i32' variables are represented as
+appropriate size. For example, `i32` variables are represented as
 bitvectors of length 32. We support all LLVM types except
 floating-point numbers. For LLVM vector types, we use SMT-LIB
-arrays. For example a register of type '<2 x i32>' is represented as 
-an array of two elements of type '(Array (_ BitVec 1) (_ BitVec 32))'.
+arrays. For example a register of type `<2 x i32>` is represented as 
+an array of two elements of type `(Array (_ BitVec 1) (_ BitVec 32))`.
 
 The SMT-LIB translation assumes that every basic block is executed at
 most once. In most cases, this means that we must unroll loops before
@@ -180,7 +180,7 @@ the translation by using `opt` with the following command switches:
 ```
 > opt -loop-rotate -loop-unroll -unroll-count=3 ...
 ```
-(Try 'opt --help-list-hidden` to see all the good things `opt` can do for you.)
+(Try `opt --help-list-hidden` to see all the good things `opt` can do for you.)
 
 
 
@@ -202,10 +202,10 @@ crude approach for now is to convert all floating-point constants to
 zero and all floating-point register to uninterpreted constants in the
 SMT-LIB translation.
 
-We do not handle the following LLVM instructions 'invoke',
-'landingpad', 'resume', 'va_arg`, 'indirectbr', 'cmpxchg',
-'atomicrmw', 'fence', 'addrspacecast', 'extractvalue', and
-'insertvalue'. Some of these could be added but we have not
+We do not handle the following LLVM instructions `invoke`,
+`landingpad`, `resume`, `va_arg`, `indirectbr`, `cmpxchg`,
+`atomicrmw`, `fence`, `addrspacecast`, `extractvalue`, and
+`insertvalue`. Some of these could be added but we have not
 encountered them in our C-code examples.
 
 
