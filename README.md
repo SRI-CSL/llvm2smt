@@ -91,14 +91,25 @@ The key points are:
 1. The function takes two input arguments denoted by `|%a_@rhs|` and `|%b_@rhs|`, both 
 being bitvectors of length 32.
 
-2. The return value is denoted by `@rhs_result`
+2. The return value of the function is denoted by `@rhs_result`.
 
-To assert that these two functions are equivalent we state:
+The other function is encoded similarly.
+
+To assert that these two functions are equivalent we add the following two SMT-LIB2 commands
+at the end of the file:
 
 ```
 (assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= @lhs_result @rhs_result))))
 (check-sat)
 ```
+
+We can then process the entire file by an SMT solver to conclude:
+
+```
+yices-smt2 shufflevector.smt
+unsat
+```
+
 
 
 Prerequisites
