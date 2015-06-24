@@ -112,10 +112,21 @@ unsat
 
 
 
-Prerequisites
+Compilation
 ==============
 
-Ocaml
+llvm2smt is written in OCaml. It is known to compile with OCaml 4.02.1
+but other versions may work too. Standard OCaml tools are required
+including `ocamllex`, `ocamlyacc`, and `ocamldep`.
+
+Installing OCaml is reasonably easy. Check the instructions at https://ocaml.org/docs/install.html.
+
+Once you hae OCaml, go to the './src' directory then type
+
+```
+> make
+```
+
 
 
 
