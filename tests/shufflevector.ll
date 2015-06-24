@@ -6,7 +6,7 @@ target triple = "x86_64-apple-macosx10.9.0"
 @.str1 = private unnamed_addr constant [22 x i8] c"lhs = %d != rhs = %d\0A\00", align 1
 
 ; Function Attrs: nounwind ssp uwtable
-define i32 @exp0(i32 %a, i32 %b) #0 {
+define i32 @lhs(i32 %a, i32 %b) #0 {
   %1 = insertelement <2 x i32> undef, i32 %a, i32 0
   %2 = insertelement <2 x i32> %1, i32 %b, i32 1
   %3 = shufflevector <2 x i32> %2, <2 x i32> undef, <2 x i32> <i32 1, i32 0>
@@ -16,7 +16,7 @@ define i32 @exp0(i32 %a, i32 %b) #0 {
 }
 
 ; Function Attrs: nounwind ssp uwtable
-define i32 @exp1(i32 %a, i32 %b) #0 {
+define i32 @rhs(i32 %a, i32 %b) #0 {
   %1 = insertelement <2 x i32> undef, i32 %a, i32 0
   %2 = insertelement <2 x i32> %1, i32 %b, i32 1
   %3 = extractelement <2 x i32> %2, i32 0
@@ -52,11 +52,11 @@ define i32 @main(i32 %argc, i8** %argv) #0 {
   store i32 %14, i32* %b, align 4
   %15 = load i32* %a, align 4
   %16 = load i32* %b, align 4
-  %17 = call i32 @exp0(i32 %15, i32 %16)
+  %17 = call i32 @lhs(i32 %15, i32 %16)
   store i32 %17, i32* %lhs, align 4
   %18 = load i32* %a, align 4
   %19 = load i32* %b, align 4
-  %20 = call i32 @exp1(i32 %18, i32 %19)
+  %20 = call i32 @rhs(i32 %18, i32 %19)
   store i32 %20, i32* %rhs, align 4
   %21 = load i32* %lhs, align 4
   %22 = load i32* %rhs, align 4
