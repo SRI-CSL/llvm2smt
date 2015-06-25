@@ -226,7 +226,7 @@ Acknowledgement:
 ==============
 
 Our code builds upon an OCaml-based parser for LLVM written by
-Trevo Jim:
+Trevor Jim:
 
 https://github.com/tjim/smpcc/blob/master/compiler/
 
