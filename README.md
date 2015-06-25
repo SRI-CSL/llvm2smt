@@ -55,7 +55,7 @@ define i32 @rhs(i32 %a, i32 %b) #0 {
 We can show that these functions are equivalent by first translating the LLVM IR
 to SMT-LIB via:
 
-```
+```shell
 > llvm2smt shufflevector.ll > shufflevector.smt
 ```
 Function `@rhs` is translated to the following SMT-LIB statements.
@@ -90,7 +90,7 @@ Function `@rhs` is translated to the following SMT-LIB statements.
 The key points are:
 
 1. The function takes two input arguments denoted by `|%a_@rhs|` and `|%b_@rhs|`. Both 
-being bitvectors of length 32.
+are bitvectors of length 32.
 
 2. The return value of the function is denoted by `@rhs_result`.
 
@@ -108,7 +108,7 @@ This tests whether the functions `@lhs` and `@rhs` can produce different results
 
 We can then give the entire file to an SMT solver, such as `yices-smt2`,  to conclude:
 
-```
+```shell
 > yices-smt2 shufflevector.smt
 unsat
 ```
@@ -128,7 +128,7 @@ https://ocaml.org/docs/install.html.
 
 Once you have OCaml, go to the `./src` directory then type
 
-```
+```shell
 > make
 ```
 
@@ -146,7 +146,7 @@ This will build two main executables:
 Examples and tests for both are included in the `./examples`,
 `./test`, and `./bitcode` directories. Check the Makefile for details.
 
-On simple examples (i.e. one source file), you can generate bitvcode using `clang -S -emit-llvm`. For
+On simple examples (i.e., one source file), you can generate bitvcode using `clang -S -emit-llvm`. For
 more complex builds, we typically use [wllvm](https://github.com/SRI-CSL/whole-program-llvm).
 
 
