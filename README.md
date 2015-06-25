@@ -1,15 +1,15 @@
 # llvm2smt
 
-Experimental translation of LLVM (3.5ish) IR to SMT-LIB2.
+Experimental translation of LLVM (3.5ish) IR to SMT-LIB.
 
 
 Overview
 =============
 
 This tool, llvm2smt, parses a llvm bitcode file (in its human readable form) and
-translates it to a symbolic SMT-LIB2 representation.
+translates it to a symbolic SMT-LIB representation.
 
-Currently the resulting SMT-LIB2 file uses the theory of bitvectors and arrays (QF_ABV).
+Currently the resulting SMT-LIB file uses the theory of bitvectors and arrays (QF_ABV).
 
 The goal is to support symbolic analyses, such as bounded model checking, using
 SMT solvers.
@@ -53,12 +53,12 @@ define i32 @rhs(i32 %a, i32 %b) #0 {
 ```
 
 We can show that these functions are equivalent by first translating the LLVM IR
-to SMT-LIB2 via:
+to SMT-LIB via:
 
 ```
 > llvm2smt shufflevector.ll > shufflevector.smt
 ```
-The translation of the second function is the following.
+Function `@rhs` is translated to the following SMT-LIB statements.
 ```scheme
 ;; Function: |@rhs|
 ;; (i32 %a, i32 %b)
@@ -89,14 +89,14 @@ The translation of the second function is the following.
 ```
 The key points are:
 
-1. The function takes two input arguments denoted by `|%a_@rhs|` and `|%b_@rhs|`, both 
+1. The function takes two input arguments denoted by `|%a_@rhs|` and `|%b_@rhs|`. Both 
 being bitvectors of length 32.
 
 2. The return value of the function is denoted by `@rhs_result`.
 
 The other function is encoded similarly.
 
-To assert that these two functions are equivalent we add the following two SMT-LIB2 commands
+To check whether these two functions are equivalent, we add the following two SMT-LIB commands
 at the end of the file:
 
 ```scheme
@@ -104,12 +104,15 @@ at the end of the file:
 (check-sat)
 ```
 
+This tests whether the functions `@lhs` and `@rhs` can produce different results when run of the same input.
+
 We can then give the entire file to an SMT solver, such as `yices-smt2`,  to conclude:
 
 ```
 > yices-smt2 shufflevector.smt
 unsat
 ```
+As expected, the assertion is not satisfiable: if we give both functions the same input, they produce the same result.
 
 
 
@@ -135,7 +138,7 @@ This will build two main executables:
     for LLVM assembly language (`.ll` suffix).
     It can be used to check that our tool properly parses LLVM.
 
-2. `llvm2smt` is the main tool. It produces an SMT-LIB2 specification 
+2. `llvm2smt` is the main tool. It produces an SMT-LIB specification 
     from a single `.ll` input.
 
 
@@ -143,7 +146,7 @@ This will build two main executables:
 Examples and tests for both are included in the `./examples`,
 `./test`, and `./bitcode` directories. Check the Makefile for details.
 
-On simple single file examples, you can generate bitvcode using `clang -S -emit-llvm`. For
+On simple examples (i.e. one source file), you can generate bitvcode using `clang -S -emit-llvm`. For
 more complex builds, we typically use [wllvm](https://github.com/SRI-CSL/whole-program-llvm).
 
 
@@ -167,7 +170,7 @@ new memory state, denoted by a fresh SMT-LIB constant.
 We also use a global variable to denote the stack pointer. It is used to
 encode the LLVM `alloca` operations (i.e., create local variables on the stack).
 
-We use a bitprecise representation: `i1` variables are represented as
+We use a bit-precise representation: `i1` variables are represented as
 Boolean, all other integer types are converted to bitvectors of the
 appropriate size. For example, `i32` variables are represented as
 bitvectors of length 32. We support all LLVM types except
@@ -222,11 +225,12 @@ have not encountered them in our C-code examples.
 Acknowledgement:
 ==============
 
-The ocaml lex and yac that we built upon comes directly from:
+Our code builds upon an OCaml-based parser for LLVM written by
+Trevo Jim:
 
 https://github.com/tjim/smpcc/blob/master/compiler/
 
-which we diverged from around February 2015.
+We diverged from this repository around February 2015.
 
 
 
