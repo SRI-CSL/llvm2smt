@@ -23,7 +23,7 @@ A Simple Example
 
 The file `test/shufflevector.ll` includes two simple functions written
 by hand.  The first function `@lhs` takes two integers, stores them
-in a two-element vector, shauffles the vector twice, then returns the first
+in a two-element vector, shuffles the vector twice, then returns the first
 vector element.
 
 ```
