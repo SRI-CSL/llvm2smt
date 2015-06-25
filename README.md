@@ -99,7 +99,7 @@ The other function is encoded similarly.
 To assert that these two functions are equivalent we add the following two SMT-LIB2 commands
 at the end of the file:
 
-```
+```scheme
 (assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= @lhs_result @rhs_result))))
 (check-sat)
 ```
@@ -155,7 +155,7 @@ sequence of SMT-LIB declarations and definitions. We use a global
 array to represent memory. For a 64 bit address space, this array has
 type
 
-```
+```scheme
   (Array (_ BitVec 64) (_ BitVec 8)).
 ```
 
@@ -174,7 +174,7 @@ floating-point numbers. For LLVM vector types, we use SMT-LIB
 arrays. For example a register of type `<2 x i32>` is represented as 
 an array of two bitvectors of length 32. The array itself is of type
 
-```
+```scheme
 (Array (_ BitVec 1) (_ BitVec 32)).
 ```
 
@@ -194,7 +194,7 @@ What we don't do
 We do not handle function calls. A work around is to force the
 compiler to inline the calls to all relevant functions. 
 This can be done by annotating function declarations as follows:
-```
+```c
 static __attribute__ ((__always_inline__))  int my_function(int x) {
   ...
 }
