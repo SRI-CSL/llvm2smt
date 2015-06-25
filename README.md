@@ -172,7 +172,11 @@ appropriate size. For example, `i32` variables are represented as
 bitvectors of length 32. We support all LLVM types except
 floating-point numbers. For LLVM vector types, we use SMT-LIB
 arrays. For example a register of type `<2 x i32>` is represented as 
-an array of two elements of type `(Array (_ BitVec 1) (_ BitVec 32))`.
+an array of two bitvectors of length 32. The array itself is of type
+
+```
+(Array (_ BitVec 1) (_ BitVec 32)).
+```
 
 The SMT-LIB translation assumes that every basic block is executed at
 most once. In most cases, this means that we must unroll loops before
