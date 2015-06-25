@@ -108,7 +108,7 @@ This tests whether the functions `@lhs` and `@rhs` can produce different results
 
 We can then give the entire file to an SMT solver, such as `yices-smt2`,  to conclude:
 
-```
+```shell
 > yices-smt2 shufflevector.smt
 unsat
 ```
