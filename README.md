@@ -26,7 +26,7 @@ by hand.  The first function `@lhs` takes two integers, stores them
 in a two-element vector, shuffles the vector twice, then returns the first
 vector element.
 
-```
+```llvm
 ; Function Attrs: nounwind ssp uwtable
 define i32 @lhs(i32 %a, i32 %b) #0 {
   %1 = insertelement <2 x i32> undef, i32 %a, i32 0
@@ -41,7 +41,7 @@ define i32 @lhs(i32 %a, i32 %b) #0 {
 
 The second function `@rhs` does the same thing without the shuffles.
 
-```
+```llvm
 ; Function Attrs: nounwind ssp uwtable
 define i32 @rhs(i32 %a, i32 %b) #0 {
   %1 = insertelement <2 x i32> undef, i32 %a, i32 0
