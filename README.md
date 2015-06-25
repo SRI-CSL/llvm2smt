@@ -58,9 +58,8 @@ to SMT-LIB2 via:
 ```
 > llvm2smt shufflevector.ll > shufflevector.smt
 ```
-
-Function `@rhs` is translated to the following SMT-LIB statements.
-```
+The translation of the second function is the following.
+```scheme
 ;; Function: |@rhs|
 ;; (i32 %a, i32 %b)
 (declare-fun memory2 () Mem)
@@ -90,34 +89,27 @@ Function `@rhs` is translated to the following SMT-LIB statements.
 ```
 The key points are:
 
-1. The function takes two input arguments denoted by `|%a_@rhs|` and `|%b_@rhs|`. Both 
-   are bitvectors of length 32.
+1. The function takes two input arguments denoted by `|%a_@rhs|` and `|%b_@rhs|`, both 
+being bitvectors of length 32.
 
 2. The return value of the function is denoted by `@rhs_result`.
 
 The other function is encoded similarly.
 
-To check whether these two functions are equivalent, we add the
-following two SMT-LIB2 commands at the end of the file:
+To assert that these two functions are equivalent we add the following two SMT-LIB2 commands
+at the end of the file:
 
 ```
 (assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= @lhs_result @rhs_result))))
 (check-sat)
 ```
 
-This tests whether the functions `@lhs` and `@rhs` can produce
-different results when run with the same input.
-
-We can then give the entire file to an SMT solver, such as
-`yices-smt2`, to conclude:
+We can then give the entire file to an SMT solver, such as `yices-smt2`,  to conclude:
 
 ```
 > yices-smt2 shufflevector.smt
 unsat
 ```
-
-As expected, the assertion is not satisfiable: if we give both
-functions the same input, they produce the same result.
 
 
 
@@ -150,9 +142,8 @@ This will build two main executables:
 Examples and tests for both are included in the `./examples`,
 `./test`, and `./bitcode` directories. Check the Makefile for details.
 
-On simple examples (i.e. one source file), you can generate bitcode
-using `clang -S -emit-llvm`. For more complex builds, we typically use
-[wllvm](https://github.com/SRI-CSL/whole-program-llvm).
+On simple single file examples, you can generate bitvcode using `clang -S -emit-llvm`. For
+more complex builds, we typically use [wllvm](https://github.com/SRI-CSL/whole-program-llvm).
 
 
 
@@ -175,7 +166,7 @@ new memory state, denoted by a fresh SMT-LIB constant.
 We also use a global variable to denote the stack pointer. It is used to
 encode the LLVM alloca operations (i.e., create local variables on the stack).
 
-We use a bit-precise representation: `i1` variables are represented as
+We use a bitprecise representation: `i1` variables are represented as
 Boolean, all other integer types are converted to bitvectors of the
 appropriate size. For example, `i32` variables are represented as
 bitvectors of length 32. We support all LLVM types except
@@ -210,9 +201,10 @@ static __attribute__ ((__always_inline__))  int my_function(int x) {
 ```
 
 We do not handle floating-point types in LLVM since the QF_ABV logic
-does not support them.  Our crude approach for now is to convert all
-floating-point constants to zero and all floating-point registers to
-uninterpreted constants in the SMT-LIB translation.
+that we use does not support include floating point operations.  Our
+crude approach for now is to convert all floating-point constants to
+zero and all floating-point register to uninterpreted constants in the
+SMT-LIB translation.
 
 We do not handle the following LLVM instructions `invoke`,
 `landingpad`, `resume`, `va_arg`, `indirectbr`, `cmpxchg`,
@@ -229,12 +221,11 @@ encountered them in our C-code examples.
 Acknowledgement:
 ==============
 
-Our code builds upon an OCaml-based parser for LLVM written by Trevor
-Jim:
+The ocaml lex and yac that we built upon comes directly from:
 
 https://github.com/tjim/smpcc/blob/master/compiler/
 
-We diverged from this repository around February 2015.
+which we diverged from around February 2015.
 
 
 
