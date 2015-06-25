@@ -131,8 +131,9 @@ Once you have OCaml, go to the `./src` directory then type
 
 This will build two main executables:
 
-1. `parse` is based on Trevor Jim's parser for LLVM assembly language (`.ll` suffix).
-   It can be used to check that our tool properly parses LLVM.
+1. `parse` is based on Trevor Jim's [parser](https://github.com/tjim/smpcc/blob/master/compiler/)
+    for LLVM assembly language (`.ll` suffix).
+    It can be used to check that our tool properly parses LLVM.
 
 2. `llvm2smt` is the main tool. It produces an SMT-LIB2 specification 
     from a single `.ll` input.
@@ -164,7 +165,7 @@ operations are encoded using `store`. Each write operation produces a
 new memory state, denoted by a fresh SMT-LIB constant.
 
 We also use a global variable to denote the stack pointer. It is used to
-encode the LLVM alloca operations (i.e., create local variables on the stack).
+encode the LLVM `alloca` operations (i.e., create local variables on the stack).
 
 We use a bitprecise representation: `i1` variables are represented as
 Boolean, all other integer types are converted to bitvectors of the
