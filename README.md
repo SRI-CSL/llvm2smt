@@ -206,11 +206,11 @@ crude approach for now is to convert all floating-point constants to
 zero and all floating-point register to uninterpreted constants in the
 SMT-LIB translation.
 
-We do not handle the following LLVM instructions `invoke`,
-`landingpad`, `resume`, `va_arg`, `indirectbr`, `cmpxchg`,
-`atomicrmw`, `fence`, `addrspacecast`, `extractvalue`, and
-`insertvalue`. Some of these could be added but we have not
-encountered them in our C-code examples.
+In addition to `call` mentioned above, we do not handle the following
+LLVM instructions `invoke`, `landingpad`, `resume`, `va_arg`,
+`indirectbr`, `cmpxchg`, `atomicrmw`, `fence`, `addrspacecast`,
+`extractvalue`, and `insertvalue`. Some of these could be added but we
+have not encountered them in our C-code examples.
 
 
 
