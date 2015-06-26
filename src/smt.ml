@@ -1,5 +1,5 @@
 (*
- * Convert abstract syntax to SMT2 bitvector constraints/expressions.
+ * Convert our LLVM abstract syntax to SMT2 bitvector constraints/expressions.
  *
  * Values of type Integer 1  are converted to Boolean expressions in SMT
  * Values of type (Integer n) where n>1 are converted to SMT expressions of type (_ BitVec n)
