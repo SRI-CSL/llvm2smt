@@ -1523,7 +1523,7 @@ let declare_result b state =
     | Some(tau, v) ->
 	let fu = state_fu state in 
 	let fstr = Llvm_pp.string_of_var fu.fname in 
-	  bprintf b "(define-fun %s_result () " fstr;
+	  bprintf b "(define-fun |%s_result| () " fstr;
 	  typ_to_smt b state tau;
 	  bprintf b " ";
 	  typ_val_to_smt b state (tau, v);
@@ -1552,9 +1552,9 @@ let block_to_smt b fu state binfo =
 	  binfo.bseen <- true;
 	  binfo.bmem <- state.mem_idx;
 	  (*
-	  eprintf "exit of block %d %s of %s: bmem = %d\n" binfo.bindex 
+	    eprintf "exit of block %d %s of %s: bmem = %d\n" binfo.bindex 
 	    (Llvm_pp.string_of_var binfo.bname) (Llvm_pp.string_of_var fu.fname) binfo.bmem
-	    *)
+	  *)
     end
 
 

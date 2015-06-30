@@ -1877,8 +1877,8 @@
 
 ;; BLOCK %0 with index 0 and rank = 1
 ;; Predecessors:
-;; @lhs_block_0_entry_condition 
-(define-fun @lhs_block_0_entry_condition () Bool true)
+;; |@lhs_block_0_entry_condition| 
+(define-fun |@lhs_block_0_entry_condition| () Bool true)
 ;; %1 = insertelement <2 x i32> undef, i32 %a, i32 0
 (define-fun |%1_@lhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_@lhs|))
 ;; %2 = insertelement <2 x i32> %1, i32 %b, i32 1
@@ -1901,7 +1901,7 @@
 ;; No backward arrows
 
 
-(define-fun @lhs_result () (_ BitVec 32) |%5_@lhs|)
+(define-fun |@lhs_result| () (_ BitVec 32) |%5_@lhs|)
 
 ;; Function: |@rhs|
 ;; (i32 %a, i32 %b)
@@ -1912,8 +1912,8 @@
 
 ;; BLOCK %0 with index 0 and rank = 1
 ;; Predecessors:
-;; @rhs_block_0_entry_condition 
-(define-fun @rhs_block_0_entry_condition () Bool true)
+;; |@rhs_block_0_entry_condition| 
+(define-fun |@rhs_block_0_entry_condition| () Bool true)
 ;; %1 = insertelement <2 x i32> undef, i32 %a, i32 0
 (define-fun |%1_@rhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_@rhs|))
 ;; %2 = insertelement <2 x i32> %1, i32 %b, i32 1
@@ -1924,7 +1924,7 @@
 ;; No backward arrows
 
 
-(define-fun @rhs_result () (_ BitVec 32) |%3_@rhs|)
+(define-fun |@rhs_result| () (_ BitVec 32) |%3_@rhs|)
 
 ;; Function: |@main|
 ;; (i32 %argc, i8** %argv)
@@ -1935,8 +1935,8 @@
 
 ;; BLOCK %0 with index 0 and rank = 1
 ;; Predecessors:
-;; @main_block_0_entry_condition 
-(define-fun @main_block_0_entry_condition () Bool true)
+;; |@main_block_0_entry_condition| 
+(define-fun |@main_block_0_entry_condition| () Bool true)
 ;; %1 = alloca i32, align 4
 (define-fun rsp4 () Address (bvsub rsp3 (_ bv4 64)))
 (define-fun |%1_@main| () (_ BitVec 64) rsp4)
@@ -1973,9 +1973,9 @@
 
 ;; BLOCK %6 with index 1 and rank = 2
 ;; Predecessors: %0
-;; @main_block_1_entry_condition 
-(define-fun @main_block_1_entry_condition () Bool
-    (and @main_block_0_entry_condition |%5_@main|)
+;; |@main_block_1_entry_condition| 
+(define-fun |@main_block_1_entry_condition| () Bool
+    (and |@main_block_0_entry_condition| |%5_@main|)
 )
 ;;Memory PHI
 (define-fun memory7 () Mem memory6)
@@ -2026,9 +2026,9 @@
 
 ;; BLOCK %24 with index 2 and rank = 3
 ;; Predecessors: %6
-;; @main_block_2_entry_condition 
-(define-fun @main_block_2_entry_condition () Bool
-    (and @main_block_1_entry_condition |%23_@main|)
+;; |@main_block_2_entry_condition| 
+(define-fun |@main_block_2_entry_condition| () Bool
+    (and |@main_block_1_entry_condition| |%23_@main|)
 )
 ;;Memory PHI
 (define-fun memory12 () Mem memory11)
@@ -2041,9 +2041,9 @@
 
 ;; BLOCK %27 with index 3 and rank = 3
 ;; Predecessors: %6
-;; @main_block_3_entry_condition 
-(define-fun @main_block_3_entry_condition () Bool
-    (and @main_block_1_entry_condition (not |%23_@main|))
+;; |@main_block_3_entry_condition| 
+(define-fun |@main_block_3_entry_condition| () Bool
+    (and |@main_block_1_entry_condition| (not |%23_@main|))
 )
 ;;Memory PHI
 (define-fun memory13 () Mem memory11)
@@ -2058,38 +2058,38 @@
 
 ;; BLOCK %31 with index 4 and rank = 4
 ;; Predecessors: %27 %24
-;; @main_block_4_entry_condition 
-(define-fun @main_block_4_entry_condition () Bool
+;; |@main_block_4_entry_condition| 
+(define-fun |@main_block_4_entry_condition| () Bool
     (or
-        @main_block_3_entry_condition
-        @main_block_2_entry_condition
+        |@main_block_3_entry_condition|
+        |@main_block_2_entry_condition|
     )
 )
 ;;Memory PHI
 (define-fun memory14 () Mem 
-    (ite @main_block_3_entry_condition memory13 memory12
+    (ite |@main_block_3_entry_condition| memory13 memory12
     ))
 ;; br label %32
 ;; No backward arrows
 
 ;; BLOCK %32 with index 5 and rank = 5
 ;; Predecessors: %31 %0
-;; @main_block_5_entry_condition 
-(define-fun @main_block_5_entry_condition () Bool
+;; |@main_block_5_entry_condition| 
+(define-fun |@main_block_5_entry_condition| () Bool
     (or
-        @main_block_4_entry_condition
-        (and @main_block_0_entry_condition (not |%5_@main|))
+        |@main_block_4_entry_condition|
+        (and |@main_block_0_entry_condition| (not |%5_@main|))
     )
 )
 ;;Memory PHI
 (define-fun memory15 () Mem 
-    (ite @main_block_4_entry_condition memory14 memory6
+    (ite |@main_block_4_entry_condition| memory14 memory6
     ))
 ;; ret i32 0
 ;; No backward arrows
 
 
-(define-fun @main_result () (_ BitVec 32) (_ bv0 32))
+(define-fun |@main_result| () (_ BitVec 32) (_ bv0 32))
 
 ;; Function: |@atoi|
 ;; (i8*)
@@ -2098,7 +2098,8 @@
 ;; Function: |@printf|
 ;; (i8*, ...)
 
-(assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= @lhs_result @rhs_result))))
+
+(assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= |@lhs_result| |@rhs_result|))))
 
 (check-sat)
 

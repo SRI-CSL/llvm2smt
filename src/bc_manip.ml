@@ -497,7 +497,7 @@ let set_ranks fu =
   *
   *)
 let get_entry_condition_name fstr i =
-  fstr ^ "_block_" ^ (string_of_int i) ^ "_entry_condition"
+  "|"^fstr ^ "_block_" ^ (string_of_int i) ^ "_entry_condition|"
 
 
 (*
