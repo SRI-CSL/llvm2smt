@@ -69,22 +69,19 @@ Function `@rhs` is translated to the following SMT-LIB statements.
 
 ;; BLOCK %0 with index 0 and rank = 1
 ;; Predecessors:
-;; @rhs_block_0_entry_condition 
-(define-fun @rhs_block_0_entry_condition () Bool true)
+;; |@rhs_block_0_entry_condition| 
+(define-fun |@rhs_block_0_entry_condition| () Bool true)
 ;; %1 = insertelement <2 x i32> undef, i32 %a, i32 0
-(define-fun |%1_@rhs| () (Array (_ BitVec 1) (_ BitVec 32))
-   (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_@rhs|))
+(define-fun |%1_@rhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_@rhs|))
 ;; %2 = insertelement <2 x i32> %1, i32 %b, i32 1
-(define-fun |%2_@rhs| () (Array (_ BitVec 1) (_ BitVec 32))
-   (store |%1_@rhs| ((_ extract 0 0) (_ bv1 32)) |%b_@rhs|))
+(define-fun |%2_@rhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store |%1_@rhs| ((_ extract 0 0) (_ bv1 32)) |%b_@rhs|))
 ;; %3 = extractelement <2 x i32> %2, i32 0
-(define-fun |%3_@rhs| () (_ BitVec 32)
-   (select |%2_@rhs| ((_ extract 0 0) (_ bv0 32))))
+(define-fun |%3_@rhs| () (_ BitVec 32) (select |%2_@rhs| ((_ extract 0 0) (_ bv0 32))))
 ;; ret i32 %3
 ;; No backward arrows
 
 
-(define-fun @rhs_result () (_ BitVec 32) |%3_@rhs|)
+(define-fun |@rhs_result| () (_ BitVec 32) |%3_@rhs|)
 
 ```
 The key points are:
@@ -100,7 +97,7 @@ To check whether these two functions are equivalent, we add the following two SM
 at the end of the file:
 
 ```scheme
-(assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= @lhs_result @rhs_result))))
+(assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= |@lhs_result| |@rhs_result|))))
 (check-sat)
 ```
 
