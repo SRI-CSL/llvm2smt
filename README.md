@@ -59,39 +59,38 @@ to SMT-LIB via:
 > llvm2smt shufflevector.ll > shufflevector.smt
 ```
 Function `@rhs` is translated to the following SMT-LIB statements, in SMT-LIB the character `@` can be controversial
-so we replace it with `G`.
+so we replace it with `-@`.
 
 ```scheme
-;; Function: |Grhs|
+;; Function: |-@rhs|
 ;; (i32 %a, i32 %b)
 (declare-fun memory2 () Mem)
 (define-fun rsp2 () (_ BitVec 64) (_ bv0 64))
-(declare-fun |%a_Grhs| () (_ BitVec 32))
-(declare-fun |%b_Grhs| () (_ BitVec 32))
+(declare-fun |%a-@rhs| () (_ BitVec 32))
+(declare-fun |%b-@rhs| () (_ BitVec 32))
 
 ;; BLOCK %0 with index 0 and rank = 1
 ;; Predecessors:
-;; |Grhs_block_0_entry_condition| 
-(define-fun |Grhs_block_0_entry_condition| () Bool true)
+;; |-@rhs_block_0_entry_condition| 
+(define-fun |-@rhs_block_0_entry_condition| () Bool true)
 ;; %1 = insertelement <2 x i32> undef, i32 %a, i32 0
-(define-fun |%1_Grhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_Grhs|))
+(define-fun |%1-@rhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a-@rhs|))
 ;; %2 = insertelement <2 x i32> %1, i32 %b, i32 1
-(define-fun |%2_Grhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store |%1_Grhs| ((_ extract 0 0) (_ bv1 32)) |%b_Grhs|))
+(define-fun |%2-@rhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store |%1-@rhs| ((_ extract 0 0) (_ bv1 32)) |%b-@rhs|))
 ;; %3 = extractelement <2 x i32> %2, i32 0
-(define-fun |%3_Grhs| () (_ BitVec 32) (select |%2_Grhs| ((_ extract 0 0) (_ bv0 32))))
+(define-fun |%3-@rhs| () (_ BitVec 32) (select |%2-@rhs| ((_ extract 0 0) (_ bv0 32))))
 ;; ret i32 %3
 ;; No backward arrows
 
 
-(define-fun |Grhs_result| () (_ BitVec 32) |%3_Grhs|)
-
+(define-fun |-@rhs_result| () (_ BitVec 32) |%3-@rhs|)
 ```
 The key points are:
 
-1. The function takes two input arguments denoted by `|%a_Grhs|` and `|%b_Grhs|`. Both 
+1. The function takes two input arguments denoted by `|%a-@rhs|` and `|%b-@rhs|`. Both 
 are bitvectors of length 32.
 
-2. The return value of the function is denoted by `Grhs_result`.
+2. The return value of the function is denoted by `-@rhs_result`.
 
 The other function is encoded similarly.
 
@@ -99,7 +98,7 @@ To check whether these two functions are equivalent, we add the following two SM
 at the end of the file:
 
 ```scheme
-(assert (and (= |%a_Glhs| |%a_Grhs|) (= |%b_Glhs| |%b_Grhs|) (not (= |Glhs_result| |Grhs_result|))))
+(assert (and (= |%a-@lhs| |%a-@rhs|) (= |%b-@lhs| |%b-@rhs|) (not (= |-@lhs_result| |-@rhs_result|))))
 (check-sat)
 ```
 

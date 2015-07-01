@@ -29,11 +29,11 @@ let get_addr_width cu =
        | Some align -> align.size )
 
 
-let global_function_char = 'G'   (* the char that replaces @ in SMT function symbols *)
-let global_register_char = 'G'   (* the char that replaces @ in SMT register symbols *)
+let global_function_prefix = "-@"   (* the prefix that replaces @ in SMT function symbols *)
+let global_register_prefix = "-@"   (* the prefix that replaces @ in SMT register symbols *)
 			     
-let local_function_char = '%' 	(* the char that replaces % in SMT function symbols IAM: DO THESE EXIST? *)
-let local_register_char = '%' 	(* the char that replaces % in SMT register symbols *)
+let local_function_prefix = "%" 	(* the prefix that replaces % in SMT function symbols IAM: DO THESE EXIST? *)
+let local_register_prefix = "%" 	(* the prefix that replaces % in SMT register symbols *)
 
 (*
  * State stores information needed for conversion to SMT
@@ -209,10 +209,10 @@ let function_name_to_smt_string v =
   Util.spr (fun b ->
 	      (fun v ->
 		 (match v with
-		    | Id(true, i)       -> bprintf b "%c%d"  global_function_char i
-		    | Id(false, i)      -> bprintf b "%c%d" local_function_char i
-		    | Name(true, name)  -> bprintf b "%c%s"  global_function_char name
-		    | Name(false, name) -> bprintf b "%c%s" local_function_char name))) v
+		    | Id(true, i)       -> bprintf b "%s%d"  global_function_prefix i
+		    | Id(false, i)      -> bprintf b "%s%d" local_function_prefix i
+		    | Name(true, name)  -> bprintf b "%s%s"  global_function_prefix name
+		    | Name(false, name) -> bprintf b "%s%s" local_function_prefix name))) v
 
 (*
  * SMT name: b = buffer, argument = var
@@ -222,14 +222,14 @@ let name_to_smt b st var =
   let f = st.fu in
   let fu_name = 
     (match f with 
-       | Some fi -> "_" ^ (function_name_to_smt_string fi.fname)
+       | Some fi -> (function_name_to_smt_string fi.fname)
        | None -> "")
   in
     (match var with
-      | Id(true, i) -> bprintf b "|%c%d|" global_register_char i
-      | Id(false, i) -> bprintf b "|%c%d%s|" local_register_char i fu_name
-      | Name(true, name)  -> bprintf b "|%c%s|" global_register_char name
-      | Name(false, name) -> bprintf b "|%c%s%s|" local_register_char name fu_name)
+      | Id(true, i) -> bprintf b "|%s%d|" global_register_prefix i
+      | Id(false, i) -> bprintf b "|%s%d%s|" local_register_prefix i fu_name
+      | Name(true, name)  -> bprintf b "|%s%s|" global_register_prefix name
+      | Name(false, name) -> bprintf b "|%s%s%s|" local_register_prefix name fu_name)
 
 (*
  * SMT name string: argument = var
