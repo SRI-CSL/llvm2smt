@@ -29,8 +29,8 @@ let get_addr_width cu =
        | Some align -> align.size )
 
 
-let global_function_prefix = "-@"   (* the prefix that replaces @ in SMT function symbols *)
-let global_register_prefix = "-@"   (* the prefix that replaces @ in SMT register symbols *)
+let global_function_prefix = "_@"   (* the prefix that replaces @ in SMT function symbols *)
+let global_register_prefix = "_@"   (* the prefix that replaces @ in SMT register symbols *)
 			     
 let local_function_prefix = "%" 	(* the prefix that replaces % in SMT function symbols IAM: DO THESE EXIST? *)
 let local_register_prefix = "%" 	(* the prefix that replaces % in SMT register symbols *)
