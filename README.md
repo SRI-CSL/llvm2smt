@@ -58,7 +58,7 @@ to SMT-LIB via:
 ```shell
 > llvm2smt shufflevector.ll > shufflevector.smt
 ```
-Function `@rhs` is translated to the following SMT-LIB statements.
+Function `@rhs` is translated to the following SMT-LIB statements, in SMT-LIB the `@` can be controversial so we replace it with `G`.
 ```scheme
 ;; Function: |Grhs|
 ;; (i32 %a, i32 %b)
