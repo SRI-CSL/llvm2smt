@@ -1858,248 +1858,248 @@
 
 
 ;; @.str [16 x i8] = c"lhs == rhs: %d\0A\00"
-(declare-fun |@.str| () (_ BitVec 64))
+(declare-fun |G.str| () (_ BitVec 64))
 ;; @.str1 [22 x i8] = c"lhs = %d != rhs = %d\0A\00"
-(declare-fun |@.str1| () (_ BitVec 64))
-(declare-fun |@lhs| () (_ BitVec 64))
-(declare-fun |@rhs| () (_ BitVec 64))
-(declare-fun |@main| () (_ BitVec 64))
-(declare-fun |@atoi| () (_ BitVec 64))
-(declare-fun |@printf| () (_ BitVec 64))
+(declare-fun |G.str1| () (_ BitVec 64))
+(declare-fun Glhs () (_ BitVec 64))
+(declare-fun Grhs () (_ BitVec 64))
+(declare-fun Gmain () (_ BitVec 64))
+(declare-fun Gatoi () (_ BitVec 64))
+(declare-fun Gprintf () (_ BitVec 64))
 
 
-;; Function: |@lhs|
+;; Function: |Glhs|
 ;; (i32 %a, i32 %b)
 (declare-fun memory1 () Mem)
 (define-fun rsp1 () (_ BitVec 64) (_ bv0 64))
-(declare-fun |%a_@lhs| () (_ BitVec 32))
-(declare-fun |%b_@lhs| () (_ BitVec 32))
+(declare-fun |%a_Glhs| () (_ BitVec 32))
+(declare-fun |%b_Glhs| () (_ BitVec 32))
 
 ;; BLOCK %0 with index 0 and rank = 1
 ;; Predecessors:
-;; |@lhs_block_0_entry_condition| 
-(define-fun |@lhs_block_0_entry_condition| () Bool true)
+;; |Glhs_block_0_entry_condition| 
+(define-fun |Glhs_block_0_entry_condition| () Bool true)
 ;; %1 = insertelement <2 x i32> undef, i32 %a, i32 0
-(define-fun |%1_@lhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_@lhs|))
+(define-fun |%1_Glhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_Glhs|))
 ;; %2 = insertelement <2 x i32> %1, i32 %b, i32 1
-(define-fun |%2_@lhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store |%1_@lhs| ((_ extract 0 0) (_ bv1 32)) |%b_@lhs|))
+(define-fun |%2_Glhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store |%1_Glhs| ((_ extract 0 0) (_ bv1 32)) |%b_Glhs|))
 ;; %3 = shufflevector <2 x i32> %2, <2 x i32> undef, <2 x i32> <i32 1, i32 0>
-(define-fun |%3_@lhs| () (Array (_ BitVec 1) (_ BitVec 32)) 
+(define-fun |%3_Glhs| () (Array (_ BitVec 1) (_ BitVec 32)) 
 (let ((x0 vundef_1_32))
-(let ((x1 (store x0 ((_ extract 0 0) (_ bv0 32)) (select |%2_@lhs| ((_ extract 0 0) (_ bv1 32))))))
- (let ((x2 (store x1 ((_ extract 0 0) (_ bv1 32)) (select |%2_@lhs| ((_ extract 0 0) (_ bv0 32))))))
+(let ((x1 (store x0 ((_ extract 0 0) (_ bv0 32)) (select |%2_Glhs| ((_ extract 0 0) (_ bv1 32))))))
+ (let ((x2 (store x1 ((_ extract 0 0) (_ bv1 32)) (select |%2_Glhs| ((_ extract 0 0) (_ bv0 32))))))
   x2))))
 ;; %4 = shufflevector <2 x i32> %3, <2 x i32> undef, <2 x i32> <i32 1, i32 0>
-(define-fun |%4_@lhs| () (Array (_ BitVec 1) (_ BitVec 32)) 
+(define-fun |%4_Glhs| () (Array (_ BitVec 1) (_ BitVec 32)) 
 (let ((x0 vundef_1_32))
-(let ((x1 (store x0 ((_ extract 0 0) (_ bv0 32)) (select |%3_@lhs| ((_ extract 0 0) (_ bv1 32))))))
- (let ((x2 (store x1 ((_ extract 0 0) (_ bv1 32)) (select |%3_@lhs| ((_ extract 0 0) (_ bv0 32))))))
+(let ((x1 (store x0 ((_ extract 0 0) (_ bv0 32)) (select |%3_Glhs| ((_ extract 0 0) (_ bv1 32))))))
+ (let ((x2 (store x1 ((_ extract 0 0) (_ bv1 32)) (select |%3_Glhs| ((_ extract 0 0) (_ bv0 32))))))
   x2))))
 ;; %5 = extractelement <2 x i32> %4, i32 0
-(define-fun |%5_@lhs| () (_ BitVec 32) (select |%4_@lhs| ((_ extract 0 0) (_ bv0 32))))
+(define-fun |%5_Glhs| () (_ BitVec 32) (select |%4_Glhs| ((_ extract 0 0) (_ bv0 32))))
 ;; ret i32 %5
 ;; No backward arrows
 
 
-(define-fun |@lhs_result| () (_ BitVec 32) |%5_@lhs|)
+(define-fun |Glhs_result| () (_ BitVec 32) |%5_Glhs|)
 
-;; Function: |@rhs|
+;; Function: |Grhs|
 ;; (i32 %a, i32 %b)
 (declare-fun memory2 () Mem)
 (define-fun rsp2 () (_ BitVec 64) (_ bv0 64))
-(declare-fun |%a_@rhs| () (_ BitVec 32))
-(declare-fun |%b_@rhs| () (_ BitVec 32))
+(declare-fun |%a_Grhs| () (_ BitVec 32))
+(declare-fun |%b_Grhs| () (_ BitVec 32))
 
 ;; BLOCK %0 with index 0 and rank = 1
 ;; Predecessors:
-;; |@rhs_block_0_entry_condition| 
-(define-fun |@rhs_block_0_entry_condition| () Bool true)
+;; |Grhs_block_0_entry_condition| 
+(define-fun |Grhs_block_0_entry_condition| () Bool true)
 ;; %1 = insertelement <2 x i32> undef, i32 %a, i32 0
-(define-fun |%1_@rhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_@rhs|))
+(define-fun |%1_Grhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store vzero_1_32 ((_ extract 0 0) (_ bv0 32)) |%a_Grhs|))
 ;; %2 = insertelement <2 x i32> %1, i32 %b, i32 1
-(define-fun |%2_@rhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store |%1_@rhs| ((_ extract 0 0) (_ bv1 32)) |%b_@rhs|))
+(define-fun |%2_Grhs| () (Array (_ BitVec 1) (_ BitVec 32)) (store |%1_Grhs| ((_ extract 0 0) (_ bv1 32)) |%b_Grhs|))
 ;; %3 = extractelement <2 x i32> %2, i32 0
-(define-fun |%3_@rhs| () (_ BitVec 32) (select |%2_@rhs| ((_ extract 0 0) (_ bv0 32))))
+(define-fun |%3_Grhs| () (_ BitVec 32) (select |%2_Grhs| ((_ extract 0 0) (_ bv0 32))))
 ;; ret i32 %3
 ;; No backward arrows
 
 
-(define-fun |@rhs_result| () (_ BitVec 32) |%3_@rhs|)
+(define-fun |Grhs_result| () (_ BitVec 32) |%3_Grhs|)
 
-;; Function: |@main|
+;; Function: |Gmain|
 ;; (i32 %argc, i8** %argv)
 (declare-fun memory3 () Mem)
 (define-fun rsp3 () (_ BitVec 64) (_ bv0 64))
-(declare-fun |%argc_@main| () (_ BitVec 32))
-(declare-fun |%argv_@main| () (_ BitVec 64))
+(declare-fun |%argc_Gmain| () (_ BitVec 32))
+(declare-fun |%argv_Gmain| () (_ BitVec 64))
 
 ;; BLOCK %0 with index 0 and rank = 1
 ;; Predecessors:
-;; |@main_block_0_entry_condition| 
-(define-fun |@main_block_0_entry_condition| () Bool true)
+;; |Gmain_block_0_entry_condition| 
+(define-fun |Gmain_block_0_entry_condition| () Bool true)
 ;; %1 = alloca i32, align 4
 (define-fun rsp4 () Address (bvsub rsp3 (_ bv4 64)))
-(define-fun |%1_@main| () (_ BitVec 64) rsp4)
+(define-fun |%1_Gmain| () (_ BitVec 64) rsp4)
 ;; %2 = alloca i32, align 4
 (define-fun rsp5 () Address (bvsub rsp4 (_ bv4 64)))
-(define-fun |%2_@main| () (_ BitVec 64) rsp5)
+(define-fun |%2_Gmain| () (_ BitVec 64) rsp5)
 ;; %3 = alloca i8**, align 8
 (define-fun rsp6 () Address (bvsub rsp5 (_ bv8 64)))
-(define-fun |%3_@main| () (_ BitVec 64) rsp6)
+(define-fun |%3_Gmain| () (_ BitVec 64) rsp6)
 ;; %a = alloca i32, align 4
 (define-fun rsp7 () Address (bvsub rsp6 (_ bv4 64)))
-(define-fun |%a_@main| () (_ BitVec 64) rsp7)
+(define-fun |%a_Gmain| () (_ BitVec 64) rsp7)
 ;; %b = alloca i32, align 4
 (define-fun rsp8 () Address (bvsub rsp7 (_ bv4 64)))
-(define-fun |%b_@main| () (_ BitVec 64) rsp8)
+(define-fun |%b_Gmain| () (_ BitVec 64) rsp8)
 ;; %lhs = alloca i32, align 4
 (define-fun rsp9 () Address (bvsub rsp8 (_ bv4 64)))
-(define-fun |%lhs_@main| () (_ BitVec 64) rsp9)
+(define-fun |%lhs_Gmain| () (_ BitVec 64) rsp9)
 ;; %rhs = alloca i32, align 4
 (define-fun rsp10 () Address (bvsub rsp9 (_ bv4 64)))
-(define-fun |%rhs_@main| () (_ BitVec 64) rsp10)
+(define-fun |%rhs_Gmain| () (_ BitVec 64) rsp10)
 ;; store i32 0, i32* %1
-(define-fun memory4 () Mem (write32 memory3 |%1_@main| (_ bv0 32)))
+(define-fun memory4 () Mem (write32 memory3 |%1_Gmain| (_ bv0 32)))
 ;; store i32 %argc, i32* %2, align 4
-(define-fun memory5 () Mem (write32 memory4 |%2_@main| |%argc_@main|))
+(define-fun memory5 () Mem (write32 memory4 |%2_Gmain| |%argc_Gmain|))
 ;; store i8** %argv, i8*** %3, align 8
-(define-fun memory6 () Mem (write64 memory5 |%3_@main| |%argv_@main|))
+(define-fun memory6 () Mem (write64 memory5 |%3_Gmain| |%argv_Gmain|))
 ;; %4 = load i32* %2, align 4
-(define-fun |%4_@main| () (_ BitVec 32) (read32 memory6 |%2_@main|))
+(define-fun |%4_Gmain| () (_ BitVec 32) (read32 memory6 |%2_Gmain|))
 ;; %5 = icmp eq i32 %4, 3
-(define-fun |%5_@main| () Bool (= |%4_@main| (_ bv3 32)))
+(define-fun |%5_Gmain| () Bool (= |%4_Gmain| (_ bv3 32)))
 ;; br i1 %5, label %6, label %32
 ;; No backward arrows
 
 ;; BLOCK %6 with index 1 and rank = 2
 ;; Predecessors: %0
-;; |@main_block_1_entry_condition| 
-(define-fun |@main_block_1_entry_condition| () Bool
-    (and |@main_block_0_entry_condition| |%5_@main|)
+;; |Gmain_block_1_entry_condition| 
+(define-fun |Gmain_block_1_entry_condition| () Bool
+    (and |Gmain_block_0_entry_condition| |%5_Gmain|)
 )
 ;;Memory PHI
 (define-fun memory7 () Mem memory6)
 ;; %7 = load i8*** %3, align 8
-(define-fun |%7_@main| () (_ BitVec 64) (read64 memory7 |%3_@main|))
+(define-fun |%7_Gmain| () (_ BitVec 64) (read64 memory7 |%3_Gmain|))
 ;; %8 = getelementptr inbounds i8** %7, i64 1
-(define-fun |%8_@main| () (_ BitVec 64) (bvadd |%7_@main| (_ bv8 64)))
+(define-fun |%8_Gmain| () (_ BitVec 64) (bvadd |%7_Gmain| (_ bv8 64)))
 ;; %9 = load i8** %8, align 8
-(define-fun |%9_@main| () (_ BitVec 64) (read64 memory7 |%8_@main|))
+(define-fun |%9_Gmain| () (_ BitVec 64) (read64 memory7 |%8_Gmain|))
 ;; %10 = call i32 @atoi(i8* %9)
-(declare-fun |%10_@main| () (_ BitVec 32))
+(declare-fun |%10_Gmain| () (_ BitVec 32))
 ;; store i32 %10, i32* %a, align 4
-(define-fun memory8 () Mem (write32 memory7 |%a_@main| |%10_@main|))
+(define-fun memory8 () Mem (write32 memory7 |%a_Gmain| |%10_Gmain|))
 ;; %11 = load i8*** %3, align 8
-(define-fun |%11_@main| () (_ BitVec 64) (read64 memory8 |%3_@main|))
+(define-fun |%11_Gmain| () (_ BitVec 64) (read64 memory8 |%3_Gmain|))
 ;; %12 = getelementptr inbounds i8** %11, i64 2
-(define-fun |%12_@main| () (_ BitVec 64) (bvadd |%11_@main| (_ bv16 64)))
+(define-fun |%12_Gmain| () (_ BitVec 64) (bvadd |%11_Gmain| (_ bv16 64)))
 ;; %13 = load i8** %12, align 8
-(define-fun |%13_@main| () (_ BitVec 64) (read64 memory8 |%12_@main|))
+(define-fun |%13_Gmain| () (_ BitVec 64) (read64 memory8 |%12_Gmain|))
 ;; %14 = call i32 @atoi(i8* %13)
-(declare-fun |%14_@main| () (_ BitVec 32))
+(declare-fun |%14_Gmain| () (_ BitVec 32))
 ;; store i32 %14, i32* %b, align 4
-(define-fun memory9 () Mem (write32 memory8 |%b_@main| |%14_@main|))
+(define-fun memory9 () Mem (write32 memory8 |%b_Gmain| |%14_Gmain|))
 ;; %15 = load i32* %a, align 4
-(define-fun |%15_@main| () (_ BitVec 32) (read32 memory9 |%a_@main|))
+(define-fun |%15_Gmain| () (_ BitVec 32) (read32 memory9 |%a_Gmain|))
 ;; %16 = load i32* %b, align 4
-(define-fun |%16_@main| () (_ BitVec 32) (read32 memory9 |%b_@main|))
+(define-fun |%16_Gmain| () (_ BitVec 32) (read32 memory9 |%b_Gmain|))
 ;; %17 = call i32 @lhs(i32 %15, i32 %16)
-(declare-fun |%17_@main| () (_ BitVec 32))
+(declare-fun |%17_Gmain| () (_ BitVec 32))
 ;; store i32 %17, i32* %lhs, align 4
-(define-fun memory10 () Mem (write32 memory9 |%lhs_@main| |%17_@main|))
+(define-fun memory10 () Mem (write32 memory9 |%lhs_Gmain| |%17_Gmain|))
 ;; %18 = load i32* %a, align 4
-(define-fun |%18_@main| () (_ BitVec 32) (read32 memory10 |%a_@main|))
+(define-fun |%18_Gmain| () (_ BitVec 32) (read32 memory10 |%a_Gmain|))
 ;; %19 = load i32* %b, align 4
-(define-fun |%19_@main| () (_ BitVec 32) (read32 memory10 |%b_@main|))
+(define-fun |%19_Gmain| () (_ BitVec 32) (read32 memory10 |%b_Gmain|))
 ;; %20 = call i32 @rhs(i32 %18, i32 %19)
-(declare-fun |%20_@main| () (_ BitVec 32))
+(declare-fun |%20_Gmain| () (_ BitVec 32))
 ;; store i32 %20, i32* %rhs, align 4
-(define-fun memory11 () Mem (write32 memory10 |%rhs_@main| |%20_@main|))
+(define-fun memory11 () Mem (write32 memory10 |%rhs_Gmain| |%20_Gmain|))
 ;; %21 = load i32* %lhs, align 4
-(define-fun |%21_@main| () (_ BitVec 32) (read32 memory11 |%lhs_@main|))
+(define-fun |%21_Gmain| () (_ BitVec 32) (read32 memory11 |%lhs_Gmain|))
 ;; %22 = load i32* %rhs, align 4
-(define-fun |%22_@main| () (_ BitVec 32) (read32 memory11 |%rhs_@main|))
+(define-fun |%22_Gmain| () (_ BitVec 32) (read32 memory11 |%rhs_Gmain|))
 ;; %23 = icmp eq i32 %21, %22
-(define-fun |%23_@main| () Bool (= |%21_@main| |%22_@main|))
+(define-fun |%23_Gmain| () Bool (= |%21_Gmain| |%22_Gmain|))
 ;; br i1 %23, label %24, label %27
 ;; No backward arrows
 
 ;; BLOCK %24 with index 2 and rank = 3
 ;; Predecessors: %6
-;; |@main_block_2_entry_condition| 
-(define-fun |@main_block_2_entry_condition| () Bool
-    (and |@main_block_1_entry_condition| |%23_@main|)
+;; |Gmain_block_2_entry_condition| 
+(define-fun |Gmain_block_2_entry_condition| () Bool
+    (and |Gmain_block_1_entry_condition| |%23_Gmain|)
 )
 ;;Memory PHI
 (define-fun memory12 () Mem memory11)
 ;; %25 = load i32* %lhs, align 4
-(define-fun |%25_@main| () (_ BitVec 32) (read32 memory12 |%lhs_@main|))
+(define-fun |%25_Gmain| () (_ BitVec 32) (read32 memory12 |%lhs_Gmain|))
 ;; %26 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([16 x i8]* @.str, i32 0, i32 0), i32 %25)
-(declare-fun |%26_@main| () (_ BitVec 32))
+(declare-fun |%26_Gmain| () (_ BitVec 32))
 ;; br label %31
 ;; No backward arrows
 
 ;; BLOCK %27 with index 3 and rank = 3
 ;; Predecessors: %6
-;; |@main_block_3_entry_condition| 
-(define-fun |@main_block_3_entry_condition| () Bool
-    (and |@main_block_1_entry_condition| (not |%23_@main|))
+;; |Gmain_block_3_entry_condition| 
+(define-fun |Gmain_block_3_entry_condition| () Bool
+    (and |Gmain_block_1_entry_condition| (not |%23_Gmain|))
 )
 ;;Memory PHI
 (define-fun memory13 () Mem memory11)
 ;; %28 = load i32* %lhs, align 4
-(define-fun |%28_@main| () (_ BitVec 32) (read32 memory13 |%lhs_@main|))
+(define-fun |%28_Gmain| () (_ BitVec 32) (read32 memory13 |%lhs_Gmain|))
 ;; %29 = load i32* %rhs, align 4
-(define-fun |%29_@main| () (_ BitVec 32) (read32 memory13 |%rhs_@main|))
+(define-fun |%29_Gmain| () (_ BitVec 32) (read32 memory13 |%rhs_Gmain|))
 ;; %30 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([22 x i8]* @.str1, i32 0, i32 0), i32 %28, i32 %29)
-(declare-fun |%30_@main| () (_ BitVec 32))
+(declare-fun |%30_Gmain| () (_ BitVec 32))
 ;; br label %31
 ;; No backward arrows
 
 ;; BLOCK %31 with index 4 and rank = 4
 ;; Predecessors: %27 %24
-;; |@main_block_4_entry_condition| 
-(define-fun |@main_block_4_entry_condition| () Bool
+;; |Gmain_block_4_entry_condition| 
+(define-fun |Gmain_block_4_entry_condition| () Bool
     (or
-        |@main_block_3_entry_condition|
-        |@main_block_2_entry_condition|
+        |Gmain_block_3_entry_condition|
+        |Gmain_block_2_entry_condition|
     )
 )
 ;;Memory PHI
 (define-fun memory14 () Mem 
-    (ite |@main_block_3_entry_condition| memory13 memory12
+    (ite |Gmain_block_3_entry_condition| memory13 memory12
     ))
 ;; br label %32
 ;; No backward arrows
 
 ;; BLOCK %32 with index 5 and rank = 5
 ;; Predecessors: %31 %0
-;; |@main_block_5_entry_condition| 
-(define-fun |@main_block_5_entry_condition| () Bool
+;; |Gmain_block_5_entry_condition| 
+(define-fun |Gmain_block_5_entry_condition| () Bool
     (or
-        |@main_block_4_entry_condition|
-        (and |@main_block_0_entry_condition| (not |%5_@main|))
+        |Gmain_block_4_entry_condition|
+        (and |Gmain_block_0_entry_condition| (not |%5_Gmain|))
     )
 )
 ;;Memory PHI
 (define-fun memory15 () Mem 
-    (ite |@main_block_4_entry_condition| memory14 memory6
+    (ite |Gmain_block_4_entry_condition| memory14 memory6
     ))
 ;; ret i32 0
 ;; No backward arrows
 
 
-(define-fun |@main_result| () (_ BitVec 32) (_ bv0 32))
+(define-fun |Gmain_result| () (_ BitVec 32) (_ bv0 32))
 
-;; Function: |@atoi|
+;; Function: |Gatoi|
 ;; (i8*)
 
 
-;; Function: |@printf|
+;; Function: |Gprintf|
 ;; (i8*, ...)
 
 
-(assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= |@lhs_result| |@rhs_result|))))
+
+(assert (and (= |%a_Glhs| |%a_Grhs|) (= |%b_Glhs| |%b_Grhs|) (not (= |Glhs_result| |Grhs_result|))))
 
 (check-sat)
-

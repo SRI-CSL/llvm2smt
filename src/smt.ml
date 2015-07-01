@@ -29,6 +29,11 @@ let get_addr_width cu =
        | Some align -> align.size )
 
 
+let global_function_char = 'G'   (* the char that replaces @ in SMT function symbols *)
+let global_register_char = 'G'   (* the char that replaces @ in SMT register symbols *)
+			     
+let local_function_char = '%' 	(* the char that replaces % in SMT function symbols IAM: DO THESE EXIST? *)
+let local_register_char = '%' 	(* the char that replaces % in SMT register symbols *)
 
 (*
  * State stores information needed for conversion to SMT
@@ -200,7 +205,14 @@ let mem_ref st = mem_ref_idx st.mem_idx
 let sp_ref st = 
   "rsp" ^ (string_of_int st.sp_idx) 
       
-
+let function_name_to_smt_string v =
+  Util.spr (fun b ->
+	      (fun v ->
+		 (match v with
+		    | Id(true, i)       -> bprintf b "%c%d"  global_function_char i
+		    | Id(false, i)      -> bprintf b "%c%d" local_function_char i
+		    | Name(true, name)  -> bprintf b "%c%s"  global_function_char name
+		    | Name(false, name) -> bprintf b "%c%s" local_function_char name))) v
 
 (*
  * SMT name: b = buffer, argument = var
@@ -210,14 +222,14 @@ let name_to_smt b st var =
   let f = st.fu in
   let fu_name = 
     (match f with 
-       | Some fi -> "_" ^ (Llvm_pp.string_of_var fi.fname)
+       | Some fi -> "_" ^ (function_name_to_smt_string fi.fname)
        | None -> "")
   in
     (match var with
-      | Id(true, i) -> bprintf b "|@%d|" i
-      | Id(false, i)      -> bprintf b "|%%%d%s|" i fu_name
-      | Name(true, name)  -> bprintf b "|@%s|" name
-      | Name(false, name) -> bprintf b "|%%%s%s|" name fu_name)
+      | Id(true, i) -> bprintf b "|%c%d|" global_register_char i
+      | Id(false, i) -> bprintf b "|%c%d%s|" local_register_char i fu_name
+      | Name(true, name)  -> bprintf b "|%c%s|" global_register_char name
+      | Name(false, name) -> bprintf b "|%c%s%s|" local_register_char name fu_name)
 
 (*
  * SMT name string: argument = var
@@ -1022,7 +1034,7 @@ let smt_distinct_condition st entry_cond typ v const_list =
  * come from v0.
  *)
 let smt_precondition fu st (v0, cond) =
-  let fstr = Llvm_pp.string_of_var fu.fname in
+  let fstr = function_name_to_smt_string fu.fname in
   let pblk = Bc_manip.lookup_block fu v0 in
   let entry_cond_name = Bc_manip.get_entry_condition_name fstr pblk.bindex in 
     (match cond with
@@ -1349,15 +1361,14 @@ let declare_globals b st =
  *)
 let declare_functions b st =
   let declare_function fu =
-    bprintf b "(declare-fun ";
-    name_to_smt b st fu.fname;
+    bprintf b "(declare-fun %s" (function_name_to_smt_string fu.fname);
     bprintf b " () (_ BitVec %d))\n" (get_addr_width st.cu)
   in
     List.iter declare_function st.cu.cfuns
 
 
 let smt_postcondition fu st cblk (v0, cond) =
-  let fstr = Llvm_pp.string_of_var fu.fname in
+  let fstr = function_name_to_smt_string fu.fname in
   let entry_cond_name = Bc_manip.get_entry_condition_name fstr cblk.bindex in 
   let smt_cond = 
     (match cond with
@@ -1466,7 +1477,7 @@ let smt_block_entry_comment b fu state binfo =
  *)
 let smt_block_entry_condition b fu state binfo =
   let cfg_pred_list = state_preds state in 
-  let fstr = Llvm_pp.string_of_var fu.fname in
+  let fstr = function_name_to_smt_string fu.fname in
   let ename = Bc_manip.get_entry_condition_name fstr binfo.bindex in
   let seen_pred_list =  List.filter (fun (bname, cond) -> (Bc_manip.lookup_block fu bname).bseen) cfg_pred_list in
     bprintf b ";; %s \n" ename;
@@ -1522,7 +1533,7 @@ let declare_result b state =
     | None -> ()
     | Some(tau, v) ->
 	let fu = state_fu state in 
-	let fstr = Llvm_pp.string_of_var fu.fname in 
+	let fstr = function_name_to_smt_string fu.fname in 
 	  bprintf b "(define-fun |%s_result| () " fstr;
 	  typ_to_smt b state tau;
 	  bprintf b " ";
