@@ -8,7 +8,7 @@ shufflevector:
 
 
 2smt:
-	../src/llvm2smt shufflevector.ll > shufflevector_raw.smt
+	../../src/llvm2smt shufflevector.ll > shufflevector_raw.smt
 
 check:
 	yices-smt2 shufflevector.smt
