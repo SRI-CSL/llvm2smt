@@ -287,7 +287,7 @@ let binops = [
   "bvor";
   "bvxor"]
 
-let widths =  [4; 8; 16; 32; 64; 128]
+let widths =  [1; 4; 8; 16; 32; 64; 128]
 
 let vector_widths =  [4; 8; 16; 32; 64]
 
@@ -338,13 +338,23 @@ let bpr_op_3_w b binop w =
    * Need to handle the n=1 case too.
    *)
 let trunc b n w =
-  if n <= w
-  then
-    bprintf b 
-      "
+    if n <= w
+    then
+      if n = 1
+      then
+	bprintf b 
+	  "
+  (define-fun trunc_1_%d ((x (_ BitVec %d))) Bool (ite (= ((_ extract 0 0) x) (_ bv0 1)) true false))
+\n"	
+	  w w 
+      else
+	bprintf b 
+	    
+	"
   (define-fun trunc_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ extract %d 0) x))
-\n" n w w n (n - 1)
-      
+\n"
+	n w w n (n - 1)
+	
    
 (*
  * Prelude: a bunch of definitions to abbreviate the conversion.
