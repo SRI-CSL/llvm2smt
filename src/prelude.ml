@@ -344,7 +344,7 @@ let trunc b n w =
       then
 	bprintf b 
 	  "
-  (define-fun trunc_1_%d ((x (_ BitVec %d))) Bool (ite (= ((_ extract 0 0) x) (_ bv0 1)) true false))
+  (define-fun trunc_1_%d ((x (_ BitVec %d))) Bool (ite (= ((_ extract 0 0) x) (_ bv1 1)) true false))
 \n"	
 	  w w 
       else
