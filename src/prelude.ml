@@ -334,7 +334,9 @@ let bpr_op_3_w b binop w =
 \n"
      binop w w w w binop binop binop binop binop binop binop binop w
 
-
+  (*
+   * Need to handle the n=1 case too.
+   *)
 let trunc b n w =
   if n <= w
   then
