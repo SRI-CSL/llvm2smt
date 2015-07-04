@@ -369,7 +369,8 @@ let trunc b n w =
  * Prelude: a bunch of definitions to abbreviate the conversion.
  *)
 let print_prelude b aw = 
-
+  bprintf b "%s" header;
+  
   bprintf b "(set-logic QF_ABV)\n";
 
   bprintf b "(define-sort Address () %s)\n" (addr_type aw);
