@@ -386,6 +386,70 @@ let vtrunc_1 b n w  =
 	n w w n n w n w n
 	
       
+let vtrunc_2 b n w  =
+  if n < w
+  then
+    if n = 1
+    then
+      bprintf b 
+	"
+(define-fun vtrunc_2_1_%d ((x vector_2_%d)) vector_2_1
+   (let ((z0 (trunc_1_%d (select x #b00)))
+         (z1 (trunc_1_%d (select x #b01)))
+         (z2 (trunc_1_%d (select x #b10)))
+         (z3 (trunc_1_%d (select x #b11))))
+      (vmake_2_%d z0 z1 z2 z3)))
+\n"
+	w w w w w w n
+    else
+      bprintf b 
+	"
+(define-fun vtrunc_2_%d_%d ((x vector_2_%d)) vector_2_%d
+   (let ((z0 (trunc_%d_%d (select x #b00)))
+         (z1 (trunc_%d_%d (select x #b01)))
+         (z2 (trunc_%d_%d (select x #b10)))
+         (z3 (trunc_%d_%d (select x #b11))))
+      (vmake_2_%d z0 z1 z2 z3)))
+\n"
+	n w w n  n w  n w  n w  n w  n
+	
+      
+let vtrunc_3 b n w  =
+  if n < w
+  then
+    if n = 1
+    then
+      bprintf b 
+	"
+(define-fun vtrunc_3_1_%d ((x vector_3_%d)) vector_3_1
+   (let ((z0 (trunc_1_%d (select x #b000)))
+         (z1 (trunc_1_%d (select x #b001)))
+         (z2 (trunc_1_%d (select x #b010)))
+         (z3 (trunc_1_%d (select x #b011)))
+         (z4 (trunc_1_%d (select x #b100)))
+         (z5 (trunc_1_%d (select x #b101)))
+         (z6 (trunc_1_%d (select x #b110)))
+         (z7 (trunc_1_%d (select x #b111))))
+      (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
+\n"
+	w w w w w w w w w w n
+    else
+      bprintf b 
+	"
+(define-fun vtrunc_2_%d_%d ((x vector_2_%d)) vector_2_%d
+   (let ((z0 (trunc_%d_%d (select x #b000)))
+         (z1 (trunc_%d_%d (select x #b001)))
+         (z2 (trunc_%d_%d (select x #b010)))
+         (z3 (trunc_%d_%d (select x #b011)))
+         (z4 (trunc_%d_%d (select x #b100)))
+         (z5 (trunc_%d_%d (select x #b101)))
+         (z6 (trunc_%d_%d (select x #b110)))
+         (z7 (trunc_%d_%d (select x #b111))))
+      (vmake_2_%d z0 z1 z2 z3 z4 z5 z6 z7)))
+\n"
+	n w w n  n w  n w  n w  n w n w n w n w  n w  n
+	
+      
       
       
       
@@ -430,6 +494,8 @@ let print_prelude b aw =
   List.iter (fun nw -> ( List.iter (fun ww -> (trunc b nw ww)) widths )) widths;
   
   List.iter (fun nw -> ( List.iter (fun ww -> (vtrunc_1 b nw ww)) widths )) widths;
+
+  List.iter (fun nw -> ( List.iter (fun ww -> (vtrunc_2 b nw ww)) widths )) widths;
   
   bprintf b "%s\n" vector_casts;
 
