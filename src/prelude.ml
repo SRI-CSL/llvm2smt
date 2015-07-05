@@ -294,7 +294,7 @@ let binops = [
   "bvor";
   "bvxor"]
 
-let widths =  [1; 4; 8; 16; 32; 64; 128]
+let widths =  [1; 4; 8; 16; 32; 64]
 
 let vector_widths =  [4; 8; 16; 32; 64]
 
@@ -362,7 +362,33 @@ let trunc b n w =
 \n"
 	n w w n (n - 1)
 	
-   
+let vtrunc_1 b n w  =
+  if n < w
+  then
+    if n = 1
+    then
+      bprintf b 
+	"
+(define-fun vtrunc_1_1_%d ((x vector_1_%d)) vector_1_1
+   (let ((z0 (trunc_1_%d (select x #b0)))
+         (z1 (trunc_1_%d (select x #b1))))
+      (vmake_1_%d z0 z1)))
+\n"
+	w w w w n
+    else
+      bprintf b 
+	"
+(define-fun vtrunc_1_%d_%d ((x vector_1_%d)) vector_1_%d
+   (let ((z0 (trunc_%d_%d (select x #b0)))
+         (z1 (trunc_%d_%d (select x #b1))))
+      (vmake_1_%d z0 z1)))
+\n"
+	n w w n n w n w n
+	
+      
+      
+      
+      
 (*
  * Prelude: a bunch of definitions to abbreviate the conversion.
  *)
@@ -402,6 +428,8 @@ let print_prelude b aw =
   List.iter (fun binop ->  ( List.iter (fun w -> (bpr_op_3_w b binop w))  binop_widths )) binops;
 
   List.iter (fun nw -> ( List.iter (fun ww -> (trunc b nw ww)) widths )) widths;
+  
+  List.iter (fun nw -> ( List.iter (fun ww -> (vtrunc_1 b nw ww)) widths )) widths;
   
   bprintf b "%s\n" vector_casts;
 
