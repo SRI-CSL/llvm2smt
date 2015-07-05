@@ -436,7 +436,7 @@ let vtrunc_3 b n w  =
     else
       bprintf b 
 	"
-(define-fun vtrunc_2_%d_%d ((x vector_2_%d)) vector_2_%d
+(define-fun vtrunc_3_%d_%d ((x vector_3_%d)) vector_3_%d
    (let ((z0 (trunc_%d_%d (select x #b000)))
          (z1 (trunc_%d_%d (select x #b001)))
          (z2 (trunc_%d_%d (select x #b010)))
@@ -445,9 +445,9 @@ let vtrunc_3 b n w  =
          (z5 (trunc_%d_%d (select x #b101)))
          (z6 (trunc_%d_%d (select x #b110)))
          (z7 (trunc_%d_%d (select x #b111))))
-      (vmake_2_%d z0 z1 z2 z3 z4 z5 z6 z7)))
+      (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
 \n"
-	n w w n  n w  n w  n w  n w n w n w n w  n w  n
+	n w w n  n w  n w  n w  n w  n w  n w  n w  n w  n
 	
       
       
@@ -496,6 +496,8 @@ let print_prelude b aw =
   List.iter (fun nw -> ( List.iter (fun ww -> (vtrunc_1 b nw ww)) widths )) widths;
 
   List.iter (fun nw -> ( List.iter (fun ww -> (vtrunc_2 b nw ww)) widths )) widths;
+
+  List.iter (fun nw -> ( List.iter (fun ww -> (vtrunc_3 b nw ww)) widths )) widths;
   
   bprintf b "%s\n" vector_casts;
 
