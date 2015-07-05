@@ -590,11 +590,26 @@ and bool_val_to_smt b st v =
      | Icmp(cmp, x, y) -> icmp_to_smt b st cmp x y
      | _ -> Util.nfailwith ("bool value not supported: " ^  (Llvm_pp.string_of_value v)))
 
-and trunc_to_smt b st x ty =
+and _trunc_to_smt b st x ty =
   let n = (bitwidth st ty) in
     bprintf b "((_ extract %d 0) " (n - 1);
     typ_val_to_smt b st x;
     bprintf b ")"
+
+and trunc_to_smt b st x ty =
+  let cu = st.cu in
+  let fu = (state_fu st) in
+  let op_name =
+    if (Bc_manip.is_vector_typ cu fu ty) then
+      let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
+	"vtrunc_" ^ (string_of_int vi) ^ "_" ^ (string_of_int (bitwidth st vt)) 
+    else
+      let (tx, vx) = x in
+	"trunc_" ^ (string_of_int (bitwidth st ty)) ^ "_" ^ (string_of_int (bitwidth st tx))
+  in
+    bprintf b "(%s " op_name;
+    typ_val_to_smt b st x;
+    bprintf b ")";
 
 and zext_to_smt b st tx x ty = 
   if is_bool st tx then

@@ -492,6 +492,9 @@ let print_prelude b aw =
   List.iter (fun binop ->  ( List.iter (fun w -> (bpr_op_3_w b binop w))  binop_widths )) binops;
 
   List.iter (fun nw -> ( List.iter (fun ww -> (trunc b nw ww)) widths )) widths;
+
+  (* let see what crazy combos are install for us with yices_main.smt *)
+  trunc b 29 32;
   
   List.iter (fun nw -> ( List.iter (fun ww -> (vtrunc_1 b nw ww)) widths )) widths;
 
