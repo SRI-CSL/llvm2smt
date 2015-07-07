@@ -455,6 +455,12 @@ let vtrunc_3 b n w  =
       
 (*
  * Prelude: a bunch of definitions to abbreviate the conversion.
+ *
+ * Note that while the current output is large and indiscriminant,
+ * this could be rectified. We could output the translation of the cu
+ * to a temporary file, recording which functions we used, then prepend
+ * the appropriately generated prelude.
+ *
  *)
 let print_prelude b aw = 
   bprintf b "%s" header;
