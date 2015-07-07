@@ -61,7 +61,7 @@ to SMT-LIB via:
 Function `@rhs` is translated to the following SMT-LIB statements, in SMT-LIB the character `@` can be controversial
 so we replace it with `_@`.
 
-```scheme
+```SMT
 ;; Function: |_@rhs|
 ;; (i32 %a, i32 %b)
 (declare-fun memory2 () Mem)
@@ -97,7 +97,7 @@ The other function is encoded similarly.
 To check whether these two functions are equivalent, we add the following two SMT-LIB commands
 at the end of the file:
 
-```scheme
+```SMT
 (assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= |_@lhs_result| |_@rhs_result|))))
 (check-sat)
 ```
@@ -157,7 +157,7 @@ sequence of SMT-LIB declarations and definitions. We use a global
 array to represent memory. For a 64 bit address space, this array has
 type
 
-```scheme
+```SMT
   (Array (_ BitVec 64) (_ BitVec 8)).
 ```
 
@@ -176,7 +176,7 @@ floating-point numbers. For LLVM vector types, we use SMT-LIB
 arrays. For example a register of type `<2 x i32>` is represented as 
 an array of two bitvectors of length 32. The array itself is of type
 
-```scheme
+```SMT
 (Array (_ BitVec 1) (_ BitVec 32)).
 ```
 
