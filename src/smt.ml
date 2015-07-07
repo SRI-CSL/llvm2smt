@@ -852,7 +852,7 @@ and val_to_smt b st (typ, v) =
     | Undef             -> bdefault_value b st typ               (* This is enough for now, but not quite what right *)
     | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
     | Vector(l)         -> bvector_to_smt b st typ l
-    | Trunc(x, ty)      -> trunc_to_smt b st x ty                (* VECTOR FIXME *)
+    | Trunc(x, ty)      -> trunc_to_smt b st x ty                
     | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              (* VECTOR FIXME *)
     | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              (* VECTOR FIXME *)
     | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)    (* VECTOR FIXME !!!!!???? %Z = bitcast <2 x int> %V to i64;   ; yields i64: %V *)
