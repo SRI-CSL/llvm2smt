@@ -61,7 +61,7 @@ to SMT-LIB via:
 Function `@rhs` is translated to the following SMT-LIB statements, in SMT-LIB the character `@` can be controversial
 so we replace it with `_@`.
 
-```SMT
+```smt
 ;; Function: |_@rhs|
 ;; (i32 %a, i32 %b)
 (declare-fun memory2 () Mem)
@@ -97,7 +97,7 @@ The other function is encoded similarly.
 To check whether these two functions are equivalent, we add the following two SMT-LIB commands
 at the end of the file:
 
-```SMT
+```smt
 (assert (and (= |%a_@lhs| |%a_@rhs|) (= |%b_@lhs| |%b_@rhs|) (not (= |_@lhs_result| |_@rhs_result|))))
 (check-sat)
 ```
@@ -157,7 +157,7 @@ sequence of SMT-LIB declarations and definitions. We use a global
 array to represent memory. For a 64 bit address space, this array has
 type
 
-```SMT
+```smt
   (Array (_ BitVec 64) (_ BitVec 8)).
 ```
 
