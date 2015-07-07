@@ -607,8 +607,11 @@ and trunc_to_smt b st (tx, vx) ty =
 	failwith ("trunc argument not a vector: " ^  (Llvm_pp.string_of_typ tx))
       else
 	let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu tx in 
-	let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
-	  "vtrunc_" ^ (string_of_int vyi) ^ "_" ^ (string_of_int (bitwidth st vyt)) ^ "_" ^ (string_of_int (bitwidth st vxt))
+	let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in
+	let logv = (string_of_int vyi) in
+	let n = (string_of_int (bitwidth st vyt)) in
+	let w = (string_of_int (bitwidth st vxt)) in 
+	  "vtrunc_" ^ logv  ^ "_" ^ n ^ "_" ^ w
     else
       "trunc_" ^ (string_of_int (bitwidth st ty)) ^ "_" ^ (string_of_int (bitwidth st tx))
   in
