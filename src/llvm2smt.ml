@@ -24,7 +24,11 @@ let cu = Lllex.parse ch in
 *)
 
 let cu = Llvm_parser.parse ch in
-  let b = (Buffer.create 100) in
-    Smt.cu_to_smt b cu;
-    Printf.printf "%s\n" (Buffer.contents b)
+let b_cu = (Buffer.create 100) in
+let b_prelude = (Buffer.create 100) in
+let aw = Smt.get_addr_width cu in 
+  Smt.cu_to_smt b_cu cu aw;
+  Prelude.print_prelude b_prelude aw;
+  Printf.printf "%s\n" (Buffer.contents b_prelude);
+  Printf.printf "%s\n" (Buffer.contents b_cu)
 ;;

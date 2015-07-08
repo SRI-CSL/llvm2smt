@@ -1617,10 +1617,9 @@ let fun_to_smt b fu state =
   end
 
   
-let cu_to_smt b cu =
-  let aw = get_addr_width cu in 
+let cu_to_smt b cu aw =
+(*  let aw = get_addr_width cu in  *)
   let state = { mem_idx = 0; sp_idx = 0; fu = None; blk = None; preds = None; cu = cu; addr_width = aw; retval = None; } in 
-    Prelude.print_prelude b aw;
     declare_globals b state;
     declare_functions b state;
     bprintf b "\n";
