@@ -16,13 +16,6 @@ let ch, module_id =
     stdin, "<stdin>"
 ;;
 
-(*
-let cu = Lllex.parse ch in
-  State.process_params cu;
-  State.number_cu cu;
-  State.assign_vartyps cu;
-*)
-
 let cu = Llvm_parser.parse ch in
 let b_cu = (Buffer.create 100) in
 let b_prelude = (Buffer.create 100) in
