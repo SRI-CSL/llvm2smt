@@ -21,11 +21,14 @@ type prelude = {
 }
 
 
+val make_prelude: prelude
+		     
+		   
 (*
  * Prelude: the parameter is the size of the address space
  * (i.e., the number of bits needed).
  *)
-val print_prelude: Buffer.t -> int -> unit
+val print_prelude: Buffer.t -> int -> prelude -> unit
 
 val addr_type: int -> string
 

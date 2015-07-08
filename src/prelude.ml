@@ -23,8 +23,9 @@ type prelude = {
   mutable vtrunc: (int * int * int) list;
 }
       
-      
-      
+let make_prelude =
+  let p = { vector = []; vundef = []; vmake = []; vzero = []; vbinop = []; trunc = []; vtrunc = []; } in
+    p
 
 let header =
   ";;
@@ -479,7 +480,7 @@ let vtrunc_3 b n w  =
  * the appropriately generated prelude.
  *
  *)
-let print_prelude b aw = 
+let print_prelude b aw preqs = 
   bprintf b "%s" header;
   
   bprintf b "(set-logic QF_ABV)\n";

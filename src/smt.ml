@@ -55,6 +55,7 @@ type state = {
   mutable retval: (typ * value) option;
   cu: Bc.cunit;
   addr_width: int;
+  mutable preqs: Prelude.prelude;
 }
 
 let state_fu st =
@@ -1617,8 +1618,8 @@ let fun_to_smt b fu state =
   end
 
   
-let cu_to_smt b cu aw =
-  let state = { mem_idx = 0; sp_idx = 0; fu = None; blk = None; preds = None; cu = cu; addr_width = aw; retval = None; } in 
+let cu_to_smt b cu aw prelude =
+  let state = { mem_idx = 0; sp_idx = 0; fu = None; blk = None; preds = None; cu = cu; addr_width = aw; retval = None; preqs = prelude; } in 
     declare_globals b state;
     declare_functions b state;
     bprintf b "\n";

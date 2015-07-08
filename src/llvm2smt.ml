@@ -17,11 +17,12 @@ let ch, module_id =
 ;;
 
 let cu = Llvm_parser.parse ch in
-let b_cu = (Buffer.create 100) in
-let b_prelude = (Buffer.create 100) in
-let aw = Smt.get_addr_width cu in 
-  Smt.cu_to_smt b_cu cu aw;
-  Prelude.print_prelude b_prelude aw;
+let b_cu = (Buffer.create 1024) in
+let b_prelude = (Buffer.create 1024) in
+let aw = Smt.get_addr_width cu in
+let preqs = Prelude.make_prelude in
+  Smt.cu_to_smt b_cu cu aw preqs;
+  Prelude.print_prelude b_prelude aw preqs;
   Printf.printf "%s\n" (Buffer.contents b_prelude);
   Printf.printf "%s\n" (Buffer.contents b_cu)
 ;;
