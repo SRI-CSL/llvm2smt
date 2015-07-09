@@ -25,6 +25,6 @@ let preqs = Prelude.make_prelude aw in
   Smt.cu_to_smt b_cu cu preqs;
   Prelude.print_prelude b_prelude preqs;
   Printf.printf "%s\n" (Buffer.contents b_prelude);
-  Printf.printf "%s\n" (Buffer.contents b_cu)
-  (* Prelude.dump_prelude preqs *)
+  Printf.printf "%s\n" (Buffer.contents b_cu);
+  Prelude.dump_prelude preqs 
 ;;

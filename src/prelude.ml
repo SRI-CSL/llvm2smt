@@ -717,9 +717,12 @@ let print_prelude b preqs =
 
     List.iter (fun (l, n, w) ->  (vtrunc b l n w)) (vtrunc_fetch preqs);
 
+    (* these require vector_1_32 vector_1_64 and vector_2_32 *)
+    (*
     if vector_logarithms <> []
     then
       bprintf b "%s\n" vector_casts;
+    *)
     
     bprintf b "\n;; end of prelude\n\n\n";
     
