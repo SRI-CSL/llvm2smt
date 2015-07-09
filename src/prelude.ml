@@ -20,6 +20,7 @@ type prelude = {
   mutable vbinop: (int * int) list;  (* could include the actual operator *)
   mutable trunc:  (int * int) list;
   mutable vtrunc: (int * int * int) list;
+  mutable cast:   bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
 }
@@ -47,8 +48,18 @@ let vector_width_fetch preq  = List.sort compare preq.vector_width
 let vector_length_fetch preq  = List.sort compare preq.vector_length
       
 let make_prelude aw =
-  let p = { address_width = aw; vundef = []; vmake = []; vzero = []; vbinop = []; trunc = []; vtrunc = [];  vector_width = [];   vector_length = []; } in
+  let p = { address_width = aw; vundef = []; vmake = []; vzero = []; vbinop = []; trunc = []; vtrunc = [];  cast = false; vector_width = [];   vector_length = []; } in
     p
+
+let cast_add preq =
+  if not preq.cast
+  then
+    begin
+      preq.cast <- true;
+      List.iter (fun w -> vector_width_add preq w) [32; 64];
+      List.iter (fun l -> vector_length_add preq l) [1; 2];
+    end
+      
       
 let vundef_add preq x =
   let l = preq.vundef in
@@ -572,45 +583,21 @@ let trunc b n w =
 let vtrunc_1 b n w  =
   if n < w
   then
-    if n = 1
-    then
-      bprintf b 
-	"
-(define-fun vtrunc_1_1_%d ((x vector_1_%d)) vector_1_1
-   (let ((z0 (trunc_1_%d (select x #b0)))
-         (z1 (trunc_1_%d (select x #b1))))
-      (vmake_1_%d z0 z1)))
-\n"
-	w w w w n
-    else
-      bprintf b 
-	"
+    bprintf b 
+      "
 (define-fun vtrunc_1_%d_%d ((x vector_1_%d)) vector_1_%d
    (let ((z0 (trunc_%d_%d (select x #b0)))
          (z1 (trunc_%d_%d (select x #b1))))
       (vmake_1_%d z0 z1)))
 \n"
-	n w w n n w n w n
-	
+      n w w n n w n w n
+      
       
 let vtrunc_2 b n w  =
   if n < w
   then
-    if n = 1
-    then
-      bprintf b 
-	"
-(define-fun vtrunc_2_1_%d ((x vector_2_%d)) vector_2_1
-   (let ((z0 (trunc_1_%d (select x #b00)))
-         (z1 (trunc_1_%d (select x #b01)))
-         (z2 (trunc_1_%d (select x #b10)))
-         (z3 (trunc_1_%d (select x #b11))))
-      (vmake_2_%d z0 z1 z2 z3)))
-\n"
-	w w w w w w n
-    else
-      bprintf b 
-	"
+    bprintf b 
+      "
 (define-fun vtrunc_2_%d_%d ((x vector_2_%d)) vector_2_%d
    (let ((z0 (trunc_%d_%d (select x #b00)))
          (z1 (trunc_%d_%d (select x #b01)))
@@ -618,31 +605,14 @@ let vtrunc_2 b n w  =
          (z3 (trunc_%d_%d (select x #b11))))
       (vmake_2_%d z0 z1 z2 z3)))
 \n"
-	n w w n  n w  n w  n w  n w  n
-	
+      n w w n  n w  n w  n w  n w  n
+      
       
 let vtrunc_3 b n w  =
   if n < w
   then
-    if n = 1
-    then
-      bprintf b 
-	"
-(define-fun vtrunc_3_1_%d ((x vector_3_%d)) vector_3_1
-   (let ((z0 (trunc_1_%d (select x #b000)))
-         (z1 (trunc_1_%d (select x #b001)))
-         (z2 (trunc_1_%d (select x #b010)))
-         (z3 (trunc_1_%d (select x #b011)))
-         (z4 (trunc_1_%d (select x #b100)))
-         (z5 (trunc_1_%d (select x #b101)))
-         (z6 (trunc_1_%d (select x #b110)))
-         (z7 (trunc_1_%d (select x #b111))))
-      (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
-\n"
-	w w w w w w w w w w n
-    else
-      bprintf b 
-	"
+    bprintf b 
+      "
 (define-fun vtrunc_3_%d_%d ((x vector_3_%d)) vector_3_%d
    (let ((z0 (trunc_%d_%d (select x #b000)))
          (z1 (trunc_%d_%d (select x #b001)))
@@ -654,7 +624,7 @@ let vtrunc_3 b n w  =
          (z7 (trunc_%d_%d (select x #b111))))
       (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
 \n"
-	n w w n  n w  n w  n w  n w  n w  n w  n w  n w  n
+      n w w n  n w  n w  n w  n w  n w  n w  n w  n w  n
 	
 
 let vtrunc b logv n w =
@@ -717,12 +687,7 @@ let print_prelude b preqs =
 
     List.iter (fun (l, n, w) ->  (vtrunc b l n w)) (vtrunc_fetch preqs);
 
-    (* these require vector_1_32 vector_1_64 and vector_2_32 *)
-    (*
-    if vector_logarithms <> []
-    then
-      bprintf b "%s\n" vector_casts;
-    *)
+    if preqs.cast then bprintf b "%s\n" vector_casts;
     
     bprintf b "\n;; end of prelude\n\n\n";
     

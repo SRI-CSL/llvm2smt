@@ -17,6 +17,7 @@ type prelude = {
   mutable vbinop: (int * int) list;  (* could include the actual operator *)
   mutable trunc:  (int * int) list;
   mutable vtrunc: (int * int * int) list;
+  mutable cast: bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
 }
@@ -27,6 +28,8 @@ val make_prelude: int -> prelude
 (* dump prelude out to standard error *)
 val dump_prelude: prelude  -> unit
 
+val cast_add: prelude -> unit
+    
 (* add a vundef requirement to a prelude object *)
 val vundef_add:  prelude -> (int * int) -> unit
 

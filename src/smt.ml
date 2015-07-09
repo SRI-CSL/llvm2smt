@@ -989,6 +989,7 @@ let load_to_smt b st i ty v =
 	 let fu = state_fu st in
 	   if Bc_manip.is_vector_typ cu fu t then
 	     let (logn, ety) = Bc_manip.deconstruct_vector_typ cu fu t in
+	       Prelude.cast_add st.preqs;
 	       bprintf b "(cast_bits_to_vector_%d_%d (read%d %s " logn (bitwidth st ety) n (mem_ref st);
 	       typ_val_to_smt b st (ty, v);
 	       bprintf b "))" 
@@ -1017,6 +1018,7 @@ let store_to_smt b st ty v p =
   let fu = state_fu st in
     if Bc_manip.is_vector_typ cu fu ty then
       let (logn, ety) = Bc_manip.deconstruct_vector_typ cu fu ty in
+	Prelude.cast_add st.preqs;
 	bprintf b "(define-fun memory%d () Mem (write%d memory%d " new_mem n old_mem;
 	typ_val_to_smt b st p;
 	bprintf b " ";
