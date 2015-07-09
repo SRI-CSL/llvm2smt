@@ -596,12 +596,6 @@ and bool_val_to_smt b st v =
      | Icmp(cmp, x, y) -> icmp_to_smt b st cmp x y
      | _ -> Util.nfailwith ("bool value not supported: " ^  (Llvm_pp.string_of_value v)))
 
-and _trunc_to_smt b st x ty =
-  let n = (bitwidth st ty) in
-    bprintf b "((_ extract %d 0) " (n - 1);
-    typ_val_to_smt b st x;
-    bprintf b ")"
-
 and trunc_to_smt b st (tx, vx) ty =
   let cu = st.cu in
   let fu = (state_fu st) in
