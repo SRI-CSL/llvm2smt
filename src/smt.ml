@@ -12,7 +12,8 @@ open Dl
 open Bc   
 open Util
 open Big_int
-   
+open Prelude
+ 
 (*
  * Size of the address space in bits
  *)
@@ -275,7 +276,9 @@ let bzero_vector b st typ v =
     if (Bc_manip.is_vector_typ cu fu typ)
     then
       let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu typ in
-	bprintf b "vzero_%d_%d"  vi (bitwidth st vt)
+      let w = (bitwidth st vt) in 
+	Prelude.vzero_add st.preqs (vi, w);
+	bprintf b "vzero_%d_%d"  vi w
     else 
       match v with 
 	| Null -> bzero_vector_n b st.addr_width     
@@ -302,7 +305,9 @@ let bdefault_value b st ty =
     if (Bc_manip.is_vector_typ cu fu ty)
     then
       let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in
-	bprintf b "vzero_%d_%d"  vi (bitwidth st vt)
+      let w = (bitwidth st vt) in 
+	Prelude.vzero_add st.preqs (vi, w);
+	bprintf b "vzero_%d_%d" vi w
     else
       let k = bitwidth st ty in
 	if k = 1 then bprintf b "false" else bzero_vector_n b k
@@ -610,11 +615,15 @@ and trunc_to_smt b st (tx, vx) ty =
 	let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu tx in 
 	let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in
 	let logv = (string_of_int vyi) in
-	let n = (string_of_int (bitwidth st vyt)) in
-	let w = (string_of_int (bitwidth st vxt)) in 
-	  "vtrunc_" ^ logv  ^ "_" ^ n ^ "_" ^ w
+	let n = (bitwidth st vyt) in
+	let w = (bitwidth st vxt) in 
+	  Prelude.vtrunc_add st.preqs (vyi, n, w);
+	  "vtrunc_" ^ logv  ^ "_" ^ (string_of_int n) ^ "_" ^ (string_of_int w)
     else
-      "trunc_" ^ (string_of_int (bitwidth st ty)) ^ "_" ^ (string_of_int (bitwidth st tx))
+      let n = (bitwidth st ty) in
+      let w = (bitwidth st tx) in 
+	Prelude.trunc_add st.preqs (n, w);
+	"trunc_" ^ (string_of_int n) ^ "_" ^ (string_of_int w)
   in
     bprintf b "(%s " op_name;
     typ_val_to_smt b st (tx, vx);
@@ -888,8 +897,10 @@ and binop_to_smt b st ty op left right =
   let fu = (state_fu st) in
   let op_name =
     if (Bc_manip.is_vector_typ cu fu ty) then
-      let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in 
-	"v" ^ op ^ "_" ^ (string_of_int vi) ^ "_" ^ (string_of_int (bitwidth st vt)) 
+      let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in
+      let w = (bitwidth st vt) in 
+	Prelude.vbinop_add st.preqs (vi, w);
+	"v" ^ op ^ "_" ^ (string_of_int vi) ^ "_" ^ (string_of_int w) 
     else 
       op
   in
@@ -917,7 +928,9 @@ and icmp_to_smt b st cmp left right = (* Comparison: cmp = operation, left/right
 
 and bvector_to_smt b st typ l =
   let (k, tau) = Bc_manip.deconstruct_vector_typ st.cu (state_fu st) typ in
-    bprintf b "(vmake_%d_%d " k (bitwidth st tau);
+  let w = (bitwidth st tau) in
+    Prelude.vmake_add st.preqs (k, w);
+    bprintf b "(vmake_%d_%d " k w;
     List.iter (fun x -> typ_val_to_smt b st x; bprintf b " ") l;
     bprintf b ")"
 
@@ -1618,7 +1631,8 @@ let fun_to_smt b fu state =
   end
 
   
-let cu_to_smt b cu aw prelude =
+let cu_to_smt b cu prelude =
+  let aw = prelude.address_width in 
   let state = { mem_idx = 0; sp_idx = 0; fu = None; blk = None; preds = None; cu = cu; addr_width = aw; retval = None; preqs = prelude; } in 
     declare_globals b state;
     declare_functions b state;
