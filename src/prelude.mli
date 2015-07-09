@@ -33,39 +33,20 @@ val cast_add: prelude -> unit
 (* add a vundef requirement to a prelude object *)
 val vundef_add:  prelude -> (int * int) -> unit
 
-(* fetch the vundef requirements  from a prelude object *)
-val vundef_fetch:  prelude -> (int * int) list
-
 (* add a vmake requirement to a prelude object *)
 val vmake_add:  prelude -> (int * int) -> unit
-
-(* fetch the vmake requirements  from a prelude object *)
-val vmake_fetch:  prelude -> (int * int) list
 
 (* add a vzero requirement to a prelude object *)
 val vzero_add:  prelude -> (int * int) -> unit
 
-(* fetch the vzero requirements  from a prelude object *)
-val vzero_fetch:  prelude -> (int * int) list
-
 (* add a vbinop requirement to a prelude object *)
 val vbinop_add:  prelude -> (int * int) -> unit
-
-(* fetch the vbinop requirements  from a prelude object *)
-val vbinop_fetch:  prelude -> (int * int) list
 
 (* add a trunc requirement to a prelude object *)
 val trunc_add:  prelude -> (int * int) -> unit
 
-(* fetch the trunc requirements  from a prelude object *)
-val trunc_fetch:  prelude -> (int * int) list
-
 (* add a vtrunc requirement to a prelude object *)
 val vtrunc_add:  prelude -> (int * int * int) -> unit
-
-(* fetch the vtrunc requirements  from a prelude object *)
-val vtrunc_fetch:  prelude -> (int * int * int) list
-
 
 (*
  * Prelude the required prelude to the buffer:
