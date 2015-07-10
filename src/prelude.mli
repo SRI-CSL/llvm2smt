@@ -21,6 +21,8 @@ type prelude = {
   mutable vzext: (int * int * int) list;
   mutable sext:  (int * int) list;
   mutable vsext: (int * int * int) list;
+  mutable int_ptr:  (int * int) list;
+  mutable vint_ptr: (int * int * int) list;
   mutable cast: bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
@@ -63,6 +65,12 @@ val sext_add:  prelude -> (int * int) -> unit
 
 (* add a vsext requirement to a prelude object *)
 val vsext_add:  prelude -> (int * int * int) -> unit
+
+(* add a int_ptr requirement to a prelude object *)
+val int_ptr_add:  prelude -> (int * int) -> unit
+
+(* add a vint_ptr requirement to a prelude object *)
+val vint_ptr_add:  prelude -> (int * int * int) -> unit
 
 (*
  * Prelude the required prelude to the buffer:

@@ -24,6 +24,8 @@ type prelude = {
   mutable vzext: (int * int * int) list;
   mutable sext:  (int * int) list;
   mutable vsext: (int * int * int) list;
+  mutable int_ptr:  (int * int) list;
+  mutable vint_ptr: (int * int * int) list;
   mutable cast:   bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
@@ -58,6 +60,7 @@ let make_prelude aw =
 	    trunc = []; vtrunc = [];
 	    zext = []; vzext = [];
 	    sext = []; vsext = [];
+	    int_ptr = []; vint_ptr = [];
 	    cast = false; vector_width = [];   vector_length = []; } in
     p
 
@@ -172,6 +175,25 @@ let vsext_add preq x =
 
 let vsext_fetch preq = List.sort compare3 preq.vsext
 
+let int_ptr_add preq x =
+  let l = preq.int_ptr in
+    if not (List.mem x l) then preq.int_ptr <- x :: l
+
+let int_ptr_fetch preq = List.sort compare2 preq.int_ptr
+    
+let vint_ptr_add preq x =
+  let l = preq.vint_ptr in
+    if not (List.mem x l)
+    then
+      let (length, n, width) = x in
+	vector_width_add preq n;
+	vector_width_add preq width;
+	vector_length_add preq length;
+	int_ptr_add preq (n, width);
+	preq.vint_ptr <- x :: l
+
+let vint_ptr_fetch preq = List.sort compare3 preq.vint_ptr
+
 let dump_prelude prelude =
   let dump_aux1 string list =
     let n = (List.length list) in
@@ -220,7 +242,9 @@ let dump_prelude prelude =
     dump_aux2 "zext" (zext_fetch prelude);
     dump_aux3 "vzext" (vzext_fetch prelude);
     dump_aux2 "sext" (sext_fetch prelude);
-    dump_aux3 "vsext" (vsext_fetch prelude)
+    dump_aux3 "vsext" (vsext_fetch prelude);
+    dump_aux2 "int_ptr" (int_ptr_fetch prelude);
+    dump_aux3 "vint_ptr" (vint_ptr_fetch prelude)
       
       
 let header =
@@ -667,6 +691,31 @@ let sext b n w =
   (define-fun sext_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ sign_extend %d) x))
 \n"
 	n w n w (w - n)
+
+let int_ptr b n w =
+  if n == w
+  then
+    bprintf b 
+      "
+  (define-fun int_ptr_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) x)
+\n"
+      n w n w  
+  else
+    if n > w
+    then
+      bprintf b 
+	"
+  (define-fun int_ptr_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ zero_extend %d) x))
+\n"
+	w n w n (n - w)
+    else
+      bprintf b 
+	"
+  (define-fun int_ptr_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ extract %d) x))
+\n"
+	w n w n (n - 1)
+
+
 	
 (* N.B. if we do it like this, then we need to be careful with the meaning of n and w; n < w
  * means that n is sometimes the argument size and sometimes the target size.
@@ -778,6 +827,10 @@ let print_prelude b preqs =
     List.iter (fun (n, w) ->  (sext b n w)) (sext_fetch preqs);
 
     List.iter (fun (l, n, w) ->  (vconversion b "sext" l n w)) (vsext_fetch preqs);
+
+    List.iter (fun (n, w) ->  (int_ptr b n w)) (int_ptr_fetch preqs);
+
+    List.iter (fun (l, n, w) ->  (vconversion b "int_ptr" l n w)) (vint_ptr_fetch preqs);
 
     if preqs.cast then bprintf b "%s\n" vector_casts;
     
