@@ -587,8 +587,10 @@ let vbinop b logv w =
     
 
 let trunc b n w =
-    if n < w
-    then
+  if n >= w
+  then
+    failwith("trunc: target size should bigger than source size!")
+  else
       if n = 1
       then
 	bprintf b 
@@ -604,43 +606,41 @@ let trunc b n w =
 	n w w n (n - 1)
 	
 let zext b n w =
-    if n < w
+  if n >= w
+  then
+    failwith("zext: target size should bigger than source size!")
+  else
+    if n = 1
     then
-      if n = 1
-      then
-	bprintf b 
-	  "
+      bprintf b 
+	"
   (define-fun zext_1_%d ((x Bool)) (_ BitVec %d) (ite x (_ bv1 %d) (_ bv0 %d)))
 \n"	
-	  w w w w
-      else
-	bprintf b 
+	w w w w
+    else
+      bprintf b 
 	"
   (define-fun zext_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ zero_extend %d) x))
 \n"
 	n w n w (w - n)
-
+	
 (* N.B. if we do it like this, then we need to be careful with the meaning of n and w; n < w
  * means that n is sometimes the argument size and sometimes the target size.
  *)
 let vconversion_1 b conv_op n w  =
-  if n < w
-  then
-    bprintf b 
-      "
+  bprintf b 
+    "
 (define-fun v%s_1_%d_%d ((x vector_1_%d)) vector_1_%d
    (let ((z0 (%s_%d_%d (select x #b0)))
          (z1 (%s_%d_%d (select x #b1))))
       (vmake_1_%d z0 z1)))
 \n"
-      conv_op n w w n conv_op n w conv_op n w n
+    conv_op n w w n conv_op n w conv_op n w n
       
       
 let vconversion_2 b conv_op n w  =
-  if n < w
-  then
-    bprintf b 
-      "
+  bprintf b 
+    "
 (define-fun v%s_2_%d_%d ((x vector_2_%d)) vector_2_%d
    (let ((z0 (%s_%d_%d (select x #b00)))
          (z1 (%s_%d_%d (select x #b01)))
@@ -648,14 +648,12 @@ let vconversion_2 b conv_op n w  =
          (z3 (%s_%d_%d (select x #b11))))
       (vmake_2_%d z0 z1 z2 z3)))
 \n"
-      conv_op n w w n  conv_op n w  conv_op n w  conv_op n w  conv_op n w  n
-      
+    conv_op n w w n  conv_op n w  conv_op n w  conv_op n w  conv_op n w  n
+    
       
 let vconversion_3 b conv_op n w  =
-  if n < w
-  then
-    bprintf b 
-      "
+  bprintf b 
+    "
 (define-fun v%s_3_%d_%d ((x vector_3_%d)) vector_3_%d
    (let ((z0 (%s_%d_%d (select x #b000)))
          (z1 (%s_%d_%d (select x #b001)))
@@ -667,8 +665,8 @@ let vconversion_3 b conv_op n w  =
          (z7 (%s_%d_%d (select x #b111))))
       (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
 \n"
-      conv_op n w w n  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  n
-
+    conv_op n w w n  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  n
+    
 let vconversion b conv_op logv n w =
   if logv = 1
   then
@@ -729,6 +727,10 @@ let print_prelude b preqs =
     List.iter (fun (n, w) ->  (trunc b n w)) (trunc_fetch preqs);
 
     List.iter (fun (l, n, w) ->  (vconversion b "trunc" l n w)) (vtrunc_fetch preqs);
+
+    List.iter (fun (n, w) ->  (zext b n w)) (zext_fetch preqs);
+
+    List.iter (fun (l, n, w) ->  (vconversion b "zext" l n w)) (vzext_fetch preqs);
 
     if preqs.cast then bprintf b "%s\n" vector_casts;
     

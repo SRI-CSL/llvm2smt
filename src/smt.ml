@@ -623,7 +623,7 @@ and trunc_to_smt b st (tx, vx) ty =
     typ_val_to_smt b st (tx, vx);
     bprintf b ")";
     
-and zext_to_smt b st tx x ty = 
+and _zext_to_smt b st tx x ty = 
   if is_bool st tx then
     let n = (bitwidth st ty) in
       bprintf b "(ite ";
@@ -635,6 +635,34 @@ and zext_to_smt b st tx x ty =
       typ_val_to_smt b st (tx, x);
       bprintf b ")"
 
+and zext_to_smt b st tx vx ty =
+  let cu = st.cu in
+  let fu = (state_fu st) in
+  let op_name =
+    if (Bc_manip.is_vector_typ cu fu ty)
+    then
+      if not (Bc_manip.is_vector_typ cu fu tx)
+      then
+	failwith ("zext argument not a vector: " ^  (Llvm_pp.string_of_typ tx))
+      else
+	let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu tx in 
+	let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in
+	let logv = (string_of_int vyi) in
+	let n = (bitwidth st vyt) in
+	let w = (bitwidth st vxt) in 
+	  Prelude.vzext_add st.preqs (vyi, w, n);
+	  "vzext_" ^ logv  ^ "_" ^ (string_of_int w)  ^ "_" ^ (string_of_int n)
+    else
+      let n = (bitwidth st ty) in
+      let w = (bitwidth st tx) in 
+	Prelude.zext_add st.preqs (w, n);
+	"zext_" ^ (string_of_int w) ^ "_" ^ (string_of_int n)
+  in
+    bprintf b "(%s " op_name;
+    typ_val_to_smt b st (tx, vx);
+    bprintf b ")";
+
+	
 and sext_to_smt b st tx x ty = 
   if is_bool st tx then
     let n = (bitwidth st ty) in
