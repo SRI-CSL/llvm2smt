@@ -17,6 +17,8 @@ type prelude = {
   mutable vbinop: (int * int) list;  (* could include the actual operator *)
   mutable trunc:  (int * int) list;
   mutable vtrunc: (int * int * int) list;
+  mutable zext:  (int * int) list;
+  mutable vzext: (int * int * int) list;
   mutable cast: bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
@@ -47,6 +49,12 @@ val trunc_add:  prelude -> (int * int) -> unit
 
 (* add a vtrunc requirement to a prelude object *)
 val vtrunc_add:  prelude -> (int * int * int) -> unit
+
+(* add a zext requirement to a prelude object *)
+val zext_add:  prelude -> (int * int) -> unit
+
+(* add a vzext requirement to a prelude object *)
+val vzext_add:  prelude -> (int * int * int) -> unit
 
 (*
  * Prelude the required prelude to the buffer:

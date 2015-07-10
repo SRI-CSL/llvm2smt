@@ -20,6 +20,8 @@ type prelude = {
   mutable vbinop: (int * int) list;  (* could include the actual operator *)
   mutable trunc:  (int * int) list;
   mutable vtrunc: (int * int * int) list;
+  mutable zext:  (int * int) list;
+  mutable vzext: (int * int * int) list;
   mutable cast:   bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
@@ -48,7 +50,11 @@ let vector_width_fetch preq  = List.sort compare preq.vector_width
 let vector_length_fetch preq  = List.sort compare preq.vector_length
       
 let make_prelude aw =
-  let p = { address_width = aw; vundef = []; vmake = []; vzero = []; vbinop = []; trunc = []; vtrunc = [];  cast = false; vector_width = [];   vector_length = []; } in
+  let p = { address_width = aw;
+	    vundef = []; vmake = []; vzero = []; vbinop = [];
+	    trunc = []; vtrunc = [];
+	    zext = []; vzext = [];
+	    cast = false; vector_width = [];   vector_length = []; } in
     p
 
 let cast_add preq =
@@ -124,6 +130,25 @@ let vtrunc_add preq x =
 
 let vtrunc_fetch preq = List.sort compare3 preq.vtrunc
 
+let zext_add preq x =
+  let l = preq.zext in
+    if not (List.mem x l) then preq.zext <- x :: l
+
+let zext_fetch preq = List.sort compare2 preq.zext
+    
+let vzext_add preq x =
+  let l = preq.vzext in
+    if not (List.mem x l)
+    then
+      let (length, n, width) = x in
+	vector_width_add preq n;
+	vector_width_add preq width;
+	vector_length_add preq length;
+	zext_add preq (n, width);
+	preq.vzext <- x :: l
+
+let vzext_fetch preq = List.sort compare3 preq.vzext
+
 let dump_prelude prelude =
   let dump_aux1 string list =
     let n = (List.length list) in
@@ -168,7 +193,9 @@ let dump_prelude prelude =
     dump_aux2 "vzero" (vzero_fetch prelude);
     dump_aux2 "vbinop" (vbinop_fetch prelude);
     dump_aux2 "trunc" (trunc_fetch prelude);
-    dump_aux3 "vtrunc" (vtrunc_fetch prelude)
+    dump_aux3 "vtrunc" (vtrunc_fetch prelude);
+    dump_aux2 "zext" (zext_fetch prelude);
+    dump_aux3 "vzext" (vzext_fetch prelude)
       
       
 let header =
@@ -651,64 +678,6 @@ let vconversion b conv_op logv n w =
     vconversion_3 b conv_op n w
   else failwith("vconversion Ooops: need to write some prelude code for vectors longer than 2^3.")
 	  
-let vtrunc_1 b n w  =
-  if n < w
-  then
-    bprintf b 
-      "
-(define-fun vtrunc_1_%d_%d ((x vector_1_%d)) vector_1_%d
-   (let ((z0 (trunc_%d_%d (select x #b0)))
-         (z1 (trunc_%d_%d (select x #b1))))
-      (vmake_1_%d z0 z1)))
-\n"
-      n w w n n w n w n
-      
-      
-let vtrunc_2 b n w  =
-  if n < w
-  then
-    bprintf b 
-      "
-(define-fun vtrunc_2_%d_%d ((x vector_2_%d)) vector_2_%d
-   (let ((z0 (trunc_%d_%d (select x #b00)))
-         (z1 (trunc_%d_%d (select x #b01)))
-         (z2 (trunc_%d_%d (select x #b10)))
-         (z3 (trunc_%d_%d (select x #b11))))
-      (vmake_2_%d z0 z1 z2 z3)))
-\n"
-      n w w n  n w  n w  n w  n w  n
-      
-      
-let vtrunc_3 b n w  =
-  if n < w
-  then
-    bprintf b 
-      "
-(define-fun vtrunc_3_%d_%d ((x vector_3_%d)) vector_3_%d
-   (let ((z0 (trunc_%d_%d (select x #b000)))
-         (z1 (trunc_%d_%d (select x #b001)))
-         (z2 (trunc_%d_%d (select x #b010)))
-         (z3 (trunc_%d_%d (select x #b011)))
-         (z4 (trunc_%d_%d (select x #b100)))
-         (z5 (trunc_%d_%d (select x #b101)))
-         (z6 (trunc_%d_%d (select x #b110)))
-         (z7 (trunc_%d_%d (select x #b111))))
-      (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
-\n"
-      n w w n  n w  n w  n w  n w  n w  n w  n w  n w  n
-	
-
-let vtrunc b logv n w =
-  if logv = 1
-  then
-    vtrunc_1 b n w
-  else if logv = 2
-  then
-    vtrunc_2 b n w
-  else if logv = 3
-  then
-    vtrunc_3 b n w
-  else failwith("vtrunc Ooops: need to write some prelude code for vectors longer than 2^3.")
 
 (*
  * Prelude: a bunch of definitions to abbreviate the conversion.
@@ -756,7 +725,7 @@ let print_prelude b preqs =
 
     List.iter (fun (n, w) ->  (trunc b n w)) (trunc_fetch preqs);
 
-    List.iter (fun (l, n, w) ->  (vtrunc b l n w)) (vtrunc_fetch preqs);
+    List.iter (fun (l, n, w) ->  (vconversion b "trunc" l n w)) (vtrunc_fetch preqs);
 
     if preqs.cast then bprintf b "%s\n" vector_casts;
     
