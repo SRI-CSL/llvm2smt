@@ -649,6 +649,25 @@ let zext b n w =
 \n"
 	n w n w (w - n)
 	
+let sext b n w =
+  if n >= w
+  then
+    failwith("sext: target size should bigger than source size!")
+  else
+    if n = 1
+    then
+      bprintf b 
+	"
+  (define-fun sext_1_%d ((x Bool)) (_ BitVec %d) (ite x (bvneg (_ bv1 %d)) (_ bv0 %d)))
+\n"	
+	w w w w
+    else
+      bprintf b 
+	"
+  (define-fun sext_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ sign_extend %d) x))
+\n"
+	n w n w (w - n)
+	
 (* N.B. if we do it like this, then we need to be careful with the meaning of n and w; n < w
  * means that n is sometimes the argument size and sometimes the target size.
  *)
@@ -755,6 +774,10 @@ let print_prelude b preqs =
     List.iter (fun (n, w) ->  (zext b n w)) (zext_fetch preqs);
 
     List.iter (fun (l, n, w) ->  (vconversion b "zext" l n w)) (vzext_fetch preqs);
+
+    List.iter (fun (n, w) ->  (sext b n w)) (sext_fetch preqs);
+
+    List.iter (fun (l, n, w) ->  (vconversion b "sext" l n w)) (vsext_fetch preqs);
 
     if preqs.cast then bprintf b "%s\n" vector_casts;
     

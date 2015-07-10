@@ -663,7 +663,7 @@ and zext_to_smt b st tx vx ty =
     bprintf b ")";
 
 	
-and sext_to_smt b st tx x ty = 
+and _sext_to_smt b st tx x ty = 
   if is_bool st tx then
     let n = (bitwidth st ty) in
       bprintf b "(ite ";
@@ -675,6 +675,34 @@ and sext_to_smt b st tx x ty =
       typ_val_to_smt b st (tx, x);
       bprintf b ")"	       
 
+and sext_to_smt b st tx vx ty =
+  let cu = st.cu in
+  let fu = (state_fu st) in
+  let op_name =
+    if (Bc_manip.is_vector_typ cu fu ty)
+    then
+      if not (Bc_manip.is_vector_typ cu fu tx)
+      then
+	failwith ("sext argument not a vector: " ^  (Llvm_pp.string_of_typ tx))
+      else
+	let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu tx in 
+	let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in
+	let logv = (string_of_int vyi) in
+	let n = (bitwidth st vyt) in
+	let w = (bitwidth st vxt) in 
+	  Prelude.vsext_add st.preqs (vyi, w, n);
+	  "vsext_" ^ logv  ^ "_" ^ (string_of_int w)  ^ "_" ^ (string_of_int n)
+    else
+      let n = (bitwidth st ty) in
+      let w = (bitwidth st tx) in 
+	Prelude.sext_add st.preqs (w, n);
+	"sext_" ^ (string_of_int w) ^ "_" ^ (string_of_int n)
+  in
+    bprintf b "(%s " op_name;
+    typ_val_to_smt b st (tx, vx);
+    bprintf b ")";
+
+	
 and int_ptr_to_smt b st tx x ty = 
   let np = (bitwidth st tx) in  (* source size *)
   let n = (bitwidth st ty) in   (* destination *)
@@ -888,8 +916,8 @@ and val_to_smt b st (typ, v) =
     | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
     | Vector(l)         -> bvector_to_smt b st typ l
     | Trunc(x, ty)      -> trunc_to_smt b st x ty                
-    | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              (* VECTOR FIXME *)
-    | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              (* VECTOR FIXME *)
+    | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              
+    | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              
     | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)    (* VECTOR FIXME !!!!!???? %Z = bitcast <2 x int> %V to i64;   ; yields i64: %V *)
     | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty       (* VECTOR FIXME *)
     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty                (* VECTOR FIXME *)
