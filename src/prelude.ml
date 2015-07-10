@@ -119,6 +119,7 @@ let vtrunc_add preq x =
 	vector_width_add preq n;
 	vector_width_add preq width;
 	vector_length_add preq length;
+	trunc_add preq (n, width);
 	preq.vtrunc <- x :: l
 
 let vtrunc_fetch preq = List.sort compare3 preq.vtrunc
@@ -558,11 +559,8 @@ let vbinop b logv w =
  
     
 
-  (*
-   * Need to handle the n=1 case too.
-   *)
 let trunc b n w =
-    if n <= w
+    if n < w
     then
       if n = 1
       then
@@ -573,13 +571,86 @@ let trunc b n w =
 	  w w 
       else
 	bprintf b 
-	    
 	"
   (define-fun trunc_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ extract %d 0) x))
 \n"
 	n w w n (n - 1)
 	
+let zext b n w =
+    if n < w
+    then
+      if n = 1
+      then
+	bprintf b 
+	  "
+  (define-fun zext_1_%d ((x Bool)) (_ BitVec %d) (ite x (_ bv1 %d) (_ bv0 %d)))
+\n"	
+	  w w w w
+      else
+	bprintf b 
+	"
+  (define-fun zext_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ zero_extend %d) x))
+\n"
+	n w n w (w - n)
 
+let vconversion_1 b conv_op n w  =
+  if n < w
+  then
+    bprintf b 
+      "
+(define-fun v%s_1_%d_%d ((x vector_1_%d)) vector_1_%d
+   (let ((z0 (%s_%d_%d (select x #b0)))
+         (z1 (%s_%d_%d (select x #b1))))
+      (vmake_1_%d z0 z1)))
+\n"
+      conv_op n w w n conv_op n w conv_op n w n
+      
+      
+let vconversion_2 b conv_op n w  =
+  if n < w
+  then
+    bprintf b 
+      "
+(define-fun v%s_2_%d_%d ((x vector_2_%d)) vector_2_%d
+   (let ((z0 (%s_%d_%d (select x #b00)))
+         (z1 (%s_%d_%d (select x #b01)))
+         (z2 (%s_%d_%d (select x #b10)))
+         (z3 (%s_%d_%d (select x #b11))))
+      (vmake_2_%d z0 z1 z2 z3)))
+\n"
+      conv_op n w w n  conv_op n w  conv_op n w  conv_op n w  conv_op n w  n
+      
+      
+let vconversion_3 b conv_op n w  =
+  if n < w
+  then
+    bprintf b 
+      "
+(define-fun v%s_3_%d_%d ((x vector_3_%d)) vector_3_%d
+   (let ((z0 (%s_%d_%d (select x #b000)))
+         (z1 (%s_%d_%d (select x #b001)))
+         (z2 (%s_%d_%d (select x #b010)))
+         (z3 (%s_%d_%d (select x #b011)))
+         (z4 (%s_%d_%d (select x #b100)))
+         (z5 (%s_%d_%d (select x #b101)))
+         (z6 (%s_%d_%d (select x #b110)))
+         (z7 (%s_%d_%d (select x #b111))))
+      (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
+\n"
+      conv_op n w w n  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  conv_op n w  n
+
+let vconversion b conv_op logv n w =
+  if logv = 1
+  then
+    vconversion_1 b conv_op n w
+  else if logv = 2
+  then
+    vconversion_2 b conv_op n w
+  else if logv = 3
+  then
+    vconversion_3 b conv_op n w
+  else failwith("vconversion Ooops: need to write some prelude code for vectors longer than 2^3.")
+	  
 let vtrunc_1 b n w  =
   if n < w
   then
