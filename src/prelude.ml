@@ -22,6 +22,8 @@ type prelude = {
   mutable vtrunc: (int * int * int) list;
   mutable zext:  (int * int) list;
   mutable vzext: (int * int * int) list;
+  mutable sext:  (int * int) list;
+  mutable vsext: (int * int * int) list;
   mutable cast:   bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
@@ -35,6 +37,7 @@ let compare2 (x0, y0) (x1, y1) =
 let compare3 (x0, y0, z0) (x1, y1, z1) =
   let xcmp = compare x0 x1 in
     if xcmp <> 0 then xcmp else compare2 (y0, z0) (y1, z1)
+
 
 let vector_width_add preq n =
   let l = preq.vector_width in
@@ -54,6 +57,7 @@ let make_prelude aw =
 	    vundef = []; vmake = []; vzero = []; vbinop = [];
 	    trunc = []; vtrunc = [];
 	    zext = []; vzext = [];
+	    sext = []; vsext = [];
 	    cast = false; vector_width = [];   vector_length = []; } in
     p
 
@@ -149,6 +153,25 @@ let vzext_add preq x =
 
 let vzext_fetch preq = List.sort compare3 preq.vzext
 
+let sext_add preq x =
+  let l = preq.sext in
+    if not (List.mem x l) then preq.sext <- x :: l
+
+let sext_fetch preq = List.sort compare2 preq.sext
+    
+let vsext_add preq x =
+  let l = preq.vsext in
+    if not (List.mem x l)
+    then
+      let (length, n, width) = x in
+	vector_width_add preq n;
+	vector_width_add preq width;
+	vector_length_add preq length;
+	sext_add preq (n, width);
+	preq.vsext <- x :: l
+
+let vsext_fetch preq = List.sort compare3 preq.vsext
+
 let dump_prelude prelude =
   let dump_aux1 string list =
     let n = (List.length list) in
@@ -195,7 +218,9 @@ let dump_prelude prelude =
     dump_aux2 "trunc" (trunc_fetch prelude);
     dump_aux3 "vtrunc" (vtrunc_fetch prelude);
     dump_aux2 "zext" (zext_fetch prelude);
-    dump_aux3 "vzext" (vzext_fetch prelude)
+    dump_aux3 "vzext" (vzext_fetch prelude);
+    dump_aux2 "sext" (sext_fetch prelude);
+    dump_aux3 "vsext" (vsext_fetch prelude)
       
       
 let header =
@@ -696,7 +721,6 @@ let print_prelude b preqs =
   let vector_logarithms = preqs.vector_length in 
 	       
   let vector_widths =  preqs.vector_width in 
-
 
     bprintf b "%s" header;
     
