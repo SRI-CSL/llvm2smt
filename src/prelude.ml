@@ -583,7 +583,7 @@ let vbinop b logv w =
   then
     List.iter (fun op -> (bpr_op_3_w b op w)) binops
   else failwith("vbinop Ooops: need to write some prelude code for binops of vectors longer than 2^3.")
- 
+
     
 
 let trunc b n w =
@@ -620,6 +620,9 @@ let zext b n w =
 \n"
 	n w n w (w - n)
 
+(* N.B. if we do it like this, then we need to be careful with the meaning of n and w; n < w
+ * means that n is sometimes the argument size and sometimes the target size.
+ *)
 let vconversion_1 b conv_op n w  =
   if n < w
   then
