@@ -10,27 +10,20 @@ open Printf
  * The prelude requirements object. This specifies what we need in our prelude.
  * It is filled in while translating the cu.
  * It to limit the prelude definitions to those that are necessary.
-*)
+ *)
 
 type prelude = {
   address_width: int;
-  mutable vundef: (int * int) list;
-  mutable vmake:  (int * int) list;
-  mutable vzero:  (int * int) list;
-  mutable vbinop: (int * int) list;  (* could include the actual operator *)
-  mutable trunc:  (int * int) list;
-  mutable vtrunc: (int * int * int) list;
-  mutable zext:  (int * int) list;
-  mutable vzext: (int * int * int) list;
-  mutable sext:  (int * int) list;
-  mutable vsext: (int * int * int) list;
-  mutable int_ptr:  (int * int) list;
-  mutable vint_ptr: (int * int * int) list;
+  (* binary prelude parametric operations: vundef vmake vzero vbinop trunc zext sext int_ptr *)
+  twos_keys: string list;
+  twos_table:  (string, (int * int) list) Hashtbl.t;
+  (* ternary prelude parametric operations: vtrunc vzext vsext vint_ptr *)
+  threes_keys: string list;
+  threes_table:  (string, (int * int * int) list) Hashtbl.t;
   mutable cast:   bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
 }
-
 
 let compare2 (x0, y0) (x1, y1) =
   let xcmp = compare x0 x1 in
@@ -39,7 +32,6 @@ let compare2 (x0, y0) (x1, y1) =
 let compare3 (x0, y0, z0) (x1, y1, z1) =
   let xcmp = compare x0 x1 in
     if xcmp <> 0 then xcmp else compare2 (y0, z0) (y1, z1)
-
 
 let vector_width_add preq n =
   let l = preq.vector_width in
@@ -55,15 +47,46 @@ let vector_width_fetch preq  = List.sort compare preq.vector_width
 let vector_length_fetch preq  = List.sort compare preq.vector_length
       
 let make_prelude aw =
-  let p = { address_width = aw;
-	    vundef = []; vmake = []; vzero = []; vbinop = [];
-	    trunc = []; vtrunc = [];
-	    zext = []; vzext = [];
-	    sext = []; vsext = [];
-	    int_ptr = []; vint_ptr = [];
-	    cast = false; vector_width = [];   vector_length = []; } in
-    p
+  let preq = { address_width = aw;
+	       twos_keys = ["vundef"; "vmake"; "vzero"; "vbinop"; "trunc"; "zext"; "sext"; "int_ptr";];
+	       twos_table = (Hashtbl.create 64);
+	       threes_keys = ["vtrunc"; "vzext"; "vsext"; "vint_ptr";];
+	       threes_table = (Hashtbl.create 64);
+	       cast = false; vector_width = [];   vector_length = []; } in
+    List.iter (fun key -> Hashtbl.add preq.twos_table key []) preq.twos_keys;
+    List.iter (fun key -> Hashtbl.add preq.threes_table key []) preq.threes_keys;
+    preq
 
+let twos_add preq key x =
+  let l = Hashtbl.find preq.twos_table key in
+    if not (List.mem x l)
+    then
+      begin
+	Hashtbl.replace preq.twos_table key (x :: l);
+	if key = "vundef" || key = "vmake" || key = "vzero" || key = "vbinop"
+	then
+	  let (length, width) = x in
+	    vector_width_add preq width;
+	    vector_length_add preq length;
+      end
+    
+let twos_fetch preq key = 
+  List.sort compare2 (Hashtbl.find preq.twos_table key)
+
+let threes_add preq key twin x =
+  let l =  Hashtbl.find preq.threes_table key in
+    if not (List.mem x l)
+    then
+      let (length, n, width) = x in
+	vector_width_add preq n;
+	vector_width_add preq width;
+	vector_length_add preq length;
+	twos_add preq twin (n, width);
+	Hashtbl.replace preq.threes_table key (x :: l)
+
+let threes_fetch preq key = List.sort compare3 (Hashtbl.find preq.threes_table key)
+
+			  
 let cast_add preq =
   if not preq.cast
   then
@@ -74,126 +97,30 @@ let cast_add preq =
     end
       
       
-let vundef_add preq x =
-  let l = preq.vundef in
-    if not (List.mem x l)
-    then
-      let (length, width) = x in
-	vector_width_add preq width;
-	vector_length_add preq length;
-	preq.vundef <- x :: l
-
-let vundef_fetch preq = List.sort compare2 preq.vundef
+let vundef_add preq x = twos_add preq "vundef" x
+  
+let vmake_add preq x = twos_add preq "vmake" x
+			 
+let vzero_add preq x = twos_add preq "vzero" x
     
-let vmake_add preq x =
-  let l = preq.vmake in
-    if not (List.mem x l)
-    then
-      let (length, width) = x in
-	vector_width_add preq width;
-	vector_length_add preq length;
-	preq.vmake <- x :: l
+let vbinop_add preq x = twos_add preq "vbinop" x
 
-let vmake_fetch preq = List.sort compare2 preq.vmake
-    
-let vzero_add preq x =
-  let l = preq.vzero in
-    if not (List.mem x l)
-    then
-      let (length, width) = x in
-	vector_width_add preq width;
-	vector_length_add preq length;
-	preq.vzero <- x :: l
+let trunc_add preq x = twos_add preq "trunc" x
+  
+let zext_add preq x = twos_add preq "zext" x
+			
+let sext_add preq x = twos_add preq "sext" x
 
-let vzero_fetch preq = List.sort compare2 preq.vzero
-    
-let vbinop_add preq x =
-  let l = preq.vbinop in
-    if not (List.mem x l)
-    then
-      let (length, width) = x in
-	vector_width_add preq width;
-	vector_length_add preq length;
-	preq.vbinop <- x :: l
+let int_ptr_add preq x = twos_add preq "int_ptr" x
 
-let vbinop_fetch preq = List.sort compare2 preq.vbinop
-    
-let trunc_add preq x =
-  let l = preq.trunc in
-    if not (List.mem x l) then preq.trunc <- x :: l
-
-let trunc_fetch preq = List.sort compare2 preq.trunc
-    
-let vtrunc_add preq x =
-  let l = preq.vtrunc in
-    if not (List.mem x l)
-    then
-      let (length, n, width) = x in
-	vector_width_add preq n;
-	vector_width_add preq width;
-	vector_length_add preq length;
-	trunc_add preq (n, width);
-	preq.vtrunc <- x :: l
-
-let vtrunc_fetch preq = List.sort compare3 preq.vtrunc
-
-let zext_add preq x =
-  let l = preq.zext in
-    if not (List.mem x l) then preq.zext <- x :: l
-
-let zext_fetch preq = List.sort compare2 preq.zext
-    
-let vzext_add preq x =
-  let l = preq.vzext in
-    if not (List.mem x l)
-    then
-      let (length, n, width) = x in
-	vector_width_add preq n;
-	vector_width_add preq width;
-	vector_length_add preq length;
-	zext_add preq (n, width);
-	preq.vzext <- x :: l
-
-let vzext_fetch preq = List.sort compare3 preq.vzext
-
-let sext_add preq x =
-  let l = preq.sext in
-    if not (List.mem x l) then preq.sext <- x :: l
-
-let sext_fetch preq = List.sort compare2 preq.sext
-    
-let vsext_add preq x =
-  let l = preq.vsext in
-    if not (List.mem x l)
-    then
-      let (length, n, width) = x in
-	vector_width_add preq n;
-	vector_width_add preq width;
-	vector_length_add preq length;
-	sext_add preq (n, width);
-	preq.vsext <- x :: l
-
-let vsext_fetch preq = List.sort compare3 preq.vsext
-
-let int_ptr_add preq x =
-  let l = preq.int_ptr in
-    if not (List.mem x l) then preq.int_ptr <- x :: l
-
-let int_ptr_fetch preq = List.sort compare2 preq.int_ptr
-    
-let vint_ptr_add preq x =
-  let l = preq.vint_ptr in
-    if not (List.mem x l)
-    then
-      let (length, n, width) = x in
-	vector_width_add preq n;
-	vector_width_add preq width;
-	vector_length_add preq length;
-	int_ptr_add preq (n, width);
-	preq.vint_ptr <- x :: l
-
-let vint_ptr_fetch preq = List.sort compare3 preq.vint_ptr
-
+let vtrunc_add preq x = threes_add preq "vtrunc" "trunc" x
+  
+let vsext_add preq x = threes_add preq "vsext" "sext" x
+  
+let vzext_add preq x = threes_add preq "vzext" "zext" x
+  
+let vint_ptr_add preq x = threes_add preq "vint_ptr" "int_ptr" x
+  
 let dump_prelude prelude =
   let dump_aux1 string list =
     let n = (List.length list) in
@@ -233,18 +160,8 @@ let dump_prelude prelude =
   in
     dump_aux1 "vector_length" (vector_length_fetch prelude);
     dump_aux1 "vector_width" (vector_width_fetch prelude);
-    dump_aux2 "vundef" (vundef_fetch prelude);
-    dump_aux2 "vmake" (vmake_fetch prelude);
-    dump_aux2 "vzero" (vzero_fetch prelude);
-    dump_aux2 "vbinop" (vbinop_fetch prelude);
-    dump_aux2 "trunc" (trunc_fetch prelude);
-    dump_aux3 "vtrunc" (vtrunc_fetch prelude);
-    dump_aux2 "zext" (zext_fetch prelude);
-    dump_aux3 "vzext" (vzext_fetch prelude);
-    dump_aux2 "sext" (sext_fetch prelude);
-    dump_aux3 "vsext" (vsext_fetch prelude);
-    dump_aux2 "int_ptr" (int_ptr_fetch prelude);
-    dump_aux3 "vint_ptr" (vint_ptr_fetch prelude)
+    List.iter (fun str -> (dump_aux2 str (twos_fetch prelude str))) prelude.twos_keys;
+    List.iter (fun str -> (dump_aux3 str (threes_fetch prelude str))) prelude.threes_keys
       
       
 let header =
@@ -471,7 +388,7 @@ let vector_bool b logv =
   then
     vector_bool_3 b
   else
-    failwith("vector_bool Ooops: need to write some prelude code for vectors longer than 2^3.")
+    failwith("vector_bool Ooops: need to write some prelude code for vectors longer than 2^3: "^(string_of_int logv))
 
     
 let vector_casts = "
@@ -814,28 +731,28 @@ let print_prelude b preqs =
     
     List.iter (fun n -> List.iter (fun w ->  (vutils b n w)) vector_widths) vector_logarithms;
 
-    List.iter (fun (n, w) ->  (vbinop b n w)) (vbinop_fetch preqs);
+    List.iter (fun (n, w) ->  (vbinop b n w)) (twos_fetch preqs "vbinop");
 
-    List.iter (fun (n, w) ->  (trunc b n w)) (trunc_fetch preqs);
+    List.iter (fun (n, w) ->  (trunc b n w)) (twos_fetch preqs "trunc");
 
-    List.iter (fun (l, n, w) ->  (vconversion b "trunc" l n w)) (vtrunc_fetch preqs);
+    List.iter (fun (l, n, w) ->  (vconversion b "trunc" l n w)) (threes_fetch preqs "vtrunc");
 
-    List.iter (fun (n, w) ->  (zext b n w)) (zext_fetch preqs);
+    List.iter (fun (n, w) ->  (zext b n w)) (twos_fetch preqs "zext");
 
-    List.iter (fun (l, n, w) ->  (vconversion b "zext" l n w)) (vzext_fetch preqs);
+    List.iter (fun (l, n, w) ->  (vconversion b "zext" l n w)) (threes_fetch preqs "vzext");
 
-    List.iter (fun (n, w) ->  (sext b n w)) (sext_fetch preqs);
+    List.iter (fun (n, w) ->  (sext b n w)) (twos_fetch preqs "sext");
 
-    List.iter (fun (l, n, w) ->  (vconversion b "sext" l n w)) (vsext_fetch preqs);
+    List.iter (fun (l, n, w) ->  (vconversion b "sext" l n w)) (threes_fetch preqs "vsext");
 
-    List.iter (fun (n, w) ->  (int_ptr b n w)) (int_ptr_fetch preqs);
+    List.iter (fun (n, w) ->  (int_ptr b n w)) (twos_fetch preqs "int_ptr");
 
-    List.iter (fun (l, n, w) ->  (vconversion b "int_ptr" l n w)) (vint_ptr_fetch preqs);
+    List.iter (fun (l, n, w) ->  (vconversion b "int_ptr" l n w)) (threes_fetch preqs "vint_ptr");
 
     if preqs.cast then bprintf b "%s\n" vector_casts;
     
     bprintf b "\n;; end of prelude\n\n\n";
-    
+  
     ()
     
     

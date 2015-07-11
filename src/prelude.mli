@@ -6,23 +6,17 @@
 (*
  * The prelude requirements object. This specifies what we need in our prelude.
  * It is filled in while translating the cu.
- * It to limit the prelude definitions to those that are necessary.
+ * It is designed to limit the prelude definitions to those that are necessary.
 *)
-
+ 
 type prelude = {
   address_width: int;
-  mutable vundef: (int * int) list;
-  mutable vmake:  (int * int) list;
-  mutable vzero:  (int * int) list;
-  mutable vbinop: (int * int) list;  (* could include the actual operator *)
-  mutable trunc:  (int * int) list;
-  mutable vtrunc: (int * int * int) list;
-  mutable zext:  (int * int) list;
-  mutable vzext: (int * int * int) list;
-  mutable sext:  (int * int) list;
-  mutable vsext: (int * int * int) list;
-  mutable int_ptr:  (int * int) list;
-  mutable vint_ptr: (int * int * int) list;
+  (* binary prelude parametric operations *)
+  twos_keys: string list;
+  twos_table:  (string, (int * int) list) Hashtbl.t;
+  (* ternary prelude parametric operations *)
+  threes_keys: string list;
+  threes_table:  (string, (int * int * int) list) Hashtbl.t;
   mutable cast: bool;
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
   mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
