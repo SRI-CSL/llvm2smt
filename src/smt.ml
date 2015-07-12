@@ -988,7 +988,7 @@ and binop_to_smt b st ty op left right =
     typ_val_to_smt b st right;
     bprintf b ")"
 
-and ite_to_smt b st cond left right = (* if cond then left else right *)
+and _ite_to_smt b st cond left right = (* if cond then left else right *)
   bprintf b "(ite ";
   typ_val_to_smt b st cond;
   bprintf b " ";
@@ -997,6 +997,29 @@ and ite_to_smt b st cond left right = (* if cond then left else right *)
   typ_val_to_smt b st right;
   bprintf b ")"
 
+and ite_to_smt b st cond left right = (* if cond then left else right *)
+  let cu = st.cu in
+  let fu = (state_fu st) in
+  let op_name =
+    if (Bc_manip.is_vector_typ cu fu (fst cond))
+    then
+      let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu (fst left) in 
+      let logv = (string_of_int vxi) in
+      let w = (bitwidth st vxt) in 
+	Prelude.vite_add st.preqs (vxi, w);
+	"vite_" ^ logv  ^ "_" ^ (string_of_int w)
+    else
+      "ite"
+  in
+    bprintf b "(%s " op_name;
+    typ_val_to_smt b st cond;
+    bprintf b " ";
+    typ_val_to_smt b st left;
+    bprintf b " ";
+    typ_val_to_smt b st right;
+    bprintf b ")"
+
+    
 and icmp_to_smt b st cmp left right = (* Comparison: cmp = operation, left/right = integer arguments *)
   bprintf b "(%s " (icmp_op_to_smt cmp);
   typ_val_to_smt b st left;

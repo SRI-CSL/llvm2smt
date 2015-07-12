@@ -66,6 +66,9 @@ val int_ptr_add:  prelude -> (int * int) -> unit
 (* add a vint_ptr requirement to a prelude object *)
 val vint_ptr_add:  prelude -> (int * int * int) -> unit
 
+(* add a vite requirement to a prelude object *)
+val vite_add:  prelude -> (int * int) -> unit
+
 (*
  * Prelude the required prelude to the buffer:
  * parameters are

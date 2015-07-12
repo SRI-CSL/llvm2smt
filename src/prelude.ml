@@ -48,7 +48,7 @@ let vector_length_fetch preq  = List.sort compare preq.vector_length
       
 let make_prelude aw =
   let preq = { address_width = aw;
-	       twos_keys = ["vundef"; "vmake"; "vzero"; "vbinop"; "trunc"; "zext"; "sext"; "int_ptr";];
+	       twos_keys = ["vundef"; "vmake"; "vzero"; "vbinop"; "trunc"; "zext"; "sext"; "int_ptr"; "vite"];
 	       twos_table = (Hashtbl.create 64);
 	       threes_keys = ["vtrunc"; "vzext"; "vsext"; "vint_ptr";];
 	       threes_table = (Hashtbl.create 64);
@@ -63,7 +63,7 @@ let twos_add preq key x =
     then
       begin
 	Hashtbl.replace preq.twos_table key (x :: l);
-	if key = "vundef" || key = "vmake" || key = "vzero" || key = "vbinop"
+	if key = "vundef" || key = "vmake" || key = "vzero" || key = "vbinop" || key = "vite"
 	then
 	  let (length, width) = x in
 	    vector_width_add preq width;
@@ -120,6 +120,8 @@ let vsext_add preq x = threes_add preq "vsext" "sext" x
 let vzext_add preq x = threes_add preq "vzext" "zext" x
   
 let vint_ptr_add preq x = threes_add preq "vint_ptr" "int_ptr" x
+
+let vite_add preq x = twos_add preq "vite" x
   
 let dump_prelude prelude =
   let dump_aux1 string list =
@@ -690,6 +692,60 @@ let vconversion b conv_op logv n w =
   else failwith("vconversion Ooops: need to write some prelude code for vectors longer than 2^3.")
 	  
 
+let vite_1_w b w = 
+  bprintf b 
+    "
+(define-fun vite_1_%d ((c vector_1_1) (x vector_1_%d) (y vector_1_%d)) vector_1_%d
+   (let ((z0 (ite (select c #b0) (select x #b0) (select y #b0)))
+         (z1 (ite (select c #b0) (select x #b1) (select y #b1))))
+      (vmake_1_%d z0 z1)))
+"
+    w w w w  w
+
+    
+let vite_2_w b w = 
+  bprintf b 
+    "
+ (define-fun vite_2_%d ((c vector_2_1) (x vector_2_%d) (y vector_2_%d)) vector_2_%d
+   (let ((z0 (ite (select c #b00) (select x #b00) (select y #b00)))
+         (z1 (ite (select c #b01) (select x #b01) (select y #b01)))
+         (z2 (ite (select c #b10) (select x #b10) (select y #b10)))
+         (z3 (ite (select c #b11) (select x #b11) (select y #b11))))
+      (vmake_2_%d z0 z1 z2 z3)))
+\n"
+     w w w w  w
+
+let vite_3_w b w = 
+  bprintf b 
+    "
+ (define-fun vite_3_%d ((c vector_3_1) (x vector_3_%d) (y vector_3_%d)) vector_3_%d
+   (let (
+         (z0 (ite (select c #b000) (select x #b000) (select y #b000)))
+         (z1 (ite (select c #b001) (select x #b001) (select y #b001)))
+         (z2 (ite (select c #b010) (select x #b010) (select y #b010)))
+         (z3 (ite (select c #b011) (select x #b011) (select y #b011)))
+         (z4 (ite (select c #b100) (select x #b100) (select y #b100)))
+         (z5 (ite (select c #b101) (select x #b101) (select y #b101)))
+         (z6 (ite (select c #b110) (select x #b110) (select y #b110)))
+         (z7 (ite (select c #b111)c(select x #b111) (select y #b111)))
+         )
+      (vmake_3_%d z0 z1 z2 z3 z4 z5 z6 z7)))
+\n"
+    w w w w  w
+
+let vite b logv w =
+  if logv = 1
+  then
+    vite_1_w b w
+  else if logv = 2
+  then
+    vite_2_w b w
+  else if logv = 3
+  then
+    vite_3_w b w
+  else failwith("vite Ooops: need to write some prelude code for vectors longer than 2^3.")
+
+
 (*
  * Prelude: a bunch of definitions to abbreviate the conversion.
  *
@@ -748,6 +804,8 @@ let print_prelude b preqs =
     List.iter (fun (n, w) ->  (int_ptr b n w)) (twos_fetch preqs "int_ptr");
 
     List.iter (fun (l, n, w) ->  (vconversion b "int_ptr" l n w)) (threes_fetch preqs "vint_ptr");
+
+    List.iter (fun (n, w) ->  (vite b n w)) (twos_fetch preqs "vite");
 
     if preqs.cast then bprintf b "%s\n" vector_casts;
     
