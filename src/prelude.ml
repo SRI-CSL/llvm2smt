@@ -14,7 +14,7 @@ open Printf
 
 type prelude = {
   address_width: int;
-  (* binary prelude parametric operations: vundef vmake vzero vbinop trunc zext sext int_ptr *)
+  (* binary prelude parametric operations: vundef vmake vzero vbinop trunc zext sext int_ptr vite *)
   twos_keys: string list;
   twos_table:  (string, (int * int) list) Hashtbl.t;
   (* ternary prelude parametric operations: vtrunc vzext vsext vint_ptr *)
@@ -48,7 +48,8 @@ let vector_length_fetch preq  = List.sort compare preq.vector_length
       
 let make_prelude aw =
   let preq = { address_width = aw;
-	       twos_keys = ["vundef"; "vmake"; "vzero"; "vbinop"; "trunc"; "zext"; "sext"; "int_ptr"; "vite"];
+	       twos_keys = ["vundef"; "vmake"; "vzero"; "vbinop";
+			    "trunc"; "zext"; "sext"; "int_ptr"; "vite"];
 	       twos_table = (Hashtbl.create 64);
 	       threes_keys = ["vtrunc"; "vzext"; "vsext"; "vint_ptr";];
 	       threes_table = (Hashtbl.create 64);
@@ -63,6 +64,7 @@ let twos_add preq key x =
     then
       begin
 	Hashtbl.replace preq.twos_table key (x :: l);
+	(* these guys are vector operations so we need to add the vector types *)
 	if key = "vundef" || key = "vmake" || key = "vzero" || key = "vbinop" || key = "vite"
 	then
 	  let (length, width) = x in
@@ -78,6 +80,7 @@ let threes_add preq key twin x =
     if not (List.mem x l)
     then
       let (length, n, width) = x in
+	(* these guys are vector operations so we need to add the vector types *)
 	vector_width_add preq n;
 	vector_width_add preq width;
 	vector_length_add preq length;

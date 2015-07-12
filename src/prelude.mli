@@ -11,10 +11,10 @@
  
 type prelude = {
   address_width: int;
-  (* binary prelude parametric operations *)
+  (* binary prelude parametric operations: vundef vmake vzero vbinop trunc zext sext int_ptr vite *)
   twos_keys: string list;
   twos_table:  (string, (int * int) list) Hashtbl.t;
-  (* ternary prelude parametric operations *)
+  (* ternary prelude parametric operations: vtrunc vzext vsext vint_ptr *)
   threes_keys: string list;
   threes_table:  (string, (int * int * int) list) Hashtbl.t;
   mutable cast: bool;
