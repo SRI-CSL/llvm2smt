@@ -623,6 +623,7 @@ and trunc_to_smt b st (tx, vx) ty =
     typ_val_to_smt b st (tx, vx);
     bprintf b ")";
     
+(* joining the dodo soon *)	
 and _zext_to_smt b st tx x ty = 
   if is_bool st tx then
     let n = (bitwidth st ty) in
@@ -662,7 +663,7 @@ and zext_to_smt b st tx vx ty =
     typ_val_to_smt b st (tx, vx);
     bprintf b ")";
 
-	
+(* joining the dodo soon *)	
 and _sext_to_smt b st tx x ty = 
   if is_bool st tx then
     let n = (bitwidth st ty) in
@@ -703,6 +704,7 @@ and sext_to_smt b st tx vx ty =
     bprintf b ")";
 
 	
+(* joining the dodo soon *)	
 and _int_ptr_to_smt b st tx x ty = 
   let np = (bitwidth st tx) in  (* source size *)
   let n = (bitwidth st ty) in   (* destination *)
@@ -988,6 +990,7 @@ and binop_to_smt b st ty op left right =
     typ_val_to_smt b st right;
     bprintf b ")"
 
+(* joining the dodo soon *)	
 and _ite_to_smt b st cond left right = (* if cond then left else right *)
   bprintf b "(ite ";
   typ_val_to_smt b st cond;
