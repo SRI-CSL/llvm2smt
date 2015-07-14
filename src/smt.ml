@@ -756,22 +756,28 @@ and int_ptr_to_smt b st tx vx ty =
 
 	
 and gep_to_smt b st (tx, x) z =
-  (match tx with
-     | Pointer(totyp, _) ->
-	 let (aty, apolylist) = gep_offset st tx z in
-	 let offsets = List.map (fun poly -> polyoffset_to_smt st poly) apolylist in
-	   (*
-	     bpr_offset_list b apolylist;
-	     bprintf b "\n;; GEP HERE\n";
-	   *)
-	   bprintf b "(bvadd ";
-	   val_to_smt b st (tx, x);
-	   bprintf b " ";
-	   bvsum b offsets;
-	   bprintf b ")"
-     | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
-  )
-	      
+  let cu = st.cu in
+  let fu = (state_fu st) in
+    if (Bc_manip.is_vector_typ cu fu tx)
+    then
+      failwith("GEP doesn't handle vector types yet\n")
+    else    
+      (match tx with
+	 | Pointer(totyp, _) ->
+	     let (aty, apolylist) = gep_offset st tx z in
+	     let offsets = List.map (fun poly -> polyoffset_to_smt st poly) apolylist in
+	       (*
+		 bpr_offset_list b apolylist;
+		 bprintf b "\n;; GEP HERE\n";
+	       *)
+	       bprintf b "(bvadd ";
+	       val_to_smt b st (tx, x);
+	       bprintf b " ";
+	       bvsum b offsets;
+	       bprintf b ")"
+	 | _ -> failwith("Crazy GEP type: "^(Llvm_pp.string_of_typ tx)^"\n")
+      )
+      
 and polyoffset_to_smt st poly =
   (match poly with
      | (n, None)  ->  int_to_bv n st.addr_width
@@ -948,11 +954,18 @@ and val_to_smt b st (typ, v) =
     | Trunc(x, ty)      -> trunc_to_smt b st x ty                
     | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              
     | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              
-    | Bitcast(x, ty)    -> typ_val_to_smt b st x  (* no op *)    (* VECTOR FIXME !!!!!???? %Z = bitcast <2 x int> %V to i64;   ; yields i64: %V *)
+    | Bitcast((tx, vx), ty)    ->
+	let cu = st.cu in
+	let fu = (state_fu st) in
+	  if (Bc_manip.is_vector_typ cu fu tx)
+	  then
+	    failwith("Bitcast doesn't handle vector types yet\n")
+	  else    
+	    typ_val_to_smt b st (tx, vx)  (* no op *)                       (* VECTOR FIXME *)
     | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty                
     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty                
-    | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z  (* VECTOR FIXME ??? *)
-    | Select([c;t;e]) -> ite_to_smt b st c t e                            (* VECTOR FIXME *)  
+    | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z  (* VECTOR FIXME *)
+    | Select([c;t;e]) -> ite_to_smt b st c t e                            
     | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
     | Add(_, _, x, y) -> binop_to_smt b st typ "bvadd" x y
     | Sub(_, _, x, y) -> binop_to_smt b st typ "bvsub" x y
