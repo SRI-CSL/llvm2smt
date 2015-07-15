@@ -2,7 +2,7 @@
  * Convert our LLVM abstract syntax to SMT2 bitvector constraints/expressions.
  *
  * Values of type Integer 1  are converted to Boolean expressions in SMT
- * Values of type (Integer n) where n>1 are converted to SMT expressions of type (_ BitVec n)
+ * Values of type (Integer n) where n > 1 are converted to SMT expressions of type (_ BitVec n)
  * Values of vector type <n x tau> are converted to arrays.
  *)
 
@@ -292,7 +292,7 @@ let bzero_vector b st typ v =
  * (e.g., that's how we deal with undef). For now, we just generate
  * a zero bitvector of the right size (or false).
  *
- * This is also used for phi instructions:`
+ * This is also used for phi instructions:
  * It's possible for all pairs (value, label) to be forward edges.
  * This means that the current block can't be executed (its
  * entry condition is false).
@@ -320,7 +320,7 @@ let default_value st ty =
 
 
 (*
- * In with the new ...
+ * Big Integers to SMT
  *
  *)
 let bbig_int_to_bv b n w =
@@ -337,7 +337,7 @@ let big_int_to_bv n w =
 
 
 (*
- * Out with the old ???
+ * Integers to SMT (used in getelementptr)
  *
  *)
 let bint_to_bv b n w =
@@ -623,19 +623,6 @@ and trunc_to_smt b st (tx, vx) ty =
     typ_val_to_smt b st (tx, vx);
     bprintf b ")";
     
-(* joining the dodo soon *)	
-and _zext_to_smt b st tx x ty = 
-  if is_bool st tx then
-    let n = (bitwidth st ty) in
-      bprintf b "(ite ";
-      typ_val_to_smt b st (tx, x);
-      bprintf b " (_ bv1 %d) (_ bv0 %d))" n n;
-  else
-    let n = (bitwidth st ty) - (bitwidth st tx) in
-      bprintf b "((_ zero_extend %d) " n;
-      typ_val_to_smt b st (tx, x);
-      bprintf b ")"
-
 and zext_to_smt b st tx vx ty =
   let cu = st.cu in
   let fu = (state_fu st) in
@@ -662,19 +649,6 @@ and zext_to_smt b st tx vx ty =
     bprintf b "(%s " op_name;
     typ_val_to_smt b st (tx, vx);
     bprintf b ")";
-
-(* joining the dodo soon *)	
-and _sext_to_smt b st tx x ty = 
-  if is_bool st tx then
-    let n = (bitwidth st ty) in
-      bprintf b "(ite ";
-      typ_val_to_smt b st (tx, x);
-      bprintf b " (bvneg (_ bv1 %d)) (_ bv0 %d))" n n;
-  else
-    let n = (bitwidth st ty) - (bitwidth st tx) in
-      bprintf b "((_ sign_extend %d) " n;
-      typ_val_to_smt b st (tx, x);
-      bprintf b ")"	       
 
 and sext_to_smt b st tx vx ty =
   let cu = st.cu in
@@ -704,29 +678,6 @@ and sext_to_smt b st tx vx ty =
     bprintf b ")";
 
 	
-(* joining the dodo soon *)	
-and _int_ptr_to_smt b st tx x ty = 
-  let np = (bitwidth st tx) in  (* source size *)
-  let n = (bitwidth st ty) in   (* destination *)
-    if np < n then
-      (* zero extend *)
-      begin
-	bprintf b "((_ zero_extend %d) " (n - np);
-	typ_val_to_smt b st (tx, x);
-	bprintf b ")"
-      end
-    else if np > n then
-      (* truncate *)
-      begin
-	bprintf b "((_ extract %d 0) " (n - 1);
-	typ_val_to_smt b st (tx, x);
-	bprintf b ")"
-      end
-      
-    else
-      (* no op *)
-      typ_val_to_smt b st (tx, x)
-
 and int_ptr_to_smt b st tx vx ty =
   let cu = st.cu in
   let fu = (state_fu st) in
@@ -760,16 +711,12 @@ and gep_to_smt b st (tx, x) z =
   let fu = (state_fu st) in
     if (Bc_manip.is_vector_typ cu fu tx)
     then
-      failwith("GEP doesn't handle vector types yet\n")
+      failwith("GEP doesn't handle vector types YET\n")   (* not that hard *)
     else    
       (match tx with
 	 | Pointer(totyp, _) ->
 	     let (aty, apolylist) = gep_offset st tx z in
 	     let offsets = List.map (fun poly -> polyoffset_to_smt st poly) apolylist in
-	       (*
-		 bpr_offset_list b apolylist;
-		 bprintf b "\n;; GEP HERE\n";
-	       *)
 	       bprintf b "(bvadd ";
 	       val_to_smt b st (tx, x);
 	       bprintf b " ";
@@ -959,12 +906,12 @@ and val_to_smt b st (typ, v) =
 	let fu = (state_fu st) in
 	  if (Bc_manip.is_vector_typ cu fu tx)
 	  then
-	    failwith("Bitcast doesn't handle vector types yet\n")
+	    failwith("Bitcast doesn't handle vector types yet\n")          (* not hard, just perplexing  Issue #3 *)
 	  else    
-	    typ_val_to_smt b st (tx, vx)  (* no op *)                       (* VECTOR FIXME *)
+	    typ_val_to_smt b st (tx, vx)  (* no op *)                      (* VECTOR FIXME  Issue #3 *)
     | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty                
     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty                
-    | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z  (* VECTOR FIXME *)
+    | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z   (* VECTOR FIXME  Issue #3 *)
     | Select([c;t;e]) -> ite_to_smt b st c t e                            
     | Select(_)       -> Util.nfailwith ("malformed Select: " ^ (Llvm_pp.string_of_value v))
     | Add(_, _, x, y) -> binop_to_smt b st typ "bvadd" x y
@@ -1002,16 +949,6 @@ and binop_to_smt b st ty op left right =
     bprintf b " ";
     typ_val_to_smt b st right;
     bprintf b ")"
-
-(* joining the dodo soon *)	
-and _ite_to_smt b st cond left right = (* if cond then left else right *)
-  bprintf b "(ite ";
-  typ_val_to_smt b st cond;
-  bprintf b " ";
-  typ_val_to_smt b st left;
-  bprintf b " ";
-  typ_val_to_smt b st right;
-  bprintf b ")"
 
 and ite_to_smt b st cond left right = (* if cond then left else right *)
   let cu = st.cu in
