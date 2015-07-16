@@ -298,6 +298,14 @@ let bzero_vector b st typ v =
  * entry condition is false).
  * Still we want a type-correct and syntactically correct smt
  * value for the assigments.
+ *
+ * Ian says: rather than translate this incorrectly into
+ * vzero_n_w or or bzero_n we should be generating a unique
+ * (i.e. gensyming) vundef_n_w. This doesn't seem so hard now that
+ * we have the prelude on demand built in. In fact it should be a doddle.
+ * Issue #5.
+ *
+ *
  *)
 let bdefault_value b st ty =
   let cu = st.cu in
