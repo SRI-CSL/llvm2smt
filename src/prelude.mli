@@ -17,9 +17,10 @@ type prelude = {
   (* ternary prelude parametric operations: vtrunc vzext vsext vint_ptr *)
   threes_keys: string list;
   threes_table:  (string, (int * int * int) list) Hashtbl.t;
-  mutable cast: bool;
+  mutable undef: int;               (* counter for gensym-ing undefs                 *)
+  mutable cast: bool;               (* do we need casts: vectors <-> bitvectors      *) 
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
-  mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
+  mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors  *)
 }
 
 (* construct an empty prelude object *)

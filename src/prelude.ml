@@ -20,9 +20,10 @@ type prelude = {
   (* ternary prelude parametric operations: vtrunc vzext vsext vint_ptr *)
   threes_keys: string list;
   threes_table:  (string, (int * int * int) list) Hashtbl.t;
-  mutable cast:   bool;
+  mutable undef: int;               (* counter for gensym-ing undefs                 *)
+  mutable cast:  bool;              (* do we need casts: vectors <-> bitvectors      *) 
   mutable vector_width: int list;   (* the bit widths of the beasts found in vectors *)
-  mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors *)
+  mutable vector_length: int list;  (* the LOGARITHMS of the lengths of the vectors  *)
 }
 
 let compare2 (x0, y0) (x1, y1) =
@@ -45,6 +46,11 @@ let vector_length_add preq n =
 let vector_width_fetch preq  = List.sort compare preq.vector_width
 
 let vector_length_fetch preq  = List.sort compare preq.vector_length
+
+let undef_fetch preq =
+  let n = preq.undef in
+    preq.undef <- (n + 1);
+    n
       
 let make_prelude aw =
   let preq = { address_width = aw;
@@ -53,7 +59,7 @@ let make_prelude aw =
 	       twos_table = (Hashtbl.create 64);
 	       threes_keys = ["vtrunc"; "vzext"; "vsext"; "vint_ptr";];
 	       threes_table = (Hashtbl.create 64);
-	       cast = false; vector_width = [];   vector_length = []; } in
+	       undef = 0; cast = false; vector_width = [];   vector_length = []; } in
     List.iter (fun key -> Hashtbl.add preq.twos_table key []) preq.twos_keys;
     List.iter (fun key -> Hashtbl.add preq.threes_table key []) preq.threes_keys;
     preq
