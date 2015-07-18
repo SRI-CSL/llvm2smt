@@ -31,8 +31,11 @@ val dump_prelude: prelude  -> unit
 
 val cast_add: prelude -> unit
     
-(* add a vundef requirement to a prelude object *)
-val vundef_add:  prelude -> (int * int) -> unit
+(* add a undef requirement to a prelude object *)
+val undef_add:  prelude -> (int * int) -> unit
+
+(* fetch an undef index from the prelude object *)
+val undef_fetch:  prelude -> int
 
 (* add a vmake requirement to a prelude object *)
 val vmake_add:  prelude -> (int * int) -> unit
@@ -45,6 +48,9 @@ val vbinop_add:  prelude -> (int * int) -> unit
 
 (* add a trunc requirement to a prelude object *)
 val trunc_add:  prelude -> (int * int) -> unit
+
+(* add a vundef requirement to a prelude object *)
+val vundef_add:  prelude -> (int * int * int) -> unit
 
 (* add a vtrunc requirement to a prelude object *)
 val vtrunc_add:  prelude -> (int * int * int) -> unit

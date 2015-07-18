@@ -26,5 +26,5 @@ let preqs = Prelude.make_prelude aw in
   Prelude.print_prelude b_prelude preqs;
   Printf.printf "%s\n" (Buffer.contents b_prelude);
   Printf.printf "%s\n" (Buffer.contents b_cu)
-  (* ; Prelude.dump_prelude preqs  *)
+  ; Prelude.dump_prelude preqs   (*  *)
 ;;

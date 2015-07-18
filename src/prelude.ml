@@ -14,10 +14,10 @@ open Printf
 
 type prelude = {
   address_width: int;
-  (* binary prelude parametric operations: vundef vmake vzero vbinop trunc zext sext int_ptr vite *)
+  (* binary prelude parametric operations: undef vmake vzero vbinop trunc zext sext int_ptr vite *)
   twos_keys: string list;
   twos_table:  (string, (int * int) list) Hashtbl.t;
-  (* ternary prelude parametric operations: vtrunc vzext vsext vint_ptr *)
+  (* ternary prelude parametric operations: vundef vtrunc vzext vsext vint_ptr *)
   threes_keys: string list;
   threes_table:  (string, (int * int * int) list) Hashtbl.t;
   mutable undef: int;               (* counter for gensym-ing undefs                 *)
@@ -54,10 +54,10 @@ let undef_fetch preq =
       
 let make_prelude aw =
   let preq = { address_width = aw;
-	       twos_keys = ["vundef"; "vmake"; "vzero"; "vbinop";
+	       twos_keys = ["undef"; "vmake"; "vzero"; "vbinop";
 			    "trunc"; "zext"; "sext"; "int_ptr"; "vite"];
 	       twos_table = (Hashtbl.create 64);
-	       threes_keys = ["vtrunc"; "vzext"; "vsext"; "vint_ptr";];
+	       threes_keys = ["vundef";  "vtrunc"; "vzext"; "vsext"; "vint_ptr";];
 	       threes_table = (Hashtbl.create 64);
 	       undef = 0; cast = false; vector_width = [];   vector_length = []; } in
     List.iter (fun key -> Hashtbl.add preq.twos_table key []) preq.twos_keys;
@@ -71,7 +71,7 @@ let twos_add preq key x =
       begin
 	Hashtbl.replace preq.twos_table key (x :: l);
 	(* these guys are vector operations so we need to add the vector types *)
-	if key = "vundef" || key = "vmake" || key = "vzero" || key = "vbinop" || key = "vite"
+	if key = "vmake" || key = "vzero" || key = "vbinop" || key = "vite"
 	then
 	  let (length, width) = x in
 	    vector_width_add preq width;
@@ -88,9 +88,13 @@ let threes_add preq key twin x =
       let (length, n, width) = x in
 	(* these guys are vector operations so we need to add the vector types *)
 	vector_width_add preq n;
-	vector_width_add preq width;
+	if key <> "vundef"
+	then
+	  begin
+	    vector_width_add preq width;     (* not a width in the case of vundef *)
+	    twos_add preq twin (n, width)   (* vundef doesn't rely on undef      *)
+	  end;
 	vector_length_add preq length;
-	twos_add preq twin (n, width);
 	Hashtbl.replace preq.threes_table key (x :: l)
 
 let threes_fetch preq key = List.sort compare3 (Hashtbl.find preq.threes_table key)
@@ -106,8 +110,8 @@ let cast_add preq =
     end
       
       
-let vundef_add preq x = twos_add preq "vundef" x
-  
+let undef_add preq x = twos_add preq "undef" x
+
 let vmake_add preq x = twos_add preq "vmake" x
 			 
 let vzero_add preq x = twos_add preq "vzero" x
@@ -122,6 +126,8 @@ let sext_add preq x = twos_add preq "sext" x
 
 let int_ptr_add preq x = twos_add preq "int_ptr" x
 
+let vundef_add preq x = threes_add preq "vundef" "undef" x
+  
 let vtrunc_add preq x = threes_add preq "vtrunc" "trunc" x
   
 let vsext_add preq x = threes_add preq "vsext" "sext" x
@@ -341,14 +347,9 @@ let vector_type b len width =
 ;;
 (define-sort vector_%d_%d () (Array (_ BitVec %d) (_ BitVec %d)))
 
-;; destined to become a gensym
-(declare-fun vundef_%d_%d () vector_%d_%d)
-
-;; used to alloc and then assign
 (declare-fun vnew_%d_%d () vector_%d_%d)
-
-"
-    len width len width len width len width len width len width len width 
+\n"
+    len width len width len width len width len width 
 
 let vector_bool_1 b =
   bprintf b
@@ -357,10 +358,6 @@ let vector_bool_1 b =
 
 (define-sort vector_1_1 () (Array (_ BitVec 1) Bool))
 
-;; destined to become a gensym
-(declare-fun vundef_1_1 () vector_1_1)
-
-;; used to alloc and then assign
 (declare-fun vnew_1_1 () vector_1_1)
 
 (define-fun vmake_1_1 ((x0 Bool) (x1 Bool)) vector_1_1
@@ -374,10 +371,6 @@ let vector_bool_2 b =
 
 (define-sort vector_2_1 () (Array (_ BitVec 2) Bool))
 
-;; destined to become a gensym
-(declare-fun vundef_2_1 () vector_2_1)
-
-;; used to alloc and then assign
 (declare-fun vnew_2_1 () vector_2_1)
 
 (define-fun vmake_2_1 
@@ -392,11 +385,7 @@ let vector_bool_3 b =
 
 (define-sort vector_3_1 () (Array (_ BitVec 3) Bool))
 
-;; destined to become a gensym
-(declare-fun vundef_3_1 () vector_3_1)
-
-;; used to alloc and then assign
-(declare-fun vundef_3_1 () vector_3_1)
+(declare-fun vnew_3_1 () vector_3_1)
 
 (define-fun vmake_3_1 
   ((x0 Bool) (x1 Bool) (x2 Bool) (x3 Bool) (x4 Bool) (x5 Bool) (x6 Bool) (x7 Bool)) vector_3_1
@@ -577,8 +566,30 @@ let vbinop b logv w =
     List.iter (fun op -> (bpr_op_3_w b op w)) binops
   else failwith("vbinop Ooops: need to write some prelude code for binops of vectors longer than 2^3.")
 
-    
 
+let undef b w c =
+  if w = 1
+  then
+    bprintf b 
+      "
+  (declare-fun undef_%d_%d () Bool)
+\n"	
+      w c  
+  else
+    bprintf b 
+	"
+  (declare-fun undef_%d_%d () (_ BitVec %d))
+\n"
+      w c w
+
+let vundef b n w c =
+    bprintf b 
+      "
+  (declare-fun vundef_%d_%d_%d () vector_%d_%d)
+\n"	
+      n w c   n w
+
+      
 let trunc b n w =
   if n >= w
   then
@@ -815,6 +826,10 @@ let print_prelude b preqs =
     List.iter (fun (n, w) ->  (vbinop b n w)) (twos_fetch preqs "vbinop");
 
     List.iter (fun (n, w) ->  (trunc b n w)) (twos_fetch preqs "trunc");
+
+    List.iter (fun (w, c) ->  (undef b w c)) (twos_fetch preqs "undef");
+
+    List.iter (fun (n, w, c) ->  (vundef b n w c)) (threes_fetch preqs "vundef");
 
     List.iter (fun (l, n, w) ->  (vconversion b "trunc" l n w)) (threes_fetch preqs "vtrunc");
 

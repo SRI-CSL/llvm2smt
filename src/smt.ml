@@ -307,7 +307,23 @@ let bzero_vector b st typ v =
  *
  *
  *)
-let bdefault_value b st ty =
+let bundef_value b st ty =
+  let cu = st.cu in
+  let fu = (state_fu st) in
+  let ucount = Prelude.undef_fetch st.preqs in
+    if (Bc_manip.is_vector_typ cu fu ty)
+    then
+      let (vi, vt) = Bc_manip.deconstruct_vector_typ cu fu ty in
+      let w = (bitwidth st vt) in 
+	Prelude.vundef_add st.preqs (vi, w, ucount);
+	bprintf b "vundef_%d_%d_%d" vi w ucount
+    else
+      let k = bitwidth st ty in
+	Prelude.undef_add st.preqs (k, ucount);
+	bprintf b "undef_%d_%d" k ucount
+  
+	    
+let bdefault_value b st ty = 
   let cu = st.cu in
   let fu = (state_fu st) in 
     if (Bc_manip.is_vector_typ cu fu ty)
@@ -319,7 +335,7 @@ let bdefault_value b st ty =
     else
       let k = bitwidth st ty in
 	if k = 1 then bprintf b "false" else bzero_vector_n b k
-
+			       
 let default_value st ty =
   let b = Buffer.create 64 in
     bdefault_value b st ty;	  
@@ -825,11 +841,14 @@ and shufflevector_to_smt_aux b st ty v0 v1 len tyM vM lenM =
 	    shufflevector_to_smt_loop (k + 1) (i + 1)
 	  end
   in
-    bprintf b "\n(let ((x0 vundef_%d_%d))\n" lm (bitwidth st vt);
+  let wt = (bitwidth st vt) in
+  let ucount = Prelude.undef_fetch st.preqs in
+    Prelude.vundef_add st.preqs (lm, wt, ucount);
+    bprintf b "\n(let ((x0 vundef_%d_%d_%d))\n" lm wt ucount;
     let k = shufflevector_to_smt_loop 0 0 in
       bprintf b " x%d)" k;
       close_paren k
-    
+	
 (*
  * Explanation: this code approximately does the loop below:
  *
@@ -903,7 +922,7 @@ and val_to_smt b st (typ, v) =
     | Var x             -> name_to_smt b st x
     | Null              -> bzero_vector b st typ v
     | Zero              -> bzero_vector b st typ v
-    | Undef             -> bdefault_value b st typ               (* This is enough for now, but not quite what right *)
+    | Undef             -> bundef_value b st typ               (* This is enough for now, but not quite what right *)
     | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
     | Vector(l)         -> bvector_to_smt b st typ l
     | Trunc(x, ty)      -> trunc_to_smt b st x ty                
