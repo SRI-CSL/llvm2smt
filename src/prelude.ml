@@ -341,10 +341,14 @@ let vector_type b len width =
 ;;
 (define-sort vector_%d_%d () (Array (_ BitVec %d) (_ BitVec %d)))
 
+;; destined to become a gensym
 (declare-fun vundef_%d_%d () vector_%d_%d)
 
+;; used to alloc and then assign
+(declare-fun vnew_%d_%d () vector_%d_%d)
+
 "
-    len width len width len width len width len width 
+    len width len width len width len width len width len width len width 
 
 let vector_bool_1 b =
   bprintf b
@@ -353,10 +357,14 @@ let vector_bool_1 b =
 
 (define-sort vector_1_1 () (Array (_ BitVec 1) Bool))
 
+;; destined to become a gensym
 (declare-fun vundef_1_1 () vector_1_1)
 
+;; used to alloc and then assign
+(declare-fun vnew_1_1 () vector_1_1)
+
 (define-fun vmake_1_1 ((x0 Bool) (x1 Bool)) vector_1_1
-   (store (store vundef_1_1 #b0 x0) #b1 x1))
+   (store (store vnew_1_1 #b0 x0) #b1 x1))
 \n"
 
 let vector_bool_2 b =
@@ -366,11 +374,15 @@ let vector_bool_2 b =
 
 (define-sort vector_2_1 () (Array (_ BitVec 2) Bool))
 
+;; destined to become a gensym
 (declare-fun vundef_2_1 () vector_2_1)
+
+;; used to alloc and then assign
+(declare-fun vnew_2_1 () vector_2_1)
 
 (define-fun vmake_2_1 
   ((x0 Bool) (x1 Bool) (x2 Bool) (x3 Bool)) vector_2_1
-   (store (store (store (store vundef_2_1 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
+   (store (store (store (store vnew_2_1 #b00 x0) #b01 x1) #b10 x2) #b11 x3))
 \n"
     
 let vector_bool_3 b =
@@ -380,11 +392,15 @@ let vector_bool_3 b =
 
 (define-sort vector_3_1 () (Array (_ BitVec 3) Bool))
 
+;; destined to become a gensym
+(declare-fun vundef_3_1 () vector_3_1)
+
+;; used to alloc and then assign
 (declare-fun vundef_3_1 () vector_3_1)
 
 (define-fun vmake_3_1 
   ((x0 Bool) (x1 Bool) (x2 Bool) (x3 Bool) (x4 Bool) (x5 Bool) (x6 Bool) (x7 Bool)) vector_3_1
-   (store (store (store (store (store (store (store (store vundef_3_1 #b000 x0) #b001 x1) #b010 x2) #b011 x3) #b100 x4) #b101 x5) #b110 x6) #b111 x7))
+   (store (store (store (store (store (store (store (store vnew_3_1 #b000 x0) #b001 x1) #b010 x2) #b011 x3) #b100 x4) #b101 x5) #b110 x6) #b111 x7))
 
 "
 
@@ -445,7 +461,7 @@ let vutils_1 b w =
 ;; Vectors of (2^1) i.e. two int%d elements
 ;;
 (define-fun vmake_1_%d ((x0 (_ BitVec %d)) (x1 (_ BitVec %d))) vector_1_%d
-   (store (store vundef_1_%d #b0 x0) #b1 x1))
+   (store (store vnew_1_%d #b0 x0) #b1 x1))
 
 ;; zero vectors with int%d elements
 
@@ -461,7 +477,7 @@ let vutils_2 b w =
 ;;
 (define-fun vmake_2_%d 
   ((x0 (_ BitVec %d)) (x1 (_ BitVec %d)) (x2 (_ BitVec %d)) (x3 (_ BitVec %d))) vector_2_%d
-   (store (store (store (store vundef_2_%d #b00 x0) #b01 x1) #b10 x2) #b11 x3))
+   (store (store (store (store vnew_2_%d #b00 x0) #b01 x1) #b10 x2) #b11 x3))
 
  (define-fun vzero_2_%d () vector_2_%d (vmake_2_%d (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d)))
 \n"
@@ -474,7 +490,7 @@ let vutils_3 b w =
 ;;
 (define-fun vmake_3_%d 
   ((x0 (_ BitVec %d)) (x1 (_ BitVec %d)) (x2 (_ BitVec %d)) (x3 (_ BitVec %d))(x4 (_ BitVec %d)) (x5 (_ BitVec %d)) (x6 (_ BitVec %d)) (x7 (_ BitVec %d))) vector_3_%d
-   (store (store (store (store (store (store (store (store vundef_3_%d #b000 x0) #b001 x1) #b010 x2) #b011 x3) #b100 x4) #b101 x5) #b110 x6) #b111 x7))
+   (store (store (store (store (store (store (store (store vnew_3_%d #b000 x0) #b001 x1) #b010 x2) #b011 x3) #b100 x4) #b101 x5) #b110 x6) #b111 x7))
 
  (define-fun vzero_3_%d () vector_3_%d (vmake_3_%d (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d) (_ bv0 %d)))
 \n"
