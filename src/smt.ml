@@ -289,22 +289,8 @@ let bzero_vector b st typ v =
 
 (*
  * In several places, we may need to generate an arbitrary value of type ty
- * (e.g., that's how we deal with undef). For now, we just generate
- * a zero bitvector of the right size (or false).
- *
- * This is also used for phi instructions:
- * It's possible for all pairs (value, label) to be forward edges.
- * This means that the current block can't be executed (its
- * entry condition is false).
- * Still we want a type-correct and syntactically correct smt
- * value for the assigments.
- *
- * Ian says: rather than translate this incorrectly into
- * vzero_n_w or or bzero_n we should be generating a unique
- * (i.e. gensyming) vundef_n_w. This doesn't seem so hard now that
- * we have the prelude on demand built in. In fact it should be a doddle.
- * Issue #5.
- *
+ * (e.g., that's how we deal with undef). To do this correctly we gensym a
+ * new smt declaration of the appropriate type.
  *
  *)
 let bundef_value b st ty =
@@ -323,6 +309,19 @@ let bundef_value b st ty =
 	bprintf b "undef_%d_%d" k ucount
   
 	    
+(*
+ * In several places, we may need to generate an arbitrary value of type ty
+ * Here we just generate a zero bitvector of the right size (or false).
+ *
+ * This is also used for phi instructions:
+ * It's possible for all pairs (value, label) to be forward edges.
+ * This means that the current block can't be executed (its
+ * entry condition is false).
+ * Still we want a type-correct and syntactically correct smt
+ * value for the assigments.
+ *
+ *
+ *)
 let bdefault_value b st ty = 
   let cu = st.cu in
   let fu = (state_fu st) in 
@@ -922,7 +921,7 @@ and val_to_smt b st (typ, v) =
     | Var x             -> name_to_smt b st x
     | Null              -> bzero_vector b st typ v
     | Zero              -> bzero_vector b st typ v
-    | Undef             -> bundef_value b st typ               (* This is enough for now, but not quite what right *)
+    | Undef             -> bundef_value b st typ
     | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
     | Vector(l)         -> bvector_to_smt b st typ l
     | Trunc(x, ty)      -> trunc_to_smt b st x ty                
