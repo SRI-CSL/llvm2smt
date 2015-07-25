@@ -915,26 +915,28 @@ and shufflevector_to_smt b st x0 x1 xM =
 	 | _ -> failwith("Bad arguments to Shufflevector.")
       )
 
+and bitcast_to_smt b st tx vx ty =
+  let cu = st.cu in
+  let fu = (state_fu st) in
+    if (Bc_manip.is_vector_typ cu fu tx)
+    then
+      failwith("Bitcast doesn't handle vector types yet\n")          (* not hard, just perplexing  Issue #3 *)
+    else    
+      typ_val_to_smt b st (tx, vx)  (* no op *)                      (* VECTOR FIXME  Issue #3 *)
+	     
 	
 and val_to_smt b st (typ, v) =
   match v with
-    | Var x             -> name_to_smt b st x
-    | Null              -> bzero_vector b st typ v
-    | Zero              -> bzero_vector b st typ v
-    | Undef             -> bundef_value b st typ
-    | Int n             -> bbig_int_to_bv b n (bitwidth st typ)
-    | Vector(l)         -> bvector_to_smt b st typ l
-    | Trunc(x, ty)      -> trunc_to_smt b st x ty                
-    | Zext((tx, x), ty) -> zext_to_smt b st tx x ty              
-    | Sext((tx, x), ty) -> sext_to_smt b st tx x ty              
-    | Bitcast((tx, vx), ty)    ->
-	let cu = st.cu in
-	let fu = (state_fu st) in
-	  if (Bc_manip.is_vector_typ cu fu tx)
-	  then
-	    failwith("Bitcast doesn't handle vector types yet\n")          (* not hard, just perplexing  Issue #3 *)
-	  else    
-	    typ_val_to_smt b st (tx, vx)  (* no op *)                      (* VECTOR FIXME  Issue #3 *)
+    | Var x                    -> name_to_smt b st x
+    | Null                     -> bzero_vector b st typ v
+    | Zero                     -> bzero_vector b st typ v
+    | Undef                    -> bundef_value b st typ
+    | Int n                    -> bbig_int_to_bv b n (bitwidth st typ)
+    | Vector(l)                -> bvector_to_smt b st typ l
+    | Trunc(x, ty)             -> trunc_to_smt b st x ty                
+    | Zext((tx, x), ty)        -> zext_to_smt b st tx x ty              
+    | Sext((tx, x), ty)        -> sext_to_smt b st tx x ty              
+    | Bitcast((tx, vx), ty)    -> bitcast_to_smt b st tx vx ty
     | Inttoptr((tx, x), ty) -> int_ptr_to_smt b st tx x ty                
     | Ptrtoint((tx, x), ty) -> int_ptr_to_smt b st tx x ty                
     | Getelementptr(inbounds, (tx, x) :: z) -> gep_to_smt b st (tx, x) z   (* VECTOR FIXME  Issue #3 *)
