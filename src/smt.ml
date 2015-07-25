@@ -929,7 +929,7 @@ and bitcast_to_smt b st tx vx ty =
 	  (* OK just a pointwise cast *)
 	  val_to_smt b st (tx, vx)
 	else
-	  (* No clue as to what this could be *)
+	  (* No clue as to what this could be. Does it ever happen *)
 	  failwith("Bitcast doesn't handle vector args of differing lengths\n") 
     else
       if isVx || isVy
