@@ -933,7 +933,18 @@ and bitcast_to_smt b st tx vx ty =
 	  failwith("Bitcast doesn't handle vector args of differing lengths\n") 
     else
       if isVx || isVy
-      then failwith("Bitcast doesn't casts b/w vectors and non vectors yet\n")   
+      then
+	if isVx
+	then
+	  let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu tx in
+	  let dimvxt = (bitwidth st vxt) in 
+	    (* casting from vector to bitvector *)
+	    failwith("Bitcast doesn't casts b/w vectors and non vectors yet\n")   
+	else
+	  let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in
+	  let dimvyt = (bitwidth st vyt) in 
+	    (* casting from bitvector to bvector *)
+	    failwith("Bitcast doesn't casts b/w vectors and non vectors yet\n")   
       else    
 	typ_val_to_smt b st (tx, vx)  (* no op *)                      (* VECTOR FIXME  Issue #3 *)
 	     
