@@ -927,7 +927,7 @@ and bitcast_to_smt b st tx vx ty =
 	if vxi = vyi
 	then
 	  (* OK just a pointwise cast *)
-	  val_to_smt b st (tx, vx)
+	  typ_val_to_smt b st (tx, vx)   
 	else
 	  (* No clue as to what this could be. Does it ever happen *)
 	  failwith("Bitcast doesn't handle vector args of differing lengths\n") 
