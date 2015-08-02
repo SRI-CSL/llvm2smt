@@ -74,3 +74,13 @@ let log2ceil n =
     if accu >= n then k else loop (k + 1) (2 * accu)
   in
     loop 0 1
+
+
+let exp n =
+  let rec loop m accu =
+    if m <= 0  then accu else loop (m - 1) (2 * accu)
+  in
+    loop n 1
+
+      
+     

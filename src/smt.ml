@@ -918,36 +918,40 @@ and shufflevector_to_smt b st x0 x1 xM =
 and bitcast_to_smt b st tx vx ty =
   let cu = st.cu in
   let fu = (state_fu st) in
-  let isVx = (Bc_manip.is_vector_typ cu fu tx) in
-  let isVy = (Bc_manip.is_vector_typ cu fu ty) in
-    if isVx && isVy
-    then
-      let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu tx in
-      let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in
-	if vxi = vyi
-	then
-	  (* OK just a pointwise cast *)
-	  typ_val_to_smt b st (tx, vx)   
-	else
-	  (* No clue as to what this could be. Does it ever happen *)
-	  failwith("Bitcast doesn't handle vector args of differing lengths\n") 
+    if (bitwidth st tx) <> (bitwidth st ty)
+    then 
+      failwith("Bitcast widths don't match\n")
     else
-      if isVx || isVy
-      then
-	if isVx
+      let isVx = (Bc_manip.is_vector_typ cu fu tx) in
+      let isVy = (Bc_manip.is_vector_typ cu fu ty) in
+	if isVx && isVy
 	then
 	  let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu tx in
-	  let dimvxt = (bitwidth st vxt) in 
-	    (* casting from vector to bitvector *)
-	    failwith("Bitcast doesn't casts b/w vectors and non vectors yet\n")   
-	else
 	  let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in
-	  let dimvyt = (bitwidth st vyt) in 
-	    (* casting from bitvector to bvector *)
-	    failwith("Bitcast doesn't casts b/w vectors and non vectors yet\n")   
-      else    
-	typ_val_to_smt b st (tx, vx)  (* no op *)                      (* VECTOR FIXME  Issue #3 *)
-	     
+	    if vxi = vyi
+	    then
+	      (* OK just a pointwise cast *)
+	      typ_val_to_smt b st (tx, vx)   
+	    else
+	      (* No clue as to what this could be. Does it ever happen *)
+	      failwith("Bitcast doesn't handle vector args of differing lengths\n") 
+	else
+	  if isVx || isVy
+	  then
+	    if isVx
+	    then
+	      let (vxi, vxt) = Bc_manip.deconstruct_vector_typ cu fu tx in
+	      let dimvxt = (bitwidth st vxt) in
+		(* casting from vector to bitvector *)
+		failwith("Bitcast doesn't casts b/w vectors and non vectors yet\n")   
+	    else
+	      let (vyi, vyt) = Bc_manip.deconstruct_vector_typ cu fu ty in
+	      let dimvyt = (bitwidth st vyt) in 
+		(* casting from bitvector to bvector *)
+		failwith("Bitcast doesn't casts b/w vectors and non vectors yet\n")   
+	  else    
+	    typ_val_to_smt b st (tx, vx)  (* no op *)                      (* VECTOR FIXME  Issue #3 *)
+	      
 	
 and val_to_smt b st (typ, v) =
   match v with
