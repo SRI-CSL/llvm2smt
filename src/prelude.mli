@@ -29,6 +29,7 @@ val make_prelude: int -> prelude
 (* dump prelude out to standard error *)
 val dump_prelude: prelude  -> unit
 
+(* cast should go away once the vcast stuff is hooked in *)
 val cast_add: prelude -> unit
     
 (* add a undef requirement to a prelude object *)

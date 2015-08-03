@@ -99,7 +99,8 @@ let threes_add preq key twin x =
 
 let threes_fetch preq key = List.sort compare3 (Hashtbl.find preq.threes_table key)
 
-			  
+
+(* cast should go away once the vcast stuff is hooked in *)
 let cast_add preq =
   if not preq.cast
   then
