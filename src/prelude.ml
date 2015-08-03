@@ -54,7 +54,7 @@ let undef_fetch preq =
       
 let make_prelude aw =
   let preq = { address_width = aw;
-	       twos_keys = ["undef"; "vmake"; "vzero"; "vbinop";
+	       twos_keys = ["undef"; "vmake"; "vzero"; "vbinop"; "vcast";
 			    "trunc"; "zext"; "sext"; "int_ptr"; "vite"];
 	       twos_table = (Hashtbl.create 64);
 	       threes_keys = ["vundef";  "vtrunc"; "vzext"; "vsext"; "vint_ptr";];
@@ -71,7 +71,7 @@ let twos_add preq key x =
       begin
 	Hashtbl.replace preq.twos_table key (x :: l);
 	(* these guys are vector operations so we need to add the vector types *)
-	if key = "vmake" || key = "vzero" || key = "vbinop" || key = "vite"
+	if key = "vmake" || key = "vzero" || key = "vbinop" || key = "vite" || key = "vcast"
 	then
 	  let (length, width) = x in
 	    vector_width_add preq width;
@@ -137,6 +137,8 @@ let vzext_add preq x = threes_add preq "vzext" "zext" x
 let vint_ptr_add preq x = threes_add preq "vint_ptr" "int_ptr" x
 
 let vite_add preq x = twos_add preq "vite" x
+
+let vcast_add preq x = twos_add preq "vcast" x
   
 let dump_prelude prelude =
   let dump_aux1 string list =
