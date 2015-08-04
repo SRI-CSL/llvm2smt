@@ -410,7 +410,60 @@ let vector_bool b logv =
     failwith("vector_bool Ooops: need to write some prelude code for vectors longer than 2^3: "^(string_of_int logv))
 
 
+let vcast_1 b w =
+  let w2 = 2 * w in 
+    bprintf b
+      "
+;; this assumes little endian representation
+(define-fun cast_vector_1_%d_to_bits ((x vector_1_%d)) (_ BitVec %d)
+   (concat (select x #b1) (select x #b0)))
 
+(define-fun cast_bits_to_vector_1_%d ((w (_ BitVec %d))) vector_1_%d
+   (let ((z0 ((_ extract %d 0) w))
+         (z1 ((_ extract %d %d) w)))
+      (vmake_1_%d z0 z1)))
+"
+      w w w2    w w2 w (w - 1) (w2 - 1) w w
+
+let vcast_2 b w =
+  let w2 = 2 * w in 
+  let w3 = 3 * w in 
+  let w4 = 2 * w2 in 
+    bprintf b
+      "
+;; this assumes little endian representation
+(define-fun cast_vector_2_%d_to_bits ((x vector_2_%d)) (_ BitVec %d)
+   (concat (concat (concat (select x #b11) (select x #b10)) (select x #b01)) (select x #b00)))
+
+(define-fun cast_bits_to_vector_2_%d ((w (_ BitVec %d))) vector_2_%d
+   (let ((z0 ((_ extract %d 0) w))
+         (z1 ((_ extract %d %d) w))
+         (z2 ((_ extract %d %d) w))
+         (z3 ((_ extract %d %d) w)))
+      (vmake_2_%d z0 z1 z2 z3)))
+"
+      w w w4     w w4 w (w - 1) (w2 - 1) w (w3 - 1) w2 (w4 - 1) w3 w
+
+      
+let vcast_3 b w =
+    bprintf b
+      "
+;;;to appear (maybe)
+"
+      
+let vcast b logv =
+  if logv = 1
+  then
+    vcast_1 b 
+  else if logv = 2
+  then
+    vcast_2 b
+  else if logv = 3
+  then
+    vcast_3 b
+  else
+    failwith("vcast Ooops: need to write some prelude code for vectors longer than 2^3: e.g. 2^"^(string_of_int logv))
+      
 let v2b_cast b w =
   let w2 = 2 * w in 
   let w4 = 2 * w2 in 
