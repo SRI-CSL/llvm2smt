@@ -63,13 +63,13 @@ define i32 @main(i32 %argc, i8** %argv) #0 {
 
 ; <label>:24                                      ; preds = %6
   %25 = load i32, i32* %lhs, align 4
-  %26 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([16 x i8]* @.str, i32 0, i32 0), i32 %25)
+  %26 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str, i32 0, i32 0), i32 %25)
   br label %31
 
 ; <label>:27                                      ; preds = %6
   %28 = load i32, i32* %lhs, align 4
   %29 = load i32, i32* %rhs, align 4
-  %30 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([22 x i8]* @.str1, i32 0, i32 0), i32 %28, i32 %29)
+  %30 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([22 x i8], [22 x i8]* @.str1, i32 0, i32 0), i32 %28, i32 %29)
   br label %31
 
 ; <label>:31                                      ; preds = %27, %24
@@ -88,4 +88,4 @@ attributes #1 = { "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "n
 
 !llvm.ident = !{!0}
 
-!0 = metadata !{metadata !"Apple LLVM version 6.0 (clang-600.0.57) (based on LLVM 3.5svn)"}
+!0 = !{!"Apple LLVM version 6.0 (clang-600.0.57) (based on LLVM 3.5svn)"}
