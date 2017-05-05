@@ -2,14 +2,14 @@
 LLVM = ${HOME}/LLVM-3.5.0/build/Debug+Asserts/bin
 
 primes:
-	clang -S -emit-llvm primes.c -o primes.ll
-	clang -O1 -S -emit-llvm primes.c -o primes_opt.ll
+	${LLVM_HOME}/bin/clang -S -emit-llvm primes.c -o primes.ll
+	${LLVM_HOME}/bin/clang -O1 -S -emit-llvm primes.c -o primes_opt.ll
 
 dot:
-	${LLVM}/opt -dot-cfg-only primes_opt.ll  -o /dev/null
+	${LLVM_HOME}/bin/opt -dot-cfg-only primes_opt.ll  -o /dev/null
 
 run:
-	${LLVM}/lli primes_opt.ll 100
+	${LLVM_HOME}/bin/lli primes_opt.ll 100
 
 
 #-loops -loop-simplify
@@ -24,9 +24,9 @@ VERSIONS=2 3 4 5
 
 unfold: primes
 	for ucount in ${VERSIONS} ; do \
-	    `${LLVM}/opt -debug -loop-unroll -unroll-count=$${ucount} -unroll-threshold=10000 primes_opt.ll  -o primes_opt_test$${ucount}.bc  2> primes_opt_test$${ucount}.log `\
-            `${LLVM}/llvm-dis primes_opt_test$${ucount}.bc` \
-	    `${LLVM}/opt -dot-cfg-only primes_opt_test$${ucount}.ll  -o /dev/null` \
+	    `${LLVM_HOME}/bin/opt -debug -loop-unroll -unroll-count=$${ucount} -unroll-threshold=10000 primes_opt.ll  -o primes_opt_test$${ucount}.bc  2> primes_opt_test$${ucount}.log `\
+            `${LLVM_HOME}/bin/llvm-dis primes_opt_test$${ucount}.bc` \
+	    `${LLVM_HOME}/bin/opt -dot-cfg-only primes_opt_test$${ucount}.ll  -o /dev/null` \
 	    `dot -Tpng cfg.primes.dot -o primes_opt_test$${ucount}.png` \
 	    echo "Success for $${ucount}\n"; \
         done
