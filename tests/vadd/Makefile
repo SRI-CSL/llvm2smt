@@ -4,7 +4,7 @@ LLVM = ${HOME}/LLVM/llvm-3.5-install/bin
 all: vadd
 
 vadd:
-	${LLVM}/lli vadd.ll 2 8	
+	${LLVM_HOME}/bin/lli vadd.ll 2 8	
 
 
 2smt:

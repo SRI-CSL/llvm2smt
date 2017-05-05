@@ -33,42 +33,42 @@ define i32 @main(i32 %argc, i8** %argv) #0 {
   store i32 0, i32* %1
   store i32 %argc, i32* %2, align 4
   store i8** %argv, i8*** %3, align 8
-  %4 = load i32* %2, align 4
+  %4 = load i32, i32* %2, align 4
   %5 = icmp eq i32 %4, 3
   br i1 %5, label %6, label %32
 
 ; <label>:6                                       ; preds = %0
-  %7 = load i8*** %3, align 8
-  %8 = getelementptr inbounds i8** %7, i64 1
-  %9 = load i8** %8, align 8
+  %7 = load i8**, i8*** %3, align 8
+  %8 = getelementptr inbounds i8*, i8** %7, i64 1
+  %9 = load i8*, i8** %8, align 8
   %10 = call i32 @atoi(i8* %9)
   store i32 %10, i32* %a, align 4
-  %11 = load i8*** %3, align 8
-  %12 = getelementptr inbounds i8** %11, i64 2
-  %13 = load i8** %12, align 8
+  %11 = load i8**, i8*** %3, align 8
+  %12 = getelementptr inbounds i8*, i8** %11, i64 2
+  %13 = load i8*, i8** %12, align 8
   %14 = call i32 @atoi(i8* %13)
   store i32 %14, i32* %b, align 4
-  %15 = load i32* %a, align 4
-  %16 = load i32* %b, align 4
+  %15 = load i32, i32* %a, align 4
+  %16 = load i32, i32* %b, align 4
   %17 = call i32 @lhs(i32 %15, i32 %16)
   store i32 %17, i32* %lhs, align 4
-  %18 = load i32* %a, align 4
-  %19 = load i32* %b, align 4
+  %18 = load i32, i32* %a, align 4
+  %19 = load i32, i32* %b, align 4
   %20 = call i32 @rhs(i32 %18, i32 %19)
   store i32 %20, i32* %rhs, align 4
-  %21 = load i32* %lhs, align 4
-  %22 = load i32* %rhs, align 4
+  %21 = load i32, i32* %lhs, align 4
+  %22 = load i32, i32* %rhs, align 4
   %23 = icmp eq i32 %21, %22
   br i1 %23, label %24, label %27
 
 ; <label>:24                                      ; preds = %6
-  %25 = load i32* %lhs, align 4
+  %25 = load i32, i32* %lhs, align 4
   %26 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([16 x i8]* @.str, i32 0, i32 0), i32 %25)
   br label %31
 
 ; <label>:27                                      ; preds = %6
-  %28 = load i32* %lhs, align 4
-  %29 = load i32* %rhs, align 4
+  %28 = load i32, i32* %lhs, align 4
+  %29 = load i32, i32* %rhs, align 4
   %30 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([22 x i8]* @.str1, i32 0, i32 0), i32 %28, i32 %29)
   br label %31
 

@@ -1,10 +1,7 @@
-LLVM = ${HOME}/LLVM/llvm-3.5-install/bin
-#LLVM = ${HOME}/LLVM-3.5.0/build/Debug+Asserts/bin
-
 all: vtrunc
 
 vtrunc:
-	${LLVM}/lli vtrunc.ll 299 8	
+	${LLVM_HOME}/bin/lli vtrunc.ll 299 8	
 
 
 2smt:
