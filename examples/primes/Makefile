@@ -34,4 +34,4 @@ unfold: primes
 
 
 clean:
-	rm *.bc *.ll *.log  *.dot *.png
+	rm -f *.bc *.ll *.log  *.dot *.png

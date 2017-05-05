@@ -1,4 +1,6 @@
-all:
+all: sums copy
+
+sums:
 	${LLVM_HOME}/bin/clang -S -emit-llvm sums.c
 
 runs:
@@ -10,6 +12,10 @@ unfolds:
 	${LLVM_HOME}/bin/llvm-dis sums_auto3.bc
 	${LLVM_HOME}/bin/opt -dot-cfg-only sums_auto3.ll  -o /dev/null
 	dot -Tpng cfg.lhs.dot -o cfg_sums_lhs_auto3.png
+
+
+copy:
+	cp *.ll ../../bitcode
 
 
 

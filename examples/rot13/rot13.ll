@@ -1,187 +1,196 @@
 ; ModuleID = 'rot13.c'
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.9.0"
+target triple = "x86_64-apple-macosx10.12.0"
 
 @.str = private unnamed_addr constant [60 x i8] c"x = '%c', y = '%c', z = '%c', lhs(x) = '%c', rhs(x) = '%c'\0A\00", align 1
 
 ; Function Attrs: nounwind ssp uwtable
 define i32 @main(i32 %argc, i8** %argv) #0 {
-  %1 = alloca i8, align 1
-  %2 = alloca i8, align 1
-  %offset.i1 = alloca i32, align 4
-  %3 = alloca i8, align 1
-  %4 = alloca i8, align 1
-  %offset.i = alloca i32, align 4
-  %5 = alloca i32, align 4
-  %6 = alloca i32, align 4
-  %7 = alloca i8**, align 8
+entry:
+  %retval.i10 = alloca i8, align 1
+  %ch.addr.i11 = alloca i8, align 1
+  %offset.i12 = alloca i8, align 1
+  %retval.i = alloca i8, align 1
+  %ch.addr.i = alloca i8, align 1
+  %offset.i = alloca i8, align 1
+  %retval = alloca i32, align 4
+  %argc.addr = alloca i32, align 4
+  %argv.addr = alloca i8**, align 8
   %x = alloca i8, align 1
   %y = alloca i8, align 1
   %z = alloca i8, align 1
-  store i32 0, i32* %5
-  store i32 %argc, i32* %6, align 4
-  store i8** %argv, i8*** %7, align 8
-  %8 = load i32* %6, align 4
-  %9 = icmp eq i32 %8, 2
-  br i1 %9, label %10, label %115
+  store i32 0, i32* %retval, align 4
+  store i32 %argc, i32* %argc.addr, align 4
+  store i8** %argv, i8*** %argv.addr, align 8
+  %0 = load i32, i32* %argc.addr, align 4
+  %cmp = icmp eq i32 %0, 2
+  br i1 %cmp, label %if.then, label %if.end
 
-; <label>:10                                      ; preds = %0
-  %11 = load i8*** %7, align 8
-  %12 = getelementptr inbounds i8** %11, i64 1
-  %13 = load i8** %12, align 8
-  %14 = getelementptr inbounds i8* %13, i64 0
-  %15 = load i8* %14, align 1
-  store i8 %15, i8* %x, align 1
-  %16 = load i8* %x, align 1
-  store i8 %16, i8* %4, align 1
-  %17 = load i8* %4, align 1
-  %18 = sext i8 %17 to i32
-  %19 = icmp sle i32 65, %18
-  br i1 %19, label %20, label %36
+if.then:                                          ; preds = %entry
+  %1 = load i8**, i8*** %argv.addr, align 8
+  %arrayidx = getelementptr inbounds i8*, i8** %1, i64 1
+  %2 = load i8*, i8** %arrayidx, align 8
+  %arrayidx1 = getelementptr inbounds i8, i8* %2, i64 0
+  %3 = load i8, i8* %arrayidx1, align 1
+  store i8 %3, i8* %x, align 1
+  %4 = load i8, i8* %x, align 1
+  store i8 %4, i8* %ch.addr.i, align 1
+  %5 = load i8, i8* %ch.addr.i, align 1
+  %conv.i = sext i8 %5 to i32
+  %cmp.i = icmp sle i32 65, %conv.i
+  br i1 %cmp.i, label %land.lhs.true.i, label %if.end.i
 
-; <label>:20                                      ; preds = %10
-  %21 = load i8* %4, align 1
-  %22 = sext i8 %21 to i32
-  %23 = icmp sle i32 %22, 90
-  br i1 %23, label %24, label %36
+land.lhs.true.i:                                  ; preds = %if.then
+  %6 = load i8, i8* %ch.addr.i, align 1
+  %conv2.i = sext i8 %6 to i32
+  %cmp3.i = icmp sle i32 %conv2.i, 90
+  br i1 %cmp3.i, label %if.then.i, label %if.end.i
 
-; <label>:24                                      ; preds = %20
-  %25 = load i8* %4, align 1
-  %26 = sext i8 %25 to i32
-  %27 = sub nsw i32 %26, 65
-  store i32 %27, i32* %offset.i, align 4
-  %28 = load i32* %offset.i, align 4
-  %29 = add i32 %28, 13
-  %30 = urem i32 %29, 26
-  store i32 %30, i32* %offset.i, align 4
-  %31 = load i32* %offset.i, align 4
-  %32 = trunc i32 %31 to i8
-  %33 = sext i8 %32 to i32
-  %34 = add nsw i32 65, %33
-  %35 = trunc i32 %34 to i8
-  store i8 %35, i8* %3
+if.then.i:                                        ; preds = %land.lhs.true.i
+  %7 = load i8, i8* %ch.addr.i, align 1
+  %conv5.i = sext i8 %7 to i32
+  %sub.i = sub nsw i32 %conv5.i, 65
+  %conv6.i = trunc i32 %sub.i to i8
+  store i8 %conv6.i, i8* %offset.i, align 1
+  %8 = load i8, i8* %offset.i, align 1
+  %conv7.i = sext i8 %8 to i32
+  %add.i = add nsw i32 %conv7.i, 13
+  %rem.i = srem i32 %add.i, 26
+  %conv8.i = trunc i32 %rem.i to i8
+  store i8 %conv8.i, i8* %offset.i, align 1
+  %9 = load i8, i8* %offset.i, align 1
+  %conv9.i = sext i8 %9 to i32
+  %add10.i = add nsw i32 65, %conv9.i
+  %conv11.i = trunc i32 %add10.i to i8
+  store i8 %conv11.i, i8* %retval.i, align 1
   br label %rot13_char.exit
 
-; <label>:36                                      ; preds = %20, %10
-  %37 = load i8* %4, align 1
-  %38 = sext i8 %37 to i32
-  %39 = icmp sle i32 97, %38
-  br i1 %39, label %40, label %56
+if.end.i:                                         ; preds = %land.lhs.true.i, %if.then
+  %10 = load i8, i8* %ch.addr.i, align 1
+  %conv12.i = sext i8 %10 to i32
+  %cmp13.i = icmp sle i32 97, %conv12.i
+  br i1 %cmp13.i, label %land.lhs.true15.i, label %if.end30.i
 
-; <label>:40                                      ; preds = %36
-  %41 = load i8* %4, align 1
-  %42 = sext i8 %41 to i32
-  %43 = icmp sle i32 %42, 122
-  br i1 %43, label %44, label %56
+land.lhs.true15.i:                                ; preds = %if.end.i
+  %11 = load i8, i8* %ch.addr.i, align 1
+  %conv16.i = sext i8 %11 to i32
+  %cmp17.i = icmp sle i32 %conv16.i, 122
+  br i1 %cmp17.i, label %if.then19.i, label %if.end30.i
 
-; <label>:44                                      ; preds = %40
-  %45 = load i8* %4, align 1
-  %46 = sext i8 %45 to i32
-  %47 = sub nsw i32 %46, 97
-  store i32 %47, i32* %offset.i, align 4
-  %48 = load i32* %offset.i, align 4
-  %49 = add i32 %48, 13
-  %50 = urem i32 %49, 26
-  store i32 %50, i32* %offset.i, align 4
-  %51 = load i32* %offset.i, align 4
-  %52 = trunc i32 %51 to i8
-  %53 = sext i8 %52 to i32
-  %54 = add nsw i32 97, %53
-  %55 = trunc i32 %54 to i8
-  store i8 %55, i8* %3
+if.then19.i:                                      ; preds = %land.lhs.true15.i
+  %12 = load i8, i8* %ch.addr.i, align 1
+  %conv20.i = sext i8 %12 to i32
+  %sub21.i = sub nsw i32 %conv20.i, 97
+  %conv22.i = trunc i32 %sub21.i to i8
+  store i8 %conv22.i, i8* %offset.i, align 1
+  %13 = load i8, i8* %offset.i, align 1
+  %conv23.i = sext i8 %13 to i32
+  %add24.i = add nsw i32 %conv23.i, 13
+  %rem25.i = srem i32 %add24.i, 26
+  %conv26.i = trunc i32 %rem25.i to i8
+  store i8 %conv26.i, i8* %offset.i, align 1
+  %14 = load i8, i8* %offset.i, align 1
+  %conv27.i = sext i8 %14 to i32
+  %add28.i = add nsw i32 97, %conv27.i
+  %conv29.i = trunc i32 %add28.i to i8
+  store i8 %conv29.i, i8* %retval.i, align 1
   br label %rot13_char.exit
 
-; <label>:56                                      ; preds = %40, %36
-  %57 = load i8* %4, align 1
-  store i8 %57, i8* %3
+if.end30.i:                                       ; preds = %land.lhs.true15.i, %if.end.i
+  %15 = load i8, i8* %ch.addr.i, align 1
+  store i8 %15, i8* %retval.i, align 1
   br label %rot13_char.exit
 
-rot13_char.exit:                                  ; preds = %24, %44, %56
-  %58 = load i8* %3
-  store i8 %58, i8* %y, align 1
-  %59 = load i8* %y, align 1
-  store i8 %59, i8* %2, align 1
-  %60 = load i8* %2, align 1
-  %61 = sext i8 %60 to i32
-  %62 = icmp sle i32 65, %61
-  br i1 %62, label %63, label %79
+rot13_char.exit:                                  ; preds = %if.then.i, %if.then19.i, %if.end30.i
+  %16 = load i8, i8* %retval.i, align 1
+  store i8 %16, i8* %y, align 1
+  %17 = load i8, i8* %y, align 1
+  store i8 %17, i8* %ch.addr.i11, align 1
+  %18 = load i8, i8* %ch.addr.i11, align 1
+  %conv.i13 = sext i8 %18 to i32
+  %cmp.i14 = icmp sle i32 65, %conv.i13
+  br i1 %cmp.i14, label %land.lhs.true.i17, label %if.end.i31
 
-; <label>:63                                      ; preds = %rot13_char.exit
-  %64 = load i8* %2, align 1
-  %65 = sext i8 %64 to i32
-  %66 = icmp sle i32 %65, 90
-  br i1 %66, label %67, label %79
+land.lhs.true.i17:                                ; preds = %rot13_char.exit
+  %19 = load i8, i8* %ch.addr.i11, align 1
+  %conv2.i15 = sext i8 %19 to i32
+  %cmp3.i16 = icmp sle i32 %conv2.i15, 90
+  br i1 %cmp3.i16, label %if.then.i28, label %if.end.i31
 
-; <label>:67                                      ; preds = %63
-  %68 = load i8* %2, align 1
-  %69 = sext i8 %68 to i32
-  %70 = sub nsw i32 %69, 65
-  store i32 %70, i32* %offset.i1, align 4
-  %71 = load i32* %offset.i1, align 4
-  %72 = add i32 %71, 13
-  %73 = urem i32 %72, 26
-  store i32 %73, i32* %offset.i1, align 4
-  %74 = load i32* %offset.i1, align 4
-  %75 = trunc i32 %74 to i8
-  %76 = sext i8 %75 to i32
-  %77 = add nsw i32 65, %76
-  %78 = trunc i32 %77 to i8
-  store i8 %78, i8* %1
-  br label %rot13_char.exit2
+if.then.i28:                                      ; preds = %land.lhs.true.i17
+  %20 = load i8, i8* %ch.addr.i11, align 1
+  %conv5.i18 = sext i8 %20 to i32
+  %sub.i19 = sub nsw i32 %conv5.i18, 65
+  %conv6.i20 = trunc i32 %sub.i19 to i8
+  store i8 %conv6.i20, i8* %offset.i12, align 1
+  %21 = load i8, i8* %offset.i12, align 1
+  %conv7.i21 = sext i8 %21 to i32
+  %add.i22 = add nsw i32 %conv7.i21, 13
+  %rem.i23 = srem i32 %add.i22, 26
+  %conv8.i24 = trunc i32 %rem.i23 to i8
+  store i8 %conv8.i24, i8* %offset.i12, align 1
+  %22 = load i8, i8* %offset.i12, align 1
+  %conv9.i25 = sext i8 %22 to i32
+  %add10.i26 = add nsw i32 65, %conv9.i25
+  %conv11.i27 = trunc i32 %add10.i26 to i8
+  store i8 %conv11.i27, i8* %retval.i10, align 1
+  br label %rot13_char.exit47
 
-; <label>:79                                      ; preds = %63, %rot13_char.exit
-  %80 = load i8* %2, align 1
-  %81 = sext i8 %80 to i32
-  %82 = icmp sle i32 97, %81
-  br i1 %82, label %83, label %99
+if.end.i31:                                       ; preds = %land.lhs.true.i17, %rot13_char.exit
+  %23 = load i8, i8* %ch.addr.i11, align 1
+  %conv12.i29 = sext i8 %23 to i32
+  %cmp13.i30 = icmp sle i32 97, %conv12.i29
+  br i1 %cmp13.i30, label %land.lhs.true15.i34, label %if.end30.i46
 
-; <label>:83                                      ; preds = %79
-  %84 = load i8* %2, align 1
-  %85 = sext i8 %84 to i32
-  %86 = icmp sle i32 %85, 122
-  br i1 %86, label %87, label %99
+land.lhs.true15.i34:                              ; preds = %if.end.i31
+  %24 = load i8, i8* %ch.addr.i11, align 1
+  %conv16.i32 = sext i8 %24 to i32
+  %cmp17.i33 = icmp sle i32 %conv16.i32, 122
+  br i1 %cmp17.i33, label %if.then19.i45, label %if.end30.i46
 
-; <label>:87                                      ; preds = %83
-  %88 = load i8* %2, align 1
-  %89 = sext i8 %88 to i32
-  %90 = sub nsw i32 %89, 97
-  store i32 %90, i32* %offset.i1, align 4
-  %91 = load i32* %offset.i1, align 4
-  %92 = add i32 %91, 13
-  %93 = urem i32 %92, 26
-  store i32 %93, i32* %offset.i1, align 4
-  %94 = load i32* %offset.i1, align 4
-  %95 = trunc i32 %94 to i8
-  %96 = sext i8 %95 to i32
-  %97 = add nsw i32 97, %96
-  %98 = trunc i32 %97 to i8
-  store i8 %98, i8* %1
-  br label %rot13_char.exit2
+if.then19.i45:                                    ; preds = %land.lhs.true15.i34
+  %25 = load i8, i8* %ch.addr.i11, align 1
+  %conv20.i35 = sext i8 %25 to i32
+  %sub21.i36 = sub nsw i32 %conv20.i35, 97
+  %conv22.i37 = trunc i32 %sub21.i36 to i8
+  store i8 %conv22.i37, i8* %offset.i12, align 1
+  %26 = load i8, i8* %offset.i12, align 1
+  %conv23.i38 = sext i8 %26 to i32
+  %add24.i39 = add nsw i32 %conv23.i38, 13
+  %rem25.i40 = srem i32 %add24.i39, 26
+  %conv26.i41 = trunc i32 %rem25.i40 to i8
+  store i8 %conv26.i41, i8* %offset.i12, align 1
+  %27 = load i8, i8* %offset.i12, align 1
+  %conv27.i42 = sext i8 %27 to i32
+  %add28.i43 = add nsw i32 97, %conv27.i42
+  %conv29.i44 = trunc i32 %add28.i43 to i8
+  store i8 %conv29.i44, i8* %retval.i10, align 1
+  br label %rot13_char.exit47
 
-; <label>:99                                      ; preds = %83, %79
-  %100 = load i8* %2, align 1
-  store i8 %100, i8* %1
-  br label %rot13_char.exit2
+if.end30.i46:                                     ; preds = %land.lhs.true15.i34, %if.end.i31
+  %28 = load i8, i8* %ch.addr.i11, align 1
+  store i8 %28, i8* %retval.i10, align 1
+  br label %rot13_char.exit47
 
-rot13_char.exit2:                                 ; preds = %67, %87, %99
-  %101 = load i8* %1
-  store i8 %101, i8* %z, align 1
-  %102 = load i8* %x, align 1
-  %103 = sext i8 %102 to i32
-  %104 = load i8* %y, align 1
-  %105 = sext i8 %104 to i32
-  %106 = load i8* %z, align 1
-  %107 = sext i8 %106 to i32
-  %108 = load i8* %x, align 1
-  %109 = call signext i8 @lhs(i8 signext %108)
-  %110 = sext i8 %109 to i32
-  %111 = load i8* %x, align 1
-  %112 = call signext i8 @rhs(i8 signext %111)
-  %113 = sext i8 %112 to i32
-  %114 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([60 x i8]* @.str, i32 0, i32 0), i32 %103, i32 %105, i32 %107, i32 %110, i32 %113)
-  br label %115
+rot13_char.exit47:                                ; preds = %if.then.i28, %if.then19.i45, %if.end30.i46
+  %29 = load i8, i8* %retval.i10, align 1
+  store i8 %29, i8* %z, align 1
+  %30 = load i8, i8* %x, align 1
+  %conv = sext i8 %30 to i32
+  %31 = load i8, i8* %y, align 1
+  %conv3 = sext i8 %31 to i32
+  %32 = load i8, i8* %z, align 1
+  %conv4 = sext i8 %32 to i32
+  %33 = load i8, i8* %x, align 1
+  %call5 = call signext i8 @lhs(i8 signext %33)
+  %conv6 = sext i8 %call5 to i32
+  %34 = load i8, i8* %x, align 1
+  %call7 = call signext i8 @rhs(i8 signext %34)
+  %conv8 = sext i8 %call7 to i32
+  %call9 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([60 x i8], [60 x i8]* @.str, i32 0, i32 0), i32 %conv, i32 %conv3, i32 %conv4, i32 %conv6, i32 %conv8)
+  br label %if.end
 
-; <label>:115                                     ; preds = %rot13_char.exit2, %0
+if.end:                                           ; preds = %rot13_char.exit47, %entry
   ret i32 0
 }
 
@@ -189,159 +198,171 @@ declare i32 @printf(i8*, ...) #1
 
 ; Function Attrs: nounwind ssp uwtable
 define internal signext i8 @lhs(i8 signext %x) #0 {
-  %1 = alloca i8, align 1
-  store i8 %x, i8* %1, align 1
-  %2 = load i8* %1, align 1
-  ret i8 %2
+entry:
+  %x.addr = alloca i8, align 1
+  store i8 %x, i8* %x.addr, align 1
+  %0 = load i8, i8* %x.addr, align 1
+  ret i8 %0
 }
 
 ; Function Attrs: nounwind ssp uwtable
 define internal signext i8 @rhs(i8 signext %x) #0 {
-  %1 = alloca i8, align 1
-  %2 = alloca i8, align 1
-  %offset.i1 = alloca i32, align 4
-  %3 = alloca i8, align 1
-  %4 = alloca i8, align 1
-  %offset.i = alloca i32, align 4
-  %5 = alloca i8, align 1
-  store i8 %x, i8* %5, align 1
-  %6 = load i8* %5, align 1
-  store i8 %6, i8* %4, align 1
-  %7 = load i8* %4, align 1
-  %8 = sext i8 %7 to i32
-  %9 = icmp sle i32 65, %8
-  br i1 %9, label %10, label %26
+entry:
+  %retval.i2 = alloca i8, align 1
+  %ch.addr.i3 = alloca i8, align 1
+  %offset.i4 = alloca i8, align 1
+  %retval.i = alloca i8, align 1
+  %ch.addr.i = alloca i8, align 1
+  %offset.i = alloca i8, align 1
+  %x.addr = alloca i8, align 1
+  store i8 %x, i8* %x.addr, align 1
+  %0 = load i8, i8* %x.addr, align 1
+  store i8 %0, i8* %ch.addr.i, align 1
+  %1 = load i8, i8* %ch.addr.i, align 1
+  %conv.i = sext i8 %1 to i32
+  %cmp.i = icmp sle i32 65, %conv.i
+  br i1 %cmp.i, label %land.lhs.true.i, label %if.end.i
 
-; <label>:10                                      ; preds = %0
-  %11 = load i8* %4, align 1
-  %12 = sext i8 %11 to i32
-  %13 = icmp sle i32 %12, 90
-  br i1 %13, label %14, label %26
+land.lhs.true.i:                                  ; preds = %entry
+  %2 = load i8, i8* %ch.addr.i, align 1
+  %conv2.i = sext i8 %2 to i32
+  %cmp3.i = icmp sle i32 %conv2.i, 90
+  br i1 %cmp3.i, label %if.then.i, label %if.end.i
 
-; <label>:14                                      ; preds = %10
-  %15 = load i8* %4, align 1
-  %16 = sext i8 %15 to i32
-  %17 = sub nsw i32 %16, 65
-  store i32 %17, i32* %offset.i, align 4
-  %18 = load i32* %offset.i, align 4
-  %19 = add i32 %18, 13
-  %20 = urem i32 %19, 26
-  store i32 %20, i32* %offset.i, align 4
-  %21 = load i32* %offset.i, align 4
-  %22 = trunc i32 %21 to i8
-  %23 = sext i8 %22 to i32
-  %24 = add nsw i32 65, %23
-  %25 = trunc i32 %24 to i8
-  store i8 %25, i8* %3
+if.then.i:                                        ; preds = %land.lhs.true.i
+  %3 = load i8, i8* %ch.addr.i, align 1
+  %conv5.i = sext i8 %3 to i32
+  %sub.i = sub nsw i32 %conv5.i, 65
+  %conv6.i = trunc i32 %sub.i to i8
+  store i8 %conv6.i, i8* %offset.i, align 1
+  %4 = load i8, i8* %offset.i, align 1
+  %conv7.i = sext i8 %4 to i32
+  %add.i = add nsw i32 %conv7.i, 13
+  %rem.i = srem i32 %add.i, 26
+  %conv8.i = trunc i32 %rem.i to i8
+  store i8 %conv8.i, i8* %offset.i, align 1
+  %5 = load i8, i8* %offset.i, align 1
+  %conv9.i = sext i8 %5 to i32
+  %add10.i = add nsw i32 65, %conv9.i
+  %conv11.i = trunc i32 %add10.i to i8
+  store i8 %conv11.i, i8* %retval.i, align 1
   br label %rot13_char.exit
 
-; <label>:26                                      ; preds = %10, %0
-  %27 = load i8* %4, align 1
-  %28 = sext i8 %27 to i32
-  %29 = icmp sle i32 97, %28
-  br i1 %29, label %30, label %46
+if.end.i:                                         ; preds = %land.lhs.true.i, %entry
+  %6 = load i8, i8* %ch.addr.i, align 1
+  %conv12.i = sext i8 %6 to i32
+  %cmp13.i = icmp sle i32 97, %conv12.i
+  br i1 %cmp13.i, label %land.lhs.true15.i, label %if.end30.i
 
-; <label>:30                                      ; preds = %26
-  %31 = load i8* %4, align 1
-  %32 = sext i8 %31 to i32
-  %33 = icmp sle i32 %32, 122
-  br i1 %33, label %34, label %46
+land.lhs.true15.i:                                ; preds = %if.end.i
+  %7 = load i8, i8* %ch.addr.i, align 1
+  %conv16.i = sext i8 %7 to i32
+  %cmp17.i = icmp sle i32 %conv16.i, 122
+  br i1 %cmp17.i, label %if.then19.i, label %if.end30.i
 
-; <label>:34                                      ; preds = %30
-  %35 = load i8* %4, align 1
-  %36 = sext i8 %35 to i32
-  %37 = sub nsw i32 %36, 97
-  store i32 %37, i32* %offset.i, align 4
-  %38 = load i32* %offset.i, align 4
-  %39 = add i32 %38, 13
-  %40 = urem i32 %39, 26
-  store i32 %40, i32* %offset.i, align 4
-  %41 = load i32* %offset.i, align 4
-  %42 = trunc i32 %41 to i8
-  %43 = sext i8 %42 to i32
-  %44 = add nsw i32 97, %43
-  %45 = trunc i32 %44 to i8
-  store i8 %45, i8* %3
+if.then19.i:                                      ; preds = %land.lhs.true15.i
+  %8 = load i8, i8* %ch.addr.i, align 1
+  %conv20.i = sext i8 %8 to i32
+  %sub21.i = sub nsw i32 %conv20.i, 97
+  %conv22.i = trunc i32 %sub21.i to i8
+  store i8 %conv22.i, i8* %offset.i, align 1
+  %9 = load i8, i8* %offset.i, align 1
+  %conv23.i = sext i8 %9 to i32
+  %add24.i = add nsw i32 %conv23.i, 13
+  %rem25.i = srem i32 %add24.i, 26
+  %conv26.i = trunc i32 %rem25.i to i8
+  store i8 %conv26.i, i8* %offset.i, align 1
+  %10 = load i8, i8* %offset.i, align 1
+  %conv27.i = sext i8 %10 to i32
+  %add28.i = add nsw i32 97, %conv27.i
+  %conv29.i = trunc i32 %add28.i to i8
+  store i8 %conv29.i, i8* %retval.i, align 1
   br label %rot13_char.exit
 
-; <label>:46                                      ; preds = %30, %26
-  %47 = load i8* %4, align 1
-  store i8 %47, i8* %3
+if.end30.i:                                       ; preds = %land.lhs.true15.i, %if.end.i
+  %11 = load i8, i8* %ch.addr.i, align 1
+  store i8 %11, i8* %retval.i, align 1
   br label %rot13_char.exit
 
-rot13_char.exit:                                  ; preds = %14, %34, %46
-  %48 = load i8* %3
-  store i8 %48, i8* %2, align 1
-  %49 = load i8* %2, align 1
-  %50 = sext i8 %49 to i32
-  %51 = icmp sle i32 65, %50
-  br i1 %51, label %52, label %68
+rot13_char.exit:                                  ; preds = %if.then.i, %if.then19.i, %if.end30.i
+  %12 = load i8, i8* %retval.i, align 1
+  store i8 %12, i8* %ch.addr.i3, align 1
+  %13 = load i8, i8* %ch.addr.i3, align 1
+  %conv.i5 = sext i8 %13 to i32
+  %cmp.i6 = icmp sle i32 65, %conv.i5
+  br i1 %cmp.i6, label %land.lhs.true.i9, label %if.end.i23
 
-; <label>:52                                      ; preds = %rot13_char.exit
-  %53 = load i8* %2, align 1
-  %54 = sext i8 %53 to i32
-  %55 = icmp sle i32 %54, 90
-  br i1 %55, label %56, label %68
+land.lhs.true.i9:                                 ; preds = %rot13_char.exit
+  %14 = load i8, i8* %ch.addr.i3, align 1
+  %conv2.i7 = sext i8 %14 to i32
+  %cmp3.i8 = icmp sle i32 %conv2.i7, 90
+  br i1 %cmp3.i8, label %if.then.i20, label %if.end.i23
 
-; <label>:56                                      ; preds = %52
-  %57 = load i8* %2, align 1
-  %58 = sext i8 %57 to i32
-  %59 = sub nsw i32 %58, 65
-  store i32 %59, i32* %offset.i1, align 4
-  %60 = load i32* %offset.i1, align 4
-  %61 = add i32 %60, 13
-  %62 = urem i32 %61, 26
-  store i32 %62, i32* %offset.i1, align 4
-  %63 = load i32* %offset.i1, align 4
-  %64 = trunc i32 %63 to i8
-  %65 = sext i8 %64 to i32
-  %66 = add nsw i32 65, %65
-  %67 = trunc i32 %66 to i8
-  store i8 %67, i8* %1
-  br label %rot13_char.exit2
+if.then.i20:                                      ; preds = %land.lhs.true.i9
+  %15 = load i8, i8* %ch.addr.i3, align 1
+  %conv5.i10 = sext i8 %15 to i32
+  %sub.i11 = sub nsw i32 %conv5.i10, 65
+  %conv6.i12 = trunc i32 %sub.i11 to i8
+  store i8 %conv6.i12, i8* %offset.i4, align 1
+  %16 = load i8, i8* %offset.i4, align 1
+  %conv7.i13 = sext i8 %16 to i32
+  %add.i14 = add nsw i32 %conv7.i13, 13
+  %rem.i15 = srem i32 %add.i14, 26
+  %conv8.i16 = trunc i32 %rem.i15 to i8
+  store i8 %conv8.i16, i8* %offset.i4, align 1
+  %17 = load i8, i8* %offset.i4, align 1
+  %conv9.i17 = sext i8 %17 to i32
+  %add10.i18 = add nsw i32 65, %conv9.i17
+  %conv11.i19 = trunc i32 %add10.i18 to i8
+  store i8 %conv11.i19, i8* %retval.i2, align 1
+  br label %rot13_char.exit39
 
-; <label>:68                                      ; preds = %52, %rot13_char.exit
-  %69 = load i8* %2, align 1
-  %70 = sext i8 %69 to i32
-  %71 = icmp sle i32 97, %70
-  br i1 %71, label %72, label %88
+if.end.i23:                                       ; preds = %land.lhs.true.i9, %rot13_char.exit
+  %18 = load i8, i8* %ch.addr.i3, align 1
+  %conv12.i21 = sext i8 %18 to i32
+  %cmp13.i22 = icmp sle i32 97, %conv12.i21
+  br i1 %cmp13.i22, label %land.lhs.true15.i26, label %if.end30.i38
 
-; <label>:72                                      ; preds = %68
-  %73 = load i8* %2, align 1
-  %74 = sext i8 %73 to i32
-  %75 = icmp sle i32 %74, 122
-  br i1 %75, label %76, label %88
+land.lhs.true15.i26:                              ; preds = %if.end.i23
+  %19 = load i8, i8* %ch.addr.i3, align 1
+  %conv16.i24 = sext i8 %19 to i32
+  %cmp17.i25 = icmp sle i32 %conv16.i24, 122
+  br i1 %cmp17.i25, label %if.then19.i37, label %if.end30.i38
 
-; <label>:76                                      ; preds = %72
-  %77 = load i8* %2, align 1
-  %78 = sext i8 %77 to i32
-  %79 = sub nsw i32 %78, 97
-  store i32 %79, i32* %offset.i1, align 4
-  %80 = load i32* %offset.i1, align 4
-  %81 = add i32 %80, 13
-  %82 = urem i32 %81, 26
-  store i32 %82, i32* %offset.i1, align 4
-  %83 = load i32* %offset.i1, align 4
-  %84 = trunc i32 %83 to i8
-  %85 = sext i8 %84 to i32
-  %86 = add nsw i32 97, %85
-  %87 = trunc i32 %86 to i8
-  store i8 %87, i8* %1
-  br label %rot13_char.exit2
+if.then19.i37:                                    ; preds = %land.lhs.true15.i26
+  %20 = load i8, i8* %ch.addr.i3, align 1
+  %conv20.i27 = sext i8 %20 to i32
+  %sub21.i28 = sub nsw i32 %conv20.i27, 97
+  %conv22.i29 = trunc i32 %sub21.i28 to i8
+  store i8 %conv22.i29, i8* %offset.i4, align 1
+  %21 = load i8, i8* %offset.i4, align 1
+  %conv23.i30 = sext i8 %21 to i32
+  %add24.i31 = add nsw i32 %conv23.i30, 13
+  %rem25.i32 = srem i32 %add24.i31, 26
+  %conv26.i33 = trunc i32 %rem25.i32 to i8
+  store i8 %conv26.i33, i8* %offset.i4, align 1
+  %22 = load i8, i8* %offset.i4, align 1
+  %conv27.i34 = sext i8 %22 to i32
+  %add28.i35 = add nsw i32 97, %conv27.i34
+  %conv29.i36 = trunc i32 %add28.i35 to i8
+  store i8 %conv29.i36, i8* %retval.i2, align 1
+  br label %rot13_char.exit39
 
-; <label>:88                                      ; preds = %72, %68
-  %89 = load i8* %2, align 1
-  store i8 %89, i8* %1
-  br label %rot13_char.exit2
+if.end30.i38:                                     ; preds = %land.lhs.true15.i26, %if.end.i23
+  %23 = load i8, i8* %ch.addr.i3, align 1
+  store i8 %23, i8* %retval.i2, align 1
+  br label %rot13_char.exit39
 
-rot13_char.exit2:                                 ; preds = %56, %76, %88
-  %90 = load i8* %1
-  ret i8 %90
+rot13_char.exit39:                                ; preds = %if.then.i20, %if.then19.i37, %if.end30.i38
+  %24 = load i8, i8* %retval.i2, align 1
+  ret i8 %24
 }
 
-attributes #0 = { nounwind ssp uwtable "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #1 = { "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #0 = { nounwind ssp uwtable "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="core2" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+ssse3" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #1 = { "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="core2" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+ssse3" "unsafe-fp-math"="false" "use-soft-float"="false" }
 
-!llvm.ident = !{!0}
+!llvm.module.flags = !{!0}
+!llvm.ident = !{!1}
 
-!0 = metadata !{metadata !"Apple LLVM version 6.0 (clang-600.0.57) (based on LLVM 3.5svn)"}
+!0 = !{i32 1, !"PIC Level", i32 2}
+!1 = !{!"clang version 3.8.1 (tags/RELEASE_381/final)"}
