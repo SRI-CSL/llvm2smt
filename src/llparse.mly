@@ -400,7 +400,7 @@ global_eq: /* may want to allow empty here (per llvm parser) but haven't seen it
 ;
 aliasee:
 | Kw_bitcast       Lparen type_value Kw_to typ Rparen         { Bc.A_bitcast($3, $5) }
-| Kw_getelementptr opt_inbounds Lparen type_value_list Rparen { Bc.A_getelementptr($2, $4) }
+| Kw_getelementptr opt_inbounds Lparen typ Comma type_value_list Rparen { Bc.A_getelementptr($2, $6) }
 | type_value                                                  { Bc.A_typ_value $1 }
 ;
 string_list:
@@ -593,7 +593,7 @@ value:
 | Kw_and                        Lparen type_value Comma type_value Rparen                   { Llvm.And($3, $5) }
 | Kw_or                         Lparen type_value Comma type_value Rparen                   { Llvm.Or($3, $5) }
 | Kw_xor                        Lparen type_value Comma type_value Rparen                   { Llvm.Xor($3, $5) }
-| Kw_getelementptr opt_inbounds Lparen type_value_list Rparen                               { Llvm.Getelementptr($2, $4) }
+| Kw_getelementptr opt_inbounds Lparen typ Comma type_value_list Rparen                     { Llvm.Getelementptr($2, $6) }
 | Kw_shufflevector              Lparen type_value_list Rparen                               { Llvm.Shufflevector  $3 }
 | Kw_insertelement              Lparen type_value_list Rparen                               { Llvm.Insertelement  $3 }
 | Kw_extractelement             Lparen type_value_list Rparen                               { Llvm.Extractelement $3 }
@@ -718,7 +718,7 @@ instruction:
 | local_eq Kw_inttoptr type_value Kw_to typ               instruction_metadata { Some $1, Llvm.Inttoptr($3, $5, $6) }
 | local_eq Kw_ptrtoint type_value Kw_to typ               instruction_metadata { Some $1, Llvm.Ptrtoint($3, $5, $6) }
 | local_eq Kw_va_arg type_value Comma typ                 instruction_metadata { Some $1, Llvm.Va_arg($3, $5, $6) }
-| local_eq Kw_getelementptr opt_inbounds type_value_LIST_metadata              { Some $1, Llvm.Getelementptr($3, fst $4, snd $4) }
+| local_eq Kw_getelementptr opt_inbounds typ Comma type_value_LIST_metadata              { Some $1, Llvm.Getelementptr($3, fst $6, snd $6) }
 | local_eq Kw_extractelement type_value_LIST_metadata                          { Some $1, Llvm.Extractelement(fst $3, snd $3) }
 | local_eq Kw_insertelement type_value_LIST_metadata                           { Some $1, Llvm.Insertelement(fst $3, snd $3) }
 | local_eq Kw_shufflevector type_value_LIST_metadata                           { Some $1, Llvm.Shufflevector(fst $3, snd $3) }
@@ -731,8 +731,8 @@ instruction:
 | opt_local opt_tail Kw_call opt_callingconv return_attributes typ value Lparen param_list Rparen call_attributes
                                                           instruction_metadata { $1, Llvm.Call($2, $4, $5, $6, $7, $9, $11, $12) }
 | local_eq Kw_alloca alloc_metadata                                            { Some $1, $3 }
-| local_eq Kw_load opt_atomic opt_volatile type_value scopeandordering
-                                                                align_metadata { Some $1, Llvm.Load($3, $4, $5, $6, fst $7, snd $7) }
+| local_eq Kw_load opt_atomic opt_volatile typ Comma type_value scopeandordering
+                                                                align_metadata { Some $1, Llvm.Load($3, $4, $7, $8, fst $9, snd $9) }
 | Kw_store opt_atomic opt_volatile type_value Comma type_value scopeandordering
                                                                 align_metadata { None, Llvm.Store($2, $3, $4, $6, $7, fst $8, snd $8) }
 | local_eq Kw_cmpxchg opt_volatile type_value Comma type_value Comma type_value opt_singlethread ordering ordering
