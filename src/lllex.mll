@@ -97,6 +97,7 @@ let _ =
      "cc"                     ,Kw_cc;
      "c"                      ,Kw_c;
      "attributes"             ,Kw_attributes;
+     "argmemonly"             ,Kw_argmemonly;
      "alwaysinline"           ,Kw_alwaysinline;
      "builtin"                ,Kw_builtin;
      "byval"                  ,Kw_byval;

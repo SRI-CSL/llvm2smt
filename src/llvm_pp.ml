@@ -56,6 +56,7 @@ let bpr_fast_math_flags = between " " bpr_fast_math_flag
 (* attributes *)
 let bpr_attribute b = function
   | Align x          -> bprintf b "align %d" x
+  | Argmemonly       -> bprintf b "argmemonly"
   | Byval            -> bprintf b "byval"
   | Dereferenceable x   -> bprintf b "dereferenceable(%d)" x
   | Inalloca         -> bprintf b "inalloca"

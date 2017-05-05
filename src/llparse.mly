@@ -108,6 +108,7 @@ let process_toplevels t =
 %token Kw_ppc_fp128
 %token Kw_label
 %token Kw_metadata
+%token Kw_argmemonly
 %token Kw_x86_mmx
 %token Kw_true
 %token Kw_false
@@ -389,8 +390,8 @@ toplevel:
     { Alias({Bc.aname=$1; Bc.avisibility=$3; Bc.alinkage=$5; Bc.aaliasee=$6}) }
 | global_eq non_external_linkage opt_visibility Kw_alias opt_linkage aliasee
     { Alias({Bc.aname=$1; Bc.avisibility=$3; Bc.alinkage=$5; Bc.aaliasee=$6}) }
-| Exclaim APInt Equal typ Exclaim Lbrace mdnodevector Rbrace
-    { MDNodeDefn({Bc.mdid=int_of_string $2; Bc.mdtyp=$4; Bc.mdcontents=$7}) }
+| Exclaim APInt Equal Exclaim Lbrace mdnodevector Rbrace
+    { MDNodeDefn({Bc.mdid=int_of_string $2; Bc.mdtyp=Llvm.Metadata; Bc.mdcontents=$6}) }
 | MetadataVar Equal Exclaim Lbrace mdlist Rbrace                             { MDVarDefn($1, $5) }
 | Kw_attributes AttrGrpID Equal Lbrace group_attributes Rbrace               { Attrgrp($2, $5) }
 ;
@@ -415,6 +416,7 @@ mdlist:
 mdnodevector:
 | Kw_null                       { [None] }
 | Kw_null Comma mdnodevector    { None::$3 }
+| Exclaim StringConstant        { [Some (Llvm.Metadata, Mdstring $2)] }
 | type_value                    { [Some $1] }
 | type_value Comma mdnodevector { (Some $1)::$3 }
 ;
@@ -873,6 +875,7 @@ group_attribute:
 | Kw_align Equal APInt                { Llvm.Align(int_of_string $3) }
 | Kw_alignstack Equal APInt           { Llvm.Alignstack(int_of_string $3) }
 | Kw_alwaysinline                     { Llvm.Alwaysinline    }
+| Kw_argmemonly                       { Llvm.Argmemonly      }
 | Kw_builtin                          { Llvm.Builtin         }
 | Kw_cold                             { Llvm.Cold            }
 | Kw_inlinehint                       { Llvm.Inlinehint      }

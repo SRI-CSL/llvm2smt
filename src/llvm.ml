@@ -41,6 +41,7 @@ type var =
 
 type attribute =
   | Align of int                   (* param_attribute *)
+  | Argmemonly                     (* param_attribute *)
   | Byval                          (* param_attribute *)
   | Dereferenceable of int         (* param_attribute *) (* return_attribute *)
   | Inalloca                       (* param_attribute *)
