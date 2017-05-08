@@ -213,6 +213,7 @@ let process_toplevels t =
 %token Kw_alwaysinline
 %token Kw_builtin
 %token Kw_byval
+%token Kw_distinct
 %token Kw_inalloca
 %token Kw_cold
 %token Kw_inlinehint
@@ -397,9 +398,9 @@ toplevel:
     { Alias({Bc.aname=$1; Bc.avisibility=$3; Bc.alinkage=$5; Bc.aaliasee=$6}) }
 | global_eq non_external_linkage opt_visibility Kw_alias opt_linkage aliasee
     { Alias({Bc.aname=$1; Bc.avisibility=$3; Bc.alinkage=$5; Bc.aaliasee=$6}) }
-| Exclaim APInt Equal Exclaim Lbrace mdnodevector Rbrace
-    { MDNodeDefn({Bc.mdid=int_of_string $2; Bc.mdtyp=Llvm.Metadata; Bc.mdcontents=$6}) }
-| MetadataVar Equal Exclaim Lbrace mdlist Rbrace                             { MDVarDefn($1, $5) }
+| Exclaim APInt Equal opt_md_attribute Exclaim Lbrace mdnodevector Rbrace
+    { MDNodeDefn({Bc.mdid=int_of_string $2; Bc.mdtyp=Llvm.Metadata; Bc.mdcontents=$7}) } /* fixme 3.8.1 opt_md_attribute is new */
+| MetadataVar Equal Exclaim Lbrace mdlist Rbrace                             { MDVarDefn($1, $5) } 
 | Kw_attributes AttrGrpID Equal Lbrace group_attributes Rbrace               { Attrgrp($2, $5) }
 ;
 global_eq: /* may want to allow empty here (per llvm parser) but haven't seen it yet and it causes grammar conflicts */
@@ -421,11 +422,14 @@ mdlist:
 | Exclaim APInt Comma mdlist { (int_of_string $2)::$4 }
 ;
 mdnodevector:
-| Kw_null                       { [None] }
-| Kw_null Comma mdnodevector    { None::$3 }
-| Exclaim StringConstant        { [Some (Llvm.Metadata, Mdstring $2)] }
-| type_value                    { [Some $1] }
-| type_value Comma mdnodevector { (Some $1)::$3 }
+| Kw_null                                    { [None] }
+| Kw_null Comma mdnodevector                 { None::$3 }
+| Exclaim APInt                              { [ None ] }   /* fixme: 3.8.1 */
+| Exclaim APInt Comma mdnodevector           { [ None ] }   /* fixme: 3.8.1 */
+| Exclaim StringConstant                     { [Some (Llvm.Metadata, Mdstring $2)] }
+| Exclaim StringConstant Comma mdnodevector  { [Some (Llvm.Metadata, Mdstring $2)] } /* fixme: 3.8.1 */
+| type_value                                 { [Some $1] }
+| type_value Comma mdnodevector              { (Some $1)::$3 }
 ;
 constant_or_global:
 | Kw_constant { true }
@@ -953,6 +957,10 @@ jump_table:
 ;
 type_value:
 | typ value { ($1, $2) }
+;
+opt_md_attribute:
+| /* empty */ { false }
+| Kw_distinct { true }
 ;
 opt_sideeffect:
 | /* empty */   { false }

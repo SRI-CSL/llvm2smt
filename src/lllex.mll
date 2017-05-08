@@ -9,6 +9,7 @@ let _ =
      "false"                  ,Kw_false;
      "declare"                ,Kw_declare;
      "define"                 ,Kw_define;
+     "distinct"               ,Kw_distinct;
      "global"                 ,Kw_global;
      "constant"               ,Kw_constant;
      "private"                ,Kw_private;
