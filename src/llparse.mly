@@ -166,6 +166,12 @@ let process_toplevels t =
 %token Kw_nsw
 %token Kw_exact
 %token Kw_inbounds
+%token Kw_inaccessiblememonly
+%token Kw_inaccessiblemem_or_argmemonly
+%token Kw_jumptable
+%token Kw_norecurse
+%token Kw_safestack
+%token Kw_thunk
 %token Kw_align
 %token Kw_dereferenceable
 %token Kw_addrspace
@@ -181,6 +187,7 @@ let process_toplevels t =
 %token Kw_ccc
 %token Kw_fastcc
 %token Kw_coldcc
+%token Kw_convergent
 %token Kw_x86_stdcallcc
 %token Kw_x86_fastcallcc
 %token Kw_x86_thiscallcc
@@ -826,6 +833,7 @@ call_attributes:
 call_attribute:
 | AttrGrpID   { Llvm.Attrgrp($1) }
 | Kw_noreturn { Llvm.Noreturn }
+| Kw_norecurse { Llvm.Norecurse }
 | Kw_nounwind { Llvm.Nounwind }
 | Kw_readnone { Llvm.Readnone }
 | Kw_readonly { Llvm.Readonly }
@@ -835,35 +843,43 @@ function_attributes:
 | function_attribute function_attributes { $1::$2 }
 ;
 function_attribute:
-| AttrGrpID                                { Llvm.Attrgrp($1) }
-| StringConstant Equal StringConstant      { Llvm.Attr($1, Some $3) }
-| Kw_alignstack Equal Lparen APInt Rparen  { Llvm.Alignstack(int_of_string $4) }
-| Kw_alwaysinline                          { Llvm.Alwaysinline     }
-| Kw_builtin                               { Llvm.Builtin          }
-| Kw_cold                                  { Llvm.Cold             }
-| Kw_inlinehint                            { Llvm.Inlinehint       }
-| Kw_minsize                               { Llvm.Minsize          }
-| Kw_naked                                 { Llvm.Naked            }
-| Kw_nobuiltin                             { Llvm.Nobuiltin        }
-| Kw_noduplicate                           { Llvm.Noduplicate      }
-| Kw_noimplicitfloat                       { Llvm.Noimplicitfloat  }
-| Kw_noinline                              { Llvm.Noinline         }
-| Kw_nonlazybind                           { Llvm.Nonlazybind      }
-| Kw_noredzone                             { Llvm.Noredzone        }
-| Kw_noreturn                              { Llvm.Noreturn         }
-| Kw_nounwind                              { Llvm.Nounwind         }
-| Kw_optnone                               { Llvm.Optnone          }
-| Kw_optsize                               { Llvm.Optsize          }
-| Kw_readnone                              { Llvm.Readnone         }
-| Kw_readonly                              { Llvm.Readonly         }
-| Kw_returns_twice                         { Llvm.Returns_twice    }
-| Kw_ssp                                   { Llvm.Ssp              }
-| Kw_sspreq                                { Llvm.Sspreq           }
-| Kw_sspstrong                             { Llvm.Sspstrong        }
-| Kw_sanitize_address                      { Llvm.Sanitize_address }
-| Kw_sanitize_thread                       { Llvm.Sanitize_thread  }
-| Kw_sanitize_memory                       { Llvm.Sanitize_memory  }
-| Kw_uwtable                               { Llvm.Uwtable          }
+| AttrGrpID                                { Llvm.Attrgrp($1)                     }
+| StringConstant Equal StringConstant      { Llvm.Attr($1, Some $3)               }
+| Kw_alignstack Equal Lparen APInt Rparen  { Llvm.Alignstack(int_of_string $4)    }
+| Kw_alwaysinline                          { Llvm.Alwaysinline                    }
+| Kw_argmemonly                            { Llvm.Argmemonly                      }
+| Kw_builtin                               { Llvm.Builtin                         }
+| Kw_cold                                  { Llvm.Cold                            }
+| Kw_convergent                            { Llvm.Convergent                      }
+| Kw_inaccessiblememonly                   { Llvm.Inaccessiblememonly             }
+| Kw_inaccessiblemem_or_argmemonly         { Llvm.Inaccessiblemem_or_argmemonly   }
+| Kw_inlinehint                            { Llvm.Inlinehint                      }
+| Kw_jumptable                             { Llvm.Jumptable                       }
+| Kw_minsize                               { Llvm.Minsize                         }
+| Kw_naked                                 { Llvm.Naked                           }
+| Kw_nobuiltin                             { Llvm.Nobuiltin                       }
+| Kw_noduplicate                           { Llvm.Noduplicate                     }
+| Kw_noimplicitfloat                       { Llvm.Noimplicitfloat                 }
+| Kw_noinline                              { Llvm.Noinline                        }
+| Kw_nonlazybind                           { Llvm.Nonlazybind                     }
+| Kw_noredzone                             { Llvm.Noredzone                       }
+| Kw_noreturn                              { Llvm.Noreturn                        }
+| Kw_norecurse                             { Llvm.Norecurse                       }
+| Kw_nounwind                              { Llvm.Nounwind                        }
+| Kw_optnone                               { Llvm.Optnone                         }
+| Kw_optsize                               { Llvm.Optsize                         }
+| Kw_readnone                              { Llvm.Readnone                        }
+| Kw_readonly                              { Llvm.Readonly                        }
+| Kw_returns_twice                         { Llvm.Returns_twice                   }
+| Kw_safestack                             { Llvm.Safestack                       }
+| Kw_sanitize_address                      { Llvm.Sanitize_address                }
+| Kw_sanitize_memory                       { Llvm.Sanitize_memory                 }
+| Kw_sanitize_thread                       { Llvm.Sanitize_thread                 }
+| Kw_ssp                                   { Llvm.Ssp                             }
+| Kw_sspreq                                { Llvm.Sspreq                          }
+| Kw_sspstrong                             { Llvm.Sspstrong                       }
+| Kw_thunk                                 { Llvm.Thunk                           }
+| Kw_uwtable                               { Llvm.Uwtable                         }
 ;
 group_attributes:
 | /* empty */                      { [] }
@@ -888,6 +904,7 @@ group_attribute:
 | Kw_nonlazybind                      { Llvm.Nonlazybind     }
 | Kw_noredzone                        { Llvm.Noredzone       }
 | Kw_noreturn                         { Llvm.Noreturn        }
+| Kw_norecurse                        { Llvm.Norecurse       }      
 | Kw_nounwind                         { Llvm.Nounwind        }
 | Kw_optnone                          { Llvm.Optnone         }
 | Kw_optsize                          { Llvm.Optsize         }

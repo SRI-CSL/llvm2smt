@@ -89,6 +89,7 @@ let bpr_attribute b = function
   | Noredzone        -> bprintf b "noredzone"
   | Noreturn         -> bprintf b "noreturn"
   | Nounwind         -> bprintf b "nounwind"
+  | Norecurse        -> bprintf b "norecurse"
   | Optnone          -> bprintf b "optnone"
   | Optsize          -> bprintf b "optsize"
   | Returns_twice    -> bprintf b "returns_twice"
