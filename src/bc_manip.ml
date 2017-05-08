@@ -203,7 +203,7 @@ let assign_vartyps_instr locals ctyps (nopt, i) =
                         with _ -> failwith ("getelementptr: unknown type "^(Llvm_pp.string_of_var v)) in
                       loop ety' ((ytyp,y)::tl)
                   | _ ->
-                      failwith "getelementptr: pointer does not point into an array or struct") in
+                      failwith ("getelementptr: pointer does not point into an array or struct -"^(Llvm_pp.string_of_rhs i))) in
             Pointer(loop ety tl,aspace)
         | _ -> failwith "getelementptr: must be applied to a pointer")
     | Shufflevector([(Vectortyp(_,typ),_);_;(Vectortyp(m,_),_)], md) -> Vectortyp(m,typ)

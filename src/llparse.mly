@@ -731,7 +731,7 @@ instruction:
 | local_eq Kw_inttoptr type_value Kw_to typ               instruction_metadata { Some $1, Llvm.Inttoptr($3, $5, $6) }
 | local_eq Kw_ptrtoint type_value Kw_to typ               instruction_metadata { Some $1, Llvm.Ptrtoint($3, $5, $6) }
 | local_eq Kw_va_arg type_value Comma typ                 instruction_metadata { Some $1, Llvm.Va_arg($3, $5, $6) }
-| local_eq Kw_getelementptr opt_inbounds typ Comma type_value_LIST_metadata              { Some $1, Llvm.Getelementptr($3, fst $6, snd $6) }
+| local_eq Kw_getelementptr opt_inbounds typ Comma type_value_LIST_metadata    { Some $1, Llvm.Getelementptr($3, fst $6, snd $6) }
 | local_eq Kw_extractelement type_value_LIST_metadata                          { Some $1, Llvm.Extractelement(fst $3, snd $3) }
 | local_eq Kw_insertelement type_value_LIST_metadata                           { Some $1, Llvm.Insertelement(fst $3, snd $3) }
 | local_eq Kw_shufflevector type_value_LIST_metadata                           { Some $1, Llvm.Shufflevector(fst $3, snd $3) }
