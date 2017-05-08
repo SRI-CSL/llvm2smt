@@ -186,6 +186,9 @@ let assign_vartyps_instr locals ctyps (nopt, i) =
                   | Arraytyp(_,ety') ->
                       (* assume that y is in-bounds *)
                       loop ety' tl
+                  | Vectortyp(_,ety') ->
+                      (* assume that y is in-bounds *)
+                      loop ety' tl
                   | Structtyp(_,field_typs) ->
                       (match y with
                       | Int i ->
