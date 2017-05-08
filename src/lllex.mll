@@ -118,6 +118,7 @@ let _ =
      "noredzone"              ,Kw_noredzone;
      "noreturn"               ,Kw_noreturn;
      "nounwind"               ,Kw_nounwind;
+     "norecurse"              ,Kw_norecurse;     
      "optnone"                ,Kw_optnone;
      "optsize"                ,Kw_optsize;
      "readnone"               ,Kw_readnone;
