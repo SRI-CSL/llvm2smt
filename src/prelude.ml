@@ -771,19 +771,19 @@ let int_ptr b n w =
 \n"
       n w n w  
   else
-    if n > w
+    if n < w
     then
       bprintf b 
 	"
   (define-fun int_ptr_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ zero_extend %d) x))
 \n"
-	w n w n (n - w)
+	n w n w  (w-n)
     else
       bprintf b 
 	"
-  (define-fun int_ptr_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ extract %d) x))
+  (define-fun int_ptr_%d_%d ((x (_ BitVec %d))) (_ BitVec %d) ((_ extract %d 0) x))
 \n"
-	w n w n (n - 1)
+	n w n w (w-1)
 
 
 	
