@@ -1182,7 +1182,11 @@ let store_to_smt b st ty v p =
  *     (and entry_cond (not (= v c_1)) ... (not (= (v c_n))))
  *)
 let smt_eq_condition st entry_cond typ v const =
-  let register = name_to_smt_string st (Bc_manip.value_to_var v) in
+  let register =
+    match v with
+      | True | False -> typ_val_to_smt_string st (typ, v)
+      | _ -> name_to_smt_string st (Bc_manip.value_to_var v)
+  in
   let conjunct = 
     match const with
       | True -> register
